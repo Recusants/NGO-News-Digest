@@ -1,36 +1,48 @@
+"""
+Django base settings.
+"""
 import os
 from pathlib import Path
+from datetime import timedelta
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-
-
-
-
 AUTH_USER_MODEL = 'accounts.User'
 
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-aoti*^1&3g_+%-3_(5ve#yr+2(ytdh1r0%+o1@xqt%x3b@7gdo')
 
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Application definition
-
 INSTALLED_APPS = [
-    "accounts",
-    "publisher",
-    "subscriptions",
-
-    "ckeditor",
-    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Third party apps
+    'whitenoise.runserver_nostatic',
+    
+    # Your apps
+    "accounts",
+    "publisher",
+    "subscriptions",
+
+    "ckeditor",
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -41,23 +53,14 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'newsletter.urls'
 
-
-# CKEditor configuration (optional)
-CKEDITOR_CONFIGS = {
-    'default': {
-        'toolbar': 'full',
-        'height': 300,
-        'width': '100%',
-    },
-}
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -68,11 +71,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'newsletter.wsgi.application'
 
+# Database
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
+# Use PostgreSQL in production (Railway will provide DATABASE_URL)
+if os.environ.get('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.config(
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -88,43 +102,30 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-
-
-
-# Email batch size
-EMAIL_BATCH_SIZE = 50
-
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
-#CUSTOM
-MEDIA_ROOT = (BASE_DIR/'media')
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+# Media files
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
-STATICFILES_ROOT = [os.path.join(BASE_DIR, 'staticfiles')]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-MEDIA_URL = '/media/'
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# LOGIN_URL = 'login_page'
+# Whitenoise configuration
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-
+# Security settings (overridden in production.py)
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_HSTS_SECONDS = 0
