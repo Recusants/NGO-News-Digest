@@ -1,0 +1,107 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}Edit Team Member{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 40px auto; padding: 30px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+    <a href="{% url 'manage_team' %}" style="color: #007bff; text-decoration: none; margin-bottom: 20px; display: inline-block;">
+        ← Back to Team Management
+    </a>
+    
+    <h1 style="margin-bottom: 30px;">Edit Team Member: {{ team_member.user.get_full_name }}</h1>
+    
+    <form method="POST">
+        {% csrf_token %}
+        
+        <div style="display: grid; gap: 25px;">
+            <!-- User Info (readonly) -->
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                <h3 style="margin: 0 0 10px 0;">User Information</h3>
+                <p style="margin: 5px 0; color: #666;">
+                    <strong>Name:</strong> {{ team_member.user.get_full_name }}
+                </p>
+                <p style="margin: 5px 0; color: #666;">
+                    <strong>Email:</strong> {{ team_member.user.email }}
+                </p>
+                <p style="margin: 5px 0; color: #666;">
+                    <strong>Username:</strong> {{ team_member.user.username }}
+                </p>
+            </div>
+            
+            <!-- Position -->
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Position *</label>
+                <input type="text" name="position" 
+                       value="{{ team_member.position }}"
+                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;"
+                       required>
+            </div>
+            
+            <!-- Bio -->
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Bio</label>
+                <textarea name="bio" rows="6" 
+                          style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;"
+                          placeholder="Brief description about this team member...">{{ team_member.bio }}</textarea>
+            </div>
+            
+            <!-- Social Links -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Twitter URL</label>
+                    <input type="url" name="twitter_url" 
+                           value="{{ team_member.twitter_url }}"
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;"
+                           placeholder="https://twitter.com/username">
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">LinkedIn URL</label>
+                    <input type="url" name="linkedin_url" 
+                           value="{{ team_member.linkedin_url }}"
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;"
+                           placeholder="https://linkedin.com/in/username">
+                </div>
+            </div>
+            
+            <!-- Display Order & Status -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Display Order</label>
+                    <input type="number" name="display_order" 
+                           value="{{ team_member.display_order }}"
+                           style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;"
+                           min="0">
+                    <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                        Lower numbers appear first
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Status</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" name="is_active" id="is_active" 
+                               {% if team_member.is_active %}checked{% endif %}>
+                        <label for="is_active" style="margin: 0;">Active</label>
+                    </div>
+                    <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                        Active members appear on the about page
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-top: 40px;">
+            <button type="submit" 
+                    style="flex: 1; padding: 14px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+                💾 Save Changes
+            </button>
+            
+            <a href="{% url 'manage_team' %}" 
+               style="padding: 14px 25px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px; text-align: center;">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

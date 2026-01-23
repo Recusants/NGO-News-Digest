@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Post Published Successfully!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .success-card {
+            background: white;
+            padding: 50px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+        .success-icon {
+            font-size: 80px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .post-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            text-align: left;
+        }
+        .post-info h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .subscriber-notice {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #28a745;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-card">
+        <div class="success-icon">✅</div>
+        <h1>Post Published Successfully!</h1>
+        
+        <p>Your blog post has been uploaded and published to the website.</p>
+        
+        {% if latest_post %}
+        <div class="post-info">
+            <h3>Post Details:</h3>
+            <p><strong>Title:</strong> {{ latest_post.title }}</p>
+            <p><strong>Published:</strong> {{ latest_post.created_at|date:"F j, Y, g:i a" }}</p>
+            <p><strong>Status:</strong> {{ latest_post.get_status_display }}</p>
+        </div>
+        
+        <div class="subscriber-notice">
+            📧 <strong>Email Notification Sent!</strong><br>
+            Subscribers have been notified about your new post.
+        </div>
+        {% endif %}
+        
+        <div class="action-buttons">
+            <a href="/" class="btn btn-primary">🏠 Go to Homepage</a>
+            <a href="{% url 'upload_blog_post' %}" class="btn btn-secondary">📝 Upload Another Post</a>
+            
+            {% if latest_post %}
+            <a href="/story/{{ latest_post.id }}/" class="btn btn-success">👁️ View Published Post</a>
+            {% endif %}
+        </div>
+        
+        <p style="margin-top: 30px; font-size: 14px; color: #999;">
+            You will be automatically redirected to the homepage in <span id="countdown">10</span> seconds...
+        </p>
+    </div>
+    
+    <script>
+    // Auto-redirect after 10 seconds
+    let countdown = 10;
+    const countdownElement = document.getElementById('countdown');
+    
+    const countdownInterval = setInterval(() => {
+        countdown--;
+        countdownElement.textContent = countdown;
+        
+        if (countdown <= 0) {
+            clearInterval(countdownInterval);
+            window.location.href = '/';
+        }
+    }, 1000);
+    
+    // Cancel redirect if user clicks any button
+    document.querySelectorAll('.btn').forEach(button => {
+        button.addEventListener('click', () => {
+            clearInterval(countdownInterval);
+        });
+    });
+    </script>
+</body>
+</html>

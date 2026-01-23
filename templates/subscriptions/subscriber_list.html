@@ -1,0 +1,267 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}Subscriber List - NGO News Digest{% endblock %}
+
+{% block content %}
+<style>
+    .subscriber-container {
+        margin: 20px;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .stats-card {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
+        border-left: 4px solid #007bff;
+        margin-bottom: 20px;
+    }
+    
+    .stats-row {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .stat-item {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .search-box {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .search-input {
+        flex: 1;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .search-btn {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .subscriber-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    
+    .subscriber-table th {
+        background: #f8f9fa;
+        padding: 12px 15px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
+    .subscriber-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .btn {
+        padding: 6px 12px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-export {
+        background: #28a745;
+        color: white;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        gap: 10px;
+    }
+    
+    .pagination a, .pagination span {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #007bff;
+    }
+    
+    .pagination .current {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+</style>
+
+<div class="subscriber-container">
+    <div class="header-section">
+        <h1>Subscriber List</h1>
+        <div class="action-buttons">
+            <a href="{% url 'export_subscribers' %}" class="btn btn-export">
+                📥 Export CSV
+            </a>
+        </div>
+    </div>
+    
+    <div class="stats-card">
+        <h3>Subscriber Statistics</h3>
+        <div class="stats-row">
+            <div class="stat-item">
+                <h4>Total Subscribers</h4>
+                <p style="font-size: 24px; font-weight: bold; color: #333;">
+                    {{ total_subscribers }}
+                </p>
+            </div>
+            <div class="stat-item">
+                <h4>Active & Verified</h4>
+                <p style="font-size: 24px; font-weight: bold; color: #28a745;">
+                    {{ active_subscribers }}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <form method="GET" class="search-box">
+        <input type="text" 
+               name="q" 
+               value="{{ search_query }}" 
+               class="search-input" 
+               placeholder="Search by email or name...">
+        <button type="submit" class="search-btn">Search</button>
+        {% if search_query %}
+            <a href="{% url 'subscriber_list' %}" class="btn" style="background: #6c757d; color: white;">
+                Clear
+            </a>
+        {% endif %}
+    </form>
+    
+    <div class="table-container">
+        <table class="subscriber-table">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Verified</th>
+                    <th>Subscribed</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subscriber in page_obj %}
+                <tr>
+                    <td>{{ subscriber.email }}</td>
+                    <td>{{ subscriber.name }}</td>
+                    <td>
+                        {% if subscriber.is_active %}
+                            <span class="status-badge status-active">Active</span>
+                        {% else %}
+                            <span class="status-badge status-inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if subscriber.is_verified %}
+                            <span class="status-badge status-active">✓ Verified</span>
+                        {% else %}
+                            <span class="status-badge status-pending">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ subscriber.subscribed_at|date:"Y-m-d" }}</td>
+                    <td>
+                        <a href="{% url 'unsubscribe_link' subscriber.email %}" 
+                           class="btn" 
+                           style="background: #dc3545; color: white;"
+                           onclick="return confirm('Unsubscribe {{ subscriber.email }}?')">
+                            Unsubscribe
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px;">
+                        No subscribers found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}">« First</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">‹ Previous</a>
+        {% endif %}
+        
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">Next ›</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}">Last »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

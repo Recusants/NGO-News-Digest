@@ -1,0 +1,279 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}Manage Site Information{% endblock %}
+
+{% block extra_head %}
+<style>
+    .manage-container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+    
+    .section-card {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 25px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        font-family: inherit;
+    }
+    
+    textarea.form-control {
+        min-height: 150px;
+        resize: vertical;
+    }
+    
+    .btn-primary {
+        padding: 12px 30px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+    
+    .message {
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .tab-container {
+        display: flex;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 30px;
+    }
+    
+    .tab {
+        padding: 12px 25px;
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        font-size: 16px;
+        cursor: pointer;
+        color: #666;
+    }
+    
+    .tab.active {
+        color: #007bff;
+        border-bottom-color: #007bff;
+        font-weight: 600;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="manage-container">
+    <h1 style="margin-bottom: 30px;">Manage Site Information</h1>
+    
+    {% if messages %}
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Tabs -->
+    <div class="tab-container">
+        <button class="tab active" onclick="showTab('about')">About Us</button>
+        <button class="tab" onclick="showTab('contact')">Contact Info</button>
+        <button class="tab" onclick="showTab('social')">Social Media</button>
+    </div>
+    
+    <form method="POST" id="siteForm">
+        {% csrf_token %}
+        
+        <!-- About Tab -->
+        <div id="aboutTab" class="tab-content active">
+            <div class="section-card">
+                <h2 style="margin-bottom: 25px;">About Us Content</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">About Us *</label>
+                    <textarea name="about_us" class="form-control" required>{{ site_info.about_us }}</textarea>
+                    <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                        Tell visitors about your organization
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Our Mission *</label>
+                    <textarea name="mission" class="form-control" required>{{ site_info.mission }}</textarea>
+                    <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                        What is your organization's mission?
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Our Vision *</label>
+                    <textarea name="vision" class="form-control" required>{{ site_info.vision }}</textarea>
+                    <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                        What is your organization's vision?
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contact Tab -->
+        <div id="contactTab" class="tab-content">
+            <div class="section-card">
+                <h2 style="margin-bottom: 25px;">Contact Information</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Contact Email</label>
+                    <input type="email" name="contact_email" class="form-control" 
+                           value="{{ site_info.contact_email }}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Contact Phone</label>
+                    <input type="text" name="contact_phone" class="form-control" 
+                           value="{{ site_info.contact_phone }}">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Address</label>
+                    <textarea name="address" class="form-control" rows="4">{{ site_info.address }}</textarea>
+                    <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                        Enter your physical address
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Social Tab -->
+        <div id="socialTab" class="tab-content">
+            <div class="section-card">
+                <h2 style="margin-bottom: 25px;">Social Media Links</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Facebook URL</label>
+                    <input type="url" name="facebook_url" class="form-control" 
+                           value="{{ site_info.facebook_url }}" placeholder="https://facebook.com/yourpage">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Twitter URL</label>
+                    <input type="url" name="twitter_url" class="form-control" 
+                           value="{{ site_info.twitter_url }}" placeholder="https://twitter.com/yourhandle">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">LinkedIn URL</label>
+                    <input type="url" name="linkedin_url" class="form-control" 
+                           value="{{ site_info.linkedin_url }}" placeholder="https://linkedin.com/company/yourcompany">
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <button type="submit" class="btn-primary">💾 Save All Changes</button>
+            <a href="{% url 'about_page' %}" 
+               style="display: inline-block; margin-left: 15px; padding: 12px 25px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px;">
+                👁️ View Live Page
+            </a>
+        </div>
+    </form>
+</div>
+
+
+<!-- Add CKEditor script -->
+<script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
+
+<!-- Update textareas to use CKEditor -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize CKEditor on textareas
+    CKEDITOR.replace('about_us');
+    CKEDITOR.replace('mission');
+    CKEDITOR.replace('vision');
+    
+    // Update form submission to get CKEditor content
+    document.getElementById('siteForm').addEventListener('submit', function(e) {
+        // Update textareas with CKEditor content
+        for (var instance in CKEDITOR.instances) {
+            CKEDITOR.instances[instance].updateElement();
+        }
+        return true;
+    });
+});
+
+
+function showTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabName + 'Tab').classList.add('active');
+    
+    // Update tab buttons
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+// Form validation
+document.getElementById('siteForm').addEventListener('submit', function(e) {
+    const aboutUs = document.querySelector('[name="about_us"]').value.trim();
+    const mission = document.querySelector('[name="mission"]').value.trim();
+    const vision = document.querySelector('[name="vision"]').value.trim();
+    
+    if (!aboutUs || !mission || !vision) {
+        e.preventDefault();
+        alert('Please fill in all required fields in the "About Us" tab');
+        showTab('about');
+        return false;
+    }
+    
+    return true;
+});
+</script>
+{% endblock %}

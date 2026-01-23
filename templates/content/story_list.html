@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 mb-3">📰 Latest Stories</h1>
+            <p class="text-muted">Browse our collection of stories and articles</p>
+        </div>
+        <div class="col-auto">
+            <form method="GET" class="d-flex">
+                <input type="text" name="q" class="form-control me-2" 
+                       placeholder="Search stories..." value="{{ request.GET.q|default:'' }}">
+                <button class="btn btn-outline-red" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Filter Tags -->
+    <div class="mb-4">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'story_list' %}" 
+               class="badge {% if not request.GET.tag %}bg-red text-white{% else %}bg-red-light text-red{% endif %} p-2">
+                All Stories
+            </a>
+            {% for tag in popular_tags|slice:":10" %}
+            <a href="{% url 'story_list' %}?tag={{ tag.id }}" 
+               class="badge {% if request.GET.tag == tag.id|stringformat:'i' %}bg-red text-white{% else %}bg-red-light text-red{% endif %} p-2">
+                {{ tag.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Stories Container -->
+    <div id="storiesContainer" class="row">
+        <!-- Initial stories will be loaded via AJAX -->
+    </div>
+    
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="text-center py-5">
+        <div class="spinner-border text-red" role="status">
+            <span class="visually-hidden">Loading stories...</span>
+        </div>
+    </div>
+    
+    <!-- No Results Message -->
+    <div id="noResults" class="text-center py-5" style="display: none;">
+        <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No stories found</h4>
+        <p>Try a different search term or check back later.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let isLoading = false;
+    let currentPage = 1;
+    let hasMore = true;
+    
+    // Load initial stories
+    loadStories();
+    
+    function loadStories() {
+        if (isLoading || !hasMore) return;
+        
+        isLoading = true;
+        
+        // Build query string
+        let queryString = `?page=${currentPage}`;
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.get('tag')) queryString += `&tag=${urlParams.get('tag')}`;
+        if (urlParams.get('q')) queryString += `&q=${encodeURIComponent(urlParams.get('q'))}`;
+        
+        fetch(`{% url "load_more_stories" %}${queryString}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            isLoading = false;
+            
+            // Hide loading indicator
+            $('#loadingIndicator').hide();
+            
+            if (currentPage === 1 && data.stories.length === 0) {
+                $('#noResults').show();
+                return;
+            }
+            
+            // Append stories
+            appendStories(data.stories);
+            
+            hasMore = data.has_next;
+            currentPage++;
+            
+            // If no more stories, hide loading indicator
+            if (!hasMore) {
+                $('#loadingIndicator').hide();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading stories:', error);
+            isLoading = false;
+            $('#loadingIndicator').hide();
+            $('#noResults').show();
+        });
+    }
+    
+    function appendStories(stories) {
+        const container = $('#storiesContainer');
+        
+        stories.forEach(story => {
+            const storyHtml = `
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 story-card">
+                        ${story.main_image_url ? `
+                            <img src="${story.main_image_url}" class="card-img-top" 
+                                 alt="${story.title}" style="height: 200px; object-fit: cover;">
+                        ` : ''}
+                        <div class="card-body">
+                            <div class="mb-2">
+                                ${story.tags.map(tag => `
+                                    <a href="{% url 'story_list' %}?tag=${tag.id}" class="badge bg-red-light text-red me-1">
+                                        ${tag.name}
+                                    </a>
+                                `).join('')}
+                            </div>
+                            <h5 class="card-title">
+                                <a href="${story.url}" class="text-decoration-none text-dark">${story.title}</a>
+                            </h5>
+                            <p class="card-text text-muted">${story.short_description}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar-alt me-1"></i>${story.published_date}
+                                </small>
+                                <a href="${story.url}" class="btn btn-sm btn-outline-red">
+                                    Read More <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.append(storyHtml);
+        });
+    }
+    
+    // Load more on scroll
+    $(window).scroll(function() {
+        if ($(window).scrollTop() + $(window).height() >= $(document).height() - 500) {
+            loadStories();
+        }
+    });
+});
+</script>
+{% endblock %}

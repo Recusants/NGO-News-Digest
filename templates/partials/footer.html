@@ -1,0 +1,22 @@
+<!-- footer.html - Only if absolutely needed for specific pages -->
+<footer class="footer">
+    <div class="footer-content">
+        <!-- Content will be loaded dynamically via AJAX -->
+    </div>
+</footer>
+
+<script>
+// Load footer content via AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/footer/')
+        .then(response => response.text())
+        .then(html => {
+            document.querySelector('.footer-content').innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error loading footer:', error);
+            document.querySelector('.footer-content').innerHTML = 
+                '<p>&copy; ' + new Date().getFullYear() + ' NGO News Digest</p>';
+        });
+});
+</script>

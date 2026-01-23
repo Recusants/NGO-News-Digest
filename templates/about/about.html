@@ -1,0 +1,277 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}About Us - NGO News Digest{% endblock %}
+
+{% block extra_head %}
+<style>
+    .about-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+    
+    .section {
+        margin-bottom: 60px;
+    }
+    
+    .section-title {
+        text-align: center;
+        margin-bottom: 40px;
+        color: #333;
+        position: relative;
+    }
+    
+    .section-title:after {
+        content: '';
+        display: block;
+        width: 60px;
+        height: 3px;
+        background: #007bff;
+        margin: 15px auto;
+    }
+    
+    .content-card {
+        background: white;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        line-height: 1.8;
+        color: #555;
+    }
+    
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 30px;
+        margin-top: 40px;
+    }
+    
+    .team-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+    
+    .team-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .team-image {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        margin: 30px auto 20px;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        color: #007bff;
+    }
+    
+    .team-info {
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .team-name {
+        font-size: 1.3rem;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    
+    .team-position {
+        color: #007bff;
+        font-weight: 500;
+        margin-bottom: 15px;
+    }
+    
+    .team-bio {
+        color: #666;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+    
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 15px;
+    }
+    
+    .social-link {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #555;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .social-link:hover {
+        background: #007bff;
+        color: white;
+    }
+    
+    .contact-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 30px;
+        margin-top: 40px;
+    }
+    
+    .contact-item {
+        text-align: center;
+        padding: 30px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .contact-icon {
+        font-size: 40px;
+        color: #007bff;
+        margin-bottom: 20px;
+    }
+    
+    .contact-details {
+        color: #555;
+        line-height: 1.6;
+    }
+    
+    @media (max-width: 768px) {
+        .content-card {
+            padding: 25px;
+        }
+        
+        .team-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-container">
+    <!-- Hero Section -->
+    <div class="section">
+        <h1 class="section-title">About NGO News Digest</h1>
+        <div class="content-card">
+            {{ site_info.about_us|safe|linebreaks }}
+        </div>
+    </div>
+    
+    <!-- Mission & Vision -->
+    <div class="section" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+        <div>
+            <h2 class="section-title" style="text-align: left;">Our Mission</h2>
+            <div class="content-card">
+                {{ site_info.mission|safe|linebreaks }}
+            </div>
+        </div>
+        
+        <div>
+            <h2 class="section-title" style="text-align: left;">Our Vision</h2>
+            <div class="content-card">
+                {{ site_info.vision|safe|linebreaks }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Team Section -->
+    {% if team_members %}
+    <div class="section">
+        <h2 class="section-title">Meet Our Team</h2>
+        <div class="team-grid">
+            {% for member in team_members %}
+            <div class="team-card">
+                <div class="team-image">
+                    {{ member.user.first_name|first }}{{ member.user.last_name|first }}
+                </div>
+                
+                <div class="team-info">
+                    <h3 class="team-name">{{ member.user.get_full_name }}</h3>
+                    <div class="team-position">{{ member.position }}</div>
+                    
+                    {% if member.bio %}
+                    <div class="team-bio">{{ member.bio|safe|linebreaks|truncatewords:30 }}</div>
+                    {% endif %}
+                    
+                    <div class="social-links">
+                        {% if member.twitter_url %}
+                        <a href="{{ member.twitter_url }}" target="_blank" class="social-link">
+                            🐦
+                        </a>
+                        {% endif %}
+                        
+                        {% if member.linkedin_url %}
+                        <a href="{{ member.linkedin_url }}" target="_blank" class="social-link">
+                            💼
+                        </a>
+                        {% endif %}
+                    </div>
+                    
+                    <a href="{% url 'team_member_detail' member.user.username %}" 
+                       style="display: inline-block; margin-top: 15px; color: #007bff; text-decoration: none;">
+                        View Profile →
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Contact Info -->
+    <div class="section">
+        <h2 class="section-title">Get In Touch</h2>
+        <div class="contact-info">
+            {% if site_info.contact_email %}
+            <div class="contact-item">
+                <div class="contact-icon">✉️</div>
+                <h3>Email Us</h3>
+                <div class="contact-details">
+                    <a href="mailto:{{ site_info.contact_email }}" style="color: #007bff;">
+                        {{ site_info.contact_email }}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if site_info.contact_phone %}
+            <div class="contact-item">
+                <div class="contact-icon">📞</div>
+                <h3>Call Us</h3>
+                <div class="contact-details">
+                    {{ site_info.contact_phone }}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if site_info.address %}
+            <div class="contact-item">
+                <div class="contact-icon">📍</div>
+                <h3>Visit Us</h3>
+                <div class="contact-details">
+                    {{ site_info.address|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="{% url 'contact_page' %}" 
+               style="display: inline-block; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+                Contact Page →
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

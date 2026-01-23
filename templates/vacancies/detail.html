@@ -1,0 +1,34 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}{{ vacancy.title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 40px auto; padding: 20px;">
+    <h1>{{ vacancy.title }}</h1>
+    <p style="color: #007bff; font-size: 1.2rem;">🏢 {{ vacancy.organization }}</p>
+    
+    <div style="display: flex; gap: 20px; margin: 20px 0; color: #666;">
+        <span>📍 {{ vacancy.location }}</span>
+        <span>📋 {{ vacancy.get_job_type_display }}</span>
+        <span>⏳ Apply by: {{ vacancy.application_deadline }}</span>
+    </div>
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0;">
+        <h3>Description</h3>
+        <p style="white-space: pre-line;">{{ vacancy.description }}</p>
+    </div>
+    
+    {% if vacancy.application_link %}
+    <div style="text-align: center; margin-top: 40px;">
+        <a href="{{ vacancy.application_link }}" 
+           style="display: inline-block; padding: 12px 30px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; font-size: 1.1rem;">
+            Apply Now
+        </a>
+    </div>
+    {% endif %}
+    
+    <div style="margin-top: 40px; text-align: center;">
+        <a href="{% url 'vacancy_list' %}" style="color: #007bff;">← Back to all vacancies</a>
+    </div>
+</div>
+{% endblock %}

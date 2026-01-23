@@ -1,0 +1,110 @@
+label {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.btn {
+    padding: 7px 21px;
+    background-color: rgb(143, 1, 1);
+    color: white;
+    font-size: 18px;
+}
+
+body {
+    background-color: azure;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Loading spinner animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* Small spinner for resend button */
+.resend-btn .loading-spinner {
+    width: 12px;
+    height: 12px;
+    border-width: 1px;
+    margin-right: 5px;
+}
+
+/* Focus styles for better accessibility */
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Success and error states */
+.form-control.is-valid {
+    border-color: #28a745;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .subscription-card {
+        padding: 20px;
+        margin: 20px;
+    }
+    
+    .btn-subscribe {
+        padding: 10px 20px;
+    }
+    
+    .message {
+        font-size: 14px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .subscription-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+    
+    .btn-subscribe,
+    .resend-btn {
+        display: none !important;
+    }
+}

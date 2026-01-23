@@ -1,0 +1,49 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}Saved Stories - NGO News Digest{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: var(--spacing-2xl) 0;">
+    <h1 style="margin-bottom: var(--spacing-xl);">Saved Stories</h1>
+    
+    {% if saved_stories %}
+    <div class="stories-grid">
+        {% for story in saved_stories %}
+        <article class="story-card">
+            <a href="/story/{{ story.id }}/" style="text-decoration: none; color: inherit;">
+                {% if story.image_url %}
+                <img src="{{ story.image_url }}" alt="{{ story.title }}" class="story-image"
+                     onerror="this.src='/static/default-story.jpg'">
+                {% endif %}
+                <div class="story-content">
+                    <h3 class="story-title">{{ story.title }}</h3>
+                    <p class="story-excerpt">{{ story.snippet|default:"" }}</p>
+                    <div class="story-meta">
+                        <span class="story-date">
+                            <i class="far fa-calendar"></i>
+                            {{ story.date_and_time|default:"Recently" }}
+                        </span>
+                        {% if story.author %}
+                        <span class="story-author">
+                            <i class="far fa-user"></i>
+                            {{ story.author }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="far fa-bookmark"></i>
+        <h3>No saved stories yet</h3>
+        <p>Save stories you want to read later by clicking the bookmark icon</p>
+        <a href="{% url 'stories' %}" class="btn" style="margin-top: var(--spacing-lg);">
+            <i class="fas fa-newspaper"></i> Browse Stories
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

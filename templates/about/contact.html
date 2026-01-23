@@ -1,0 +1,134 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}Contact Us - NGO News Digest{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 40px auto; padding: 20px;">
+    <h1 style="text-align: center; margin-bottom: 40px;">Contact Us</h1>
+    
+    <div style="display: grid; gap: 30px;">
+        <!-- Contact Form -->
+        <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <h2 style="margin-bottom: 20px;">Send us a Message</h2>
+            
+            <form id="contactForm" style="display: grid; gap: 20px;">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Your Name *</label>
+                    <input type="text" id="name" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;" required>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Your Email *</label>
+                    <input type="email" id="email" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;" required>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Subject *</label>
+                    <input type="text" id="subject" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;" required>
+                </div>
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Message *</label>
+                    <textarea id="message" rows="6" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;" required></textarea>
+                </div>
+                
+                <button type="button" onclick="sendMessage()" 
+                        style="padding: 14px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+                    Send Message
+                </button>
+                
+                <div id="contactResult" style="display: none; padding: 10px; border-radius: 5px;"></div>
+            </form>
+        </div>
+        
+        <!-- Contact Info -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            {% if site_info.contact_email %}
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 32px; margin-bottom: 15px;">✉️</div>
+                <h3 style="margin-bottom: 10px;">Email</h3>
+                <a href="mailto:{{ site_info.contact_email }}" style="color: #007bff;">
+                    {{ site_info.contact_email }}
+                </a>
+            </div>
+            {% endif %}
+            
+            {% if site_info.contact_phone %}
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 32px; margin-bottom: 15px;">📞</div>
+                <h3 style="margin-bottom: 10px;">Phone</h3>
+                <p>{{ site_info.contact_phone }}</p>
+            </div>
+            {% endif %}
+            
+            {% if site_info.address %}
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 32px; margin-bottom: 15px;">📍</div>
+                <h3 style="margin-bottom: 10px;">Address</h3>
+                <p style="white-space: pre-line;">{{ site_info.address }}</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Social Media -->
+        {% if site_info.facebook_url or site_info.twitter_url or site_info.linkedin_url %}
+        <div style="text-align: center; margin-top: 20px;">
+            <h3>Follow Us</h3>
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px;">
+                {% if site_info.facebook_url %}
+                <a href="{{ site_info.facebook_url }}" target="_blank" 
+                   style="display: inline-block; padding: 10px 20px; background: #1877f2; color: white; text-decoration: none; border-radius: 5px;">
+                    Facebook
+                </a>
+                {% endif %}
+                
+                {% if site_info.twitter_url %}
+                <a href="{{ site_info.twitter_url }}" target="_blank" 
+                   style="display: inline-block; padding: 10px 20px; background: #1da1f2; color: white; text-decoration: none; border-radius: 5px;">
+                    Twitter
+                </a>
+                {% endif %}
+                
+                {% if site_info.linkedin_url %}
+                <a href="{{ site_info.linkedin_url }}" target="_blank" 
+                   style="display: inline-block; padding: 10px 20px; background: #0077b5; color: white; text-decoration: none; border-radius: 5px;">
+                    LinkedIn
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function sendMessage() {
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const subject = document.getElementById('subject').value.trim();
+    const message = document.getElementById('message').value.trim();
+    const resultDiv = document.getElementById('contactResult');
+    
+    if (!name || !email || !subject || !message) {
+        resultDiv.innerHTML = '<div style="color: #dc3545; padding: 10px;">Please fill in all fields</div>';
+        resultDiv.style.display = 'block';
+        return;
+    }
+    
+    // In a real app, you would send this to your backend
+    // For now, just show success message
+    resultDiv.innerHTML = `
+        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px;">
+            ✅ Thank you for your message! We'll get back to you soon.
+        </div>
+    `;
+    resultDiv.style.display = 'block';
+    
+    // Clear form
+    document.getElementById('contactForm').reset();
+    
+    // Scroll to result
+    resultDiv.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+{% endblock %}

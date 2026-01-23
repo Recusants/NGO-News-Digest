@@ -1,0 +1,344 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}Manage Team Members{% endblock %}
+
+{% block extra_head %}
+<style>
+    .team-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+    
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+    }
+    
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+    
+    .team-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+    
+    .team-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .team-header {
+        background: #007bff;
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .team-initials {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: bold;
+    }
+    
+    .team-content {
+        padding: 25px;
+    }
+    
+    .team-name {
+        font-size: 1.3rem;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    
+    .team-position {
+        color: #007bff;
+        font-weight: 500;
+        margin-bottom: 15px;
+    }
+    
+    .team-status {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin-bottom: 15px;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .team-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+    }
+    
+    .btn-edit {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-add {
+        background: #28a745;
+        color: white;
+        padding: 12px 25px;
+        border-radius: 5px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .add-section {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-top: 40px;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+    
+    .message {
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="team-container">
+    <div class="header-section">
+        <h1>Manage Team Members</h1>
+        <a href="{% url 'about_page' %}" 
+           style="color: #007bff; text-decoration: none; font-size: 1.1rem;">
+            👁️ View Live Page
+        </a>
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Current Team Members -->
+    <h2 style="margin-bottom: 25px;">Current Team ({{ team_members.count }}/5)</h2>
+    
+    {% if team_members %}
+    <div class="team-grid">
+        {% for member in team_members %}
+        <div class="team-card">
+            <div class="team-header">
+                <div class="team-initials">
+                    {{ member.user.first_name|first }}{{ member.user.last_name|first }}
+                </div>
+                <div style="font-size: 1.1rem; font-weight: bold;">{{ member.user.get_full_name }}</div>
+            </div>
+            
+            <div class="team-content">
+                <div class="team-name">{{ member.user.get_full_name }}</div>
+                <div class="team-position">{{ member.position }}</div>
+                
+                <div class="team-status {% if member.is_active %}status-active{% else %}status-inactive{% endif %}">
+                    {% if member.is_active %}Active{% else %}Inactive{% endif %}
+                </div>
+                
+                {% if member.bio %}
+                <p style="color: #666; font-size: 0.95rem; line-height: 1.6; margin: 15px 0;">
+                    {{ member.bio|truncatewords:30 }}
+                </p>
+                {% endif %}
+                
+                <div class="team-actions">
+                    <a href="{% url 'edit_team_member' member.user.id %}" class="btn btn-edit">
+                        ✏️ Edit
+                    </a>
+                    <a href="{% url 'delete_team_member' member.user.id %}" 
+                       class="btn btn-delete"
+                       onclick="return confirm('Remove {{ member.user.get_full_name }} from team?')">
+                        🗑️ Remove
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div style="font-size: 60px; margin-bottom: 20px;">👥</div>
+        <h3>No Team Members Yet</h3>
+        <p style="color: #666; margin: 10px 0 30px 0;">Add your first team member below</p>
+    </div>
+    {% endif %}
+    
+    <!-- Add New Team Member -->
+    <div class="add-section">
+        <h2 style="margin-bottom: 25px;">Add New Team Member</h2>
+        
+        <form method="POST" action="{% url 'add_team_member' %}">
+            {% csrf_token %}
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Select Staff User *</label>
+                    <select name="user_id" class="form-control" required>
+                        <option value="">-- Select User --</option>
+                        {% for user in staff_users %}
+                        <option value="{{ user.id }}">
+                            {{ user.get_full_name }} ({{ user.username }})
+                        </option>
+                        {% empty %}
+                        <option value="">No available staff users</option>
+                        {% endfor %}
+                    </select>
+                    <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                        Only active staff users without team profiles are shown
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Position *</label>
+                    <input type="text" name="position" class="form-control" 
+                           placeholder="e.g., Editor-in-Chief" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Bio</label>
+                <textarea name="bio" class="form-control" rows="4" 
+                          placeholder="Brief description about this team member..."></textarea>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Twitter URL</label>
+                    <input type="url" name="twitter_url" class="form-control" 
+                           placeholder="https://twitter.com/username">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">LinkedIn URL</label>
+                    <input type="url" name="linkedin_url" class="form-control" 
+                           placeholder="https://linkedin.com/in/username">
+                </div>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Display Order</label>
+                    <input type="number" name="display_order" class="form-control" 
+                           value="0" min="0">
+                    <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                        Lower numbers appear first
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="is_active" id="is_active" checked>
+                        <label for="is_active" class="form-label" style="margin: 0;">Active</label>
+                    </div>
+                    <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                        Only active members appear on the about page
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="submit" class="btn-add">➕ Add Team Member</button>
+            </div>
+        </form>
+    </div>
+    
+    {% if team_members.count >= 5 %}
+    <div style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 5px; margin-top: 30px;">
+        ⚠️ <strong>Maximum team members reached (5/5)</strong><br>
+        You cannot add more team members. Make some members inactive or remove them to add new ones.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

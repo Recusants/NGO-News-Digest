@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 mb-3">💼 Job Vacancies</h1>
+            <p class="text-muted">Find your next career opportunity</p>
+        </div>
+        <div class="col-auto">
+            <form method="GET" class="d-flex">
+                <input type="text" name="q" class="form-control me-2" 
+                       placeholder="Search vacancies..." value="{{ request.GET.q|default:'' }}">
+                <button class="btn btn-outline-red" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Type Filter -->
+    <div class="mb-4">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'vacancy_list' %}" 
+               class="badge {% if not request.GET.type %}bg-red text-white{% else %}bg-red-light text-red{% endif %} p-2">
+                All Types
+            </a>
+            {% for type_key, type_name in vacancy_types %}
+            <a href="{% url 'vacancy_list' %}?type={{ type_key }}" 
+               class="badge {% if request.GET.type == type_key %}bg-red text-white{% else %}bg-red-light text-red{% endif %} p-2">
+                {{ type_name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Vacancies Container -->
+    <div id="vacanciesContainer" class="row">
+        <!-- Initial vacancies will be loaded via AJAX -->
+    </div>
+    
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="text-center py-5">
+        <div class="spinner-border text-red" role="status">
+            <span class="visually-hidden">Loading vacancies...</span>
+        </div>
+    </div>
+    
+    <!-- No Results Message -->
+    <div id="noResults" class="text-center py-5" style="display: none;">
+        <i class="fas fa-briefcase fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No vacancies found</h4>
+        <p>Try a different search term or check back later.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let isLoading = false;
+    let currentPage = 1;
+    let hasMore = true;
+    
+    // Load initial vacancies
+    loadVacancies();
+    
+    function loadVacancies() {
+        if (isLoading || !hasMore) return;
+        
+        isLoading = true;
+        
+        let queryString = `?page=${currentPage}`;
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.get('type')) queryString += `&type=${urlParams.get('type')}`;
+        if (urlParams.get('q')) queryString += `&q=${encodeURIComponent(urlParams.get('q'))}`;
+        if (urlParams.get('tag')) queryString += `&tag=${urlParams.get('tag')}`;
+        
+        fetch(`{% url "load_more_vacancies" %}${queryString}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            isLoading = false;
+            $('#loadingIndicator').hide();
+            
+            if (currentPage === 1 && data.vacancies.length === 0) {
+                $('#noResults').show();
+                return;
+            }
+            
+            appendVacancies(data.vacancies);
+            hasMore = data.has_next;
+            currentPage++;
+            
+            if (!hasMore) {
+                $('#loadingIndicator').hide();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading vacancies:', error);
+            isLoading = false;
+            $('#loadingIndicator').hide();
+            $('#noResults').show();
+        });
+    }
+    
+    function appendVacancies(vacancies) {
+        const container = $('#vacanciesContainer');
+        
+        vacancies.forEach(vacancy => {
+            const vacancyHtml = `
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 ${vacancy.deadline_passed ? 'opacity-75' : ''}">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start mb-3">
+                                ${vacancy.company_logo_url ? `
+                                    <img src="${vacancy.company_logo_url}" 
+                                         class="rounded me-3" 
+                                         alt="${vacancy.company}"
+                                         style="width: 60px; height: 60px; object-fit: contain;">
+                                ` : ''}
+                                <div>
+                                    <h5 class="card-title mb-1">${vacancy.title}</h5>
+                                    <p class="card-text text-muted mb-1">
+                                        <i class="fas fa-building me-1"></i>${vacancy.company}
+                                    </p>
+                                </div>
+                            </div>
+                            <p class="card-text">
+                                <i class="fas fa-map-marker-alt me-1 text-red"></i>${vacancy.location}
+                            </p>
+                            <div class="mb-3">
+                                ${vacancy.tags.map(tag => `
+                                    <span class="badge bg-red-light text-red me-1">${tag.name}</span>
+                                `).join('')}
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Apply by: ${vacancy.application_deadline}
+                                </small>
+                                <a href="${vacancy.url}" class="btn btn-sm btn-outline-red">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.append(vacancyHtml);
+        });
+    }
+    
+    $(window).scroll(function() {
+        if ($(window).scrollTop() + $(window).height() >= $(document).height() - 500) {
+            loadVacancies();
+        }
+    });
+});
+</script>
+{% endblock %}

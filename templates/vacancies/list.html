@@ -1,0 +1,633 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}Vacancies - NGO News Digest{% endblock %}
+
+{% block extra_head %}
+
+{% include 'partials/header.html' %}
+    <meta name="description" content="Browse NGO job vacancies and career opportunities">
+    <style>
+        /* Vacancies Page Specific Styles */
+        .vacancies-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing-xl) 0;
+        }
+        
+        .page-header {
+            margin-bottom: var(--spacing-2xl);
+            text-align: center;
+        }
+        
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        /* Filters */
+        .filters-section {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-2xl);
+            border: 1px solid var(--border-color);
+        }
+        
+        .filters-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+        
+        .filter-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        
+        .filter-select, .filter-input {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--white);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all var(--transition-fast);
+        }
+        
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px rgba(209, 0, 0, 0.1);
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+        }
+        
+        /* Vacancies Grid */
+        .vacancies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-2xl);
+        }
+        
+        .vacancy-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-normal);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .vacancy-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px var(--shadow-color);
+            border-color: var(--primary-red);
+        }
+        
+        .vacancy-card.featured {
+            border-left: 4px solid var(--primary-red);
+            background: linear-gradient(135deg, rgba(209, 0, 0, 0.05) 0%, rgba(209, 0, 0, 0.02) 100%);
+        }
+        
+        .vacancy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .vacancy-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            line-height: 1.4;
+        }
+        
+        .vacancy-badge {
+            background: var(--primary-red);
+            color: white;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .vacancy-organization {
+            color: var(--primary-red);
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .vacancy-details {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+        
+        .vacancy-description {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: var(--spacing-lg);
+            flex: 1;
+        }
+        
+        .vacancy-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .vacancy-deadline {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .vacancy-deadline.urgent {
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-2xl);
+        }
+        
+        .page-link {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+        }
+        
+        .page-link:hover {
+            border-color: var(--primary-red);
+            color: var(--primary-red);
+        }
+        
+        .page-link.active {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+        }
+        
+        .page-link.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-2xl);
+            color: var(--text-secondary);
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 2px dashed var(--border-color);
+            grid-column: 1 / -1;
+        }
+        
+        /* Loading State */
+        .loading {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-2xl);
+            color: var(--text-secondary);
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .page-title {
+                font-size: 2rem;
+            }
+            
+            .vacancies-grid {
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .vacancies-container {
+                padding: var(--spacing-lg) var(--spacing-md);
+            }
+            
+            .page-title {
+                font-size: 1.75rem;
+            }
+            
+            .filters-section {
+                padding: var(--spacing-lg);
+            }
+            
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .vacancies-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .vacancy-header {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+                align-items: flex-start;
+            }
+            
+            .vacancy-footer {
+                flex-direction: column;
+                gap: var(--spacing-md);
+                align-items: flex-start;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+            
+            .filter-actions {
+                flex-direction: column;
+            }
+            
+            .pagination {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="vacancies-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">NGO Vacancies</h1>
+            <p class="page-subtitle">
+                Find job opportunities, internships, and volunteering positions in the NGO sector
+            </p>
+        </div>
+        
+        <!-- Filters -->
+        <div class="filters-section">
+            <h3 class="filters-title">Filter Vacancies</h3>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Job Type</label>
+                    <select class="filter-select" id="jobTypeFilter">
+                        <option value="">All Types</option>
+                        <option value="full-time">Full Time</option>
+                        <option value="part-time">Part Time</option>
+                        <option value="contract">Contract</option>
+                        <option value="internship">Internship</option>
+                        <option value="volunteer">Volunteer</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Location</label>
+                    <select class="filter-select" id="locationFilter">
+                        <option value="">All Locations</option>
+                        <option value="remote">Remote</option>
+                        <option value="onsite">On-site</option>
+                        <option value="hybrid">Hybrid</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Category</label>
+                    <select class="filter-select" id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="health">Health</option>
+                        <option value="education">Education</option>
+                        <option value="environment">Environment</option>
+                        <option value="human-rights">Human Rights</option>
+                        <option value="development">Development</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Sort By</label>
+                    <select class="filter-select" id="sortFilter">
+                        <option value="newest">Newest First</option>
+                        <option value="deadline">Deadline (Soonest)</option>
+                        <option value="featured">Featured First</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button class="btn" onclick="applyFilters()">
+                    <i class="fas fa-filter"></i> Apply Filters
+                </button>
+                <button class="btn btn-secondary" onclick="clearFilters()">
+                    <i class="fas fa-times"></i> Clear All
+                </button>
+            </div>
+        </div>
+        
+        <!-- Vacancies Grid -->
+        <div class="vacancies-grid" id="vacanciesGrid">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Loading vacancies...</p>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination" id="pagination">
+            <!-- Pagination will be loaded via JavaScript -->
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        $(document).ready(function() {
+            loadVacancies();
+            
+            // Load saved filters from localStorage
+            loadSavedFilters();
+            
+            // Apply filters when select changes
+            $('#jobTypeFilter, #locationFilter, #categoryFilter, #sortFilter').change(function() {
+                // Save filters to localStorage
+                saveFilters();
+                // Apply filters after a short delay
+                setTimeout(applyFilters, 300);
+            });
+        });
+        
+        let currentPage = 1;
+        let totalPages = 1;
+        
+        function loadVacancies(page = 1) {
+            currentPage = page;
+            const container = $('#vacanciesGrid');
+            
+            // Show loading state
+            container.html(`
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading vacancies...</p>
+                </div>
+            `);
+            
+            // Get filter values
+            const filters = getCurrentFilters();
+            
+            // Build query string
+            const queryParams = new URLSearchParams({
+                page: page,
+                ...filters
+            }).toString();
+            
+            // Load vacancies via AJAX
+            $.ajax({
+                url: '{% url "get_vacancies" %}' + '?' + queryParams,
+                method: 'GET',
+                success: function(response) {
+                    displayVacancies(response.vacancies || []);
+                    updatePagination(response.pagination || {});
+                },
+                error: function() {
+                    showError('Failed to load vacancies. Please try again.');
+                }
+            });
+        }
+        
+        function displayVacancies(vacancies) {
+            const container = $('#vacanciesGrid');
+            
+            if (!vacancies || vacancies.length === 0) {
+                container.html(`
+                    <div class="empty-state">
+                        <i class="far fa-briefcase"></i>
+                        <h3>No Vacancies Found</h3>
+                        <p>No job vacancies match your current filters. Try adjusting your search criteria.</p>
+                        <button onclick="clearFilters()" class="btn" style="margin-top: var(--spacing-lg);">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </button>
+                    </div>
+                `);
+                return;
+            }
+            
+            let html = '';
+            vacancies.forEach(vacancy => {
+                const isUrgent = vacancy.days_left <= 3;
+                const isFeatured = vacancy.is_featured;
+                
+                html += `
+                    <div class="vacancy-card ${isFeatured ? 'featured' : ''}">
+                        <div class="vacancy-header">
+                            <h3 class="vacancy-title">${vacancy.title}</h3>
+                            <span class="vacancy-badge">${vacancy.job_type || 'Full-time'}</span>
+                        </div>
+                        
+                        <p class="vacancy-organization">${vacancy.organization}</p>
+                        
+                        <div class="vacancy-details">
+                            <span class="detail-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                ${vacancy.location || 'Location not specified'}
+                            </span>
+                            <span class="detail-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                ${vacancy.deadline ? 'Deadline: ' + formatDate(vacancy.deadline) : 'Open until filled'}
+                            </span>
+                            ${vacancy.salary ? `
+                                <span class="detail-item">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    ${vacancy.salary}
+                                </span>
+                            ` : ''}
+                        </div>
+                        
+                        <p class="vacancy-description">
+                            ${vacancy.description || vacancy.summary || 'No description available.'}
+                        </p>
+                        
+                        <div class="vacancy-footer">
+                            <span class="vacancy-deadline ${isUrgent ? 'urgent' : ''}">
+                                <i class="fas fa-hourglass-half"></i>
+                                ${isUrgent ? 'Urgent: ' : ''}${vacancy.days_left || 'N/A'} days left
+                            </span>
+                            <a href="/vacancy/${vacancy.id}/" class="btn" style="padding: 8px 16px;">
+                                View Details <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.html(html);
+        }
+        
+        function updatePagination(pagination) {
+            const container = $('#pagination');
+            const { current_page = 1, total_pages = 1 } = pagination;
+            
+            totalPages = total_pages;
+            
+            if (total_pages <= 1) {
+                container.html('');
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            if (current_page > 1) {
+                html += `<a href="#" class="page-link" onclick="loadVacancies(${current_page - 1})">&laquo; Previous</a>`;
+            } else {
+                html += `<span class="page-link disabled">&laquo; Previous</span>`;
+            }
+            
+            // Page numbers
+            const startPage = Math.max(1, current_page - 2);
+            const endPage = Math.min(total_pages, current_page + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === current_page) {
+                    html += `<span class="page-link active">${i}</span>`;
+                } else {
+                    html += `<a href="#" class="page-link" onclick="loadVacancies(${i})">${i}</a>`;
+                }
+            }
+            
+            // Next button
+            if (current_page < total_pages) {
+                html += `<a href="#" class="page-link" onclick="loadVacancies(${current_page + 1})">Next &raquo;</a>`;
+            } else {
+                html += `<span class="page-link disabled">Next &raquo;</span>`;
+            }
+            
+            container.html(html);
+        }
+        
+        function getCurrentFilters() {
+            return {
+                job_type: $('#jobTypeFilter').val(),
+                location: $('#locationFilter').val(),
+                category: $('#categoryFilter').val(),
+                sort: $('#sortFilter').val()
+            };
+        }
+        
+        function applyFilters() {
+            saveFilters();
+            loadVacancies(1); // Reset to first page when applying filters
+        }
+        
+        function clearFilters() {
+            $('#jobTypeFilter').val('');
+            $('#locationFilter').val('');
+            $('#categoryFilter').val('');
+            $('#sortFilter').val('newest');
+            
+            saveFilters();
+            loadVacancies(1);
+        }
+        
+        function saveFilters() {
+            const filters = getCurrentFilters();
+            localStorage.setItem('vacancyFilters', JSON.stringify(filters));
+        }
+        
+        function loadSavedFilters() {
+            const savedFilters = localStorage.getItem('vacancyFilters');
+            if (savedFilters) {
+                const filters = JSON.parse(savedFilters);
+                $('#jobTypeFilter').val(filters.job_type || '');
+                $('#locationFilter').val(filters.location || '');
+                $('#categoryFilter').val(filters.category || '');
+                $('#sortFilter').val(filters.sort || 'newest');
+            }
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
+        function showError(message) {
+            $('#vacanciesGrid').html(`
+                <div class="empty-state" style="border-color: var(--primary-red);">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--primary-red);"></i>
+                    <h3>Error Loading Vacancies</h3>
+                    <p>${message}</p>
+                    <button onclick="loadVacancies()" class="btn" style="margin-top: var(--spacing-lg);">
+                        <i class="fas fa-redo"></i> Try Again
+                    </button>
+                </div>
+            `);
+        }
+        
+        // Make functions available globally
+        window.loadVacancies = loadVacancies;
+        window.applyFilters = applyFilters;
+        window.clearFilters = clearFilters;
+    </script>
+{% endblock %}

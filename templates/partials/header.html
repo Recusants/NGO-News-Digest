@@ -1,0 +1,305 @@
+<!-- header.html - Clean version with NO redundant styling -->
+<header class="header">
+    <div class="nav-container">
+        <!-- Logo -->
+        <a href="{% url 'home' %}" class="logo" aria-label="NGO News Digest Home">
+            <img src="/static/images/logo.png" alt="NGO News Digest Logo" class="logo-img" 
+                 onerror="this.onerror=null; this.style.display='none';">
+            <span class="logo-text">NGO News Digest</span>
+        </a>
+
+        <!-- Main Navigation -->
+        <nav aria-label="Main navigation">
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="{% url 'home' %}" class="nav-link" data-page="home">
+                    <i class="fas fa-home" aria-hidden="true"></i> Home
+                </a></li>
+                <li><a href="{% url 'stories' %}" class="nav-link" data-page="stories">
+                    <i class="fas fa-newspaper" aria-hidden="true"></i> Stories
+                </a></li>
+                <li><a href="{% url 'vacancy_list' %}" class="nav-link" data-page="vacancies">
+                    <i class="fas fa-briefcase" aria-hidden="true"></i> Vacancies
+                </a></li>
+                <li><a href="{% url 'notice_list' %}" class="nav-link" data-page="notices">
+                    <i class="fas fa-bullhorn" aria-hidden="true"></i> Notices
+                </a></li>
+                <li><a href="{% url 'about_page' %}" class="nav-link" data-page="about">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i> About
+                </a></li>
+                <li><a href="{% url 'contact_page' %}" class="nav-link" data-page="contact">
+                    <i class="fas fa-envelope" aria-hidden="true"></i> Contact
+                </a></li>
+            </ul>
+        </nav>
+
+        <!-- User Actions -->
+        <div class="nav-actions">
+            {% if user.is_authenticated %}
+            <div class="user-dropdown">
+                <button class="user-menu-btn" id="userMenuBtn" aria-label="User menu">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="sr-only">User menu</span>
+                </button>
+                <div class="dropdown-menu" id="userDropdown">
+                    <span class="dropdown-header">Hello, {{ user.username|default:"User" }}</span>
+                    
+                    {% if user.is_staff %}
+                    <a href="{% url 'admin:index' %}" class="dropdown-item" target="_blank">
+                        <i class="fas fa-cog"></i> Admin Panel
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    {% endif %}
+                    
+                    <a href="{% url 'profile' %}" class="dropdown-item">
+                        <i class="fas fa-user"></i> Profile
+                    </a>
+                    <a href="{% url 'saved_stories' %}" class="dropdown-item">
+                        <i class="fas fa-bookmark"></i> Saved Stories
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <form method="post" action="{% url 'logout' %}" style="display: none;" id="logoutForm">
+                        {% csrf_token %}
+                    </form>
+                    <a href="#" class="dropdown-item logout" onclick="document.getElementById('logoutForm').submit(); return false;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="auth-buttons">
+                <a href="{% url 'login' %}" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.9rem;">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+                <a href="{% url 'register' %}" class="btn" style="padding: 8px 16px; font-size: 0.9rem;">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Theme Toggle -->
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+                <span class="sr-only">Toggle theme</span>
+            </button>
+
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- ONLY minimal additional CSS not in base.html -->
+<style>
+    /* ONLY styles that are NOT already in base.css */
+    .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+    
+    .user-dropdown {
+        position: relative;
+    }
+    
+    .user-menu-btn {
+        background: none;
+        border: none;
+        color: var(--text-color);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: var(--spacing-xs);
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition-fast);
+    }
+    
+    .user-menu-btn:hover {
+        background-color: rgba(209, 0, 0, 0.1);
+        color: var(--primary-red);
+    }
+    
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        min-width: 220px;
+        z-index: 1000;
+        display: none;
+        margin-top: var(--spacing-xs);
+        overflow: hidden;
+    }
+    
+    .dropdown-menu.show {
+        display: block;
+        animation: fadeIn 0.2s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .dropdown-header {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-weight: 600;
+        color: var(--text-color);
+        border-bottom: 1px solid var(--border-color);
+        display: block;
+        background: rgba(209, 0, 0, 0.05);
+    }
+    
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-sm) var(--spacing-md);
+        color: var(--text-color);
+        text-decoration: none;
+        transition: all var(--transition-fast);
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+    
+    .dropdown-item:hover {
+        background-color: rgba(209, 0, 0, 0.1);
+        color: var(--primary-red);
+    }
+    
+    .dropdown-item.logout {
+        color: var(--primary-red);
+        font-weight: 600;
+    }
+    
+    .dropdown-divider {
+        height: 1px;
+        background-color: var(--border-color);
+        margin: var(--spacing-xs) 0;
+    }
+    
+    .auth-buttons {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+    
+    /* Responsive adjustments ONLY */
+    @media (max-width: 768px) {
+        .auth-buttons {
+            display: none;
+        }
+        
+        .user-menu-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 1.3rem;
+        }
+        
+        .dropdown-menu {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            margin: 0;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 10px 20px var(--shadow-color);
+        }
+        
+        .nav-actions {
+            gap: var(--spacing-sm);
+        }
+    }
+</style>
+
+<script>
+    // User dropdown functionality ONLY
+    document.addEventListener('DOMContentLoaded', function() {
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        if (userMenuBtn && userDropdown) {
+            userMenuBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!userDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) {
+                    userDropdown.classList.remove('show');
+                }
+            });
+            
+            // Close dropdown when clicking a dropdown item
+            userDropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    userDropdown.classList.remove('show');
+                });
+            });
+        }
+        
+        // Set active navigation link
+        function setActiveNavLink() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                const linkPath = link.getAttribute('href');
+                const cleanCurrentPath = currentPath.replace(/\/$/, '');
+                const cleanLinkPath = linkPath.replace(/\/$/, '');
+                
+                if (cleanCurrentPath === cleanLinkPath || 
+                    (cleanCurrentPath === '' && cleanLinkPath === '') ||
+                    (cleanCurrentPath.startsWith(cleanLinkPath) && cleanLinkPath !== '')) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+        
+        // Set active nav link on page load
+        setActiveNavLink();
+        
+        // Update active nav link when navigating
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    });
+    
+    // Function to update active nav link
+    window.updateActiveNavLink = function() {
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(link => {
+            const linkPath = link.getAttribute('href');
+            const cleanCurrentPath = currentPath.replace(/\/$/, '');
+            const cleanLinkPath = linkPath.replace(/\/$/, '');
+            
+            if (cleanCurrentPath === cleanLinkPath || 
+                (cleanCurrentPath === '' && cleanLinkPath === '') ||
+                (cleanCurrentPath.startsWith(cleanLinkPath) && cleanLinkPath !== '')) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    };
+</script>

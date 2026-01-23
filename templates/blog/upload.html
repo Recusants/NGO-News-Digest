@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Blog Post</title>
+    {{ form.media }}  <!-- Loads CKEditor assets -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .upload-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        input[type="text"], 
+        input[type="file"], 
+        select {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+        .upload-btn {
+            background: #007bff;
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .upload-btn:hover {
+            background: #0056b3;
+        }
+        .upload-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        #message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+            font-size: 14px;
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb;
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb;
+        }
+        .form-note {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        .form-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .form-section h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+        .status-options {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .status-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .status-option input[type="radio"] {
+            width: auto;
+        }
+        .status-label {
+            font-weight: normal;
+            margin-bottom: 0;
+        }
+        .publish-note {
+            background: #e7f3ff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #004085;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <h1>📝 Upload Blog Post</h1>
+        
+        <form id="postForm">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <h2>Basic Information</h2>
+
+                <div class="form-group">
+                    <label for="id_thumbnail">Thumbnail Image</label>
+                    {{ form.thumbnail }}
+                    <div class="form-note">
+                        Optional: Upload a thumbnail image (recommended: 1200x630px). 
+                        If not provided, the first image from your content will be used.
+                    </div>
+                </div>
+                
+                {% if form.image %}
+                <div class="form-group">
+                    <label for="id_image">Featured Image</label>
+                    {{ form.image }}
+                    <div class="form-note">Optional: Upload a featured image for your post</div>
+                </div>
+                {% endif %}
+                
+                {% if form.category %}
+                <div class="form-group">
+                    <label for="id_category">Category</label>
+                    {{ form.category }}
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-section">
+                <h2>Content</h2>
+                
+                <div class="form-group">
+                    <label for="id_content">Post Content *</label>
+                    {{ form.content }}
+                    <div class="form-note">Write your blog post content using the editor above</div>
+                    <div id="contentError" style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none;">
+                        ⚠️ Please enter some content in the editor
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2>Publishing Options</h2>
+                
+                {% if form.status %}
+                <div class="form-group">
+                    <label>Post Status *</label>
+                    <div class="status-options">
+                        {% for radio in form.status %}
+                        <div class="status-option">
+                            {{ radio.tag }}
+                            <label for="{{ radio.id_for_label }}" class="status-label">
+                                {{ radio.choice_label }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="publish-note">
+                        💡 <strong>Note:</strong> Choose "Published" to make the post live immediately. 
+                        Subscribers will be notified when the post is published.
+                    </div>
+                </div>
+                {% else %}
+                <input type="hidden" name="status" value="PUBLISHED">
+                {% endif %}
+            </div>
+            
+            <button type="button" id="uploadBtn" class="upload-btn" onclick="uploadPost()">
+                <span id="btnText">🚀 Upload & Publish Post</span>
+                <div id="spinner" class="spinner"></div>
+            </button>
+            
+            <div id="message"></div>
+        </form>
+    </div>
+    
+    <script>
+    // Track if form is being submitted to prevent double clicks
+    let isSubmitting = false;
+    
+    // Function to force CKEditor to update its textarea
+    function updateCKEditorData() {
+        if (typeof CKEDITOR !== 'undefined') {
+            // Update all CKEditor instances
+            for (var instance in CKEDITOR.instances) {
+                CKEDITOR.instances[instance].updateElement();
+            }
+        }
+        return true;
+    }
+    
+    function uploadPost() {
+        // Prevent double submission
+        if (isSubmitting) {
+            console.log("Already submitting, please wait...");
+            return;
+        }
+        
+        // FIRST: Force CKEditor to update the textarea content
+        updateCKEditorData();
+        
+        const uploadBtn = document.getElementById('uploadBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('spinner');
+        const messageDiv = document.getElementById('message');
+        const contentError = document.getElementById('contentError');
+        
+        // Hide previous errors
+        messageDiv.style.display = 'none';
+        contentError.style.display = 'none';
+        
+        // Get form data
+        const form = document.getElementById('postForm');
+        const formData = new FormData(form);
+        
+        // Get values for validation
+        const title = formData.get('title') || '';
+        const content = formData.get('content') || '';
+        
+        // Validate required fields
+        let hasError = false;
+        
+        if (!title.trim()) {
+            showMessage('❌ Please enter a title for the post', 'error');
+            document.querySelector('[name="title"]').focus();
+            return;
+        }
+        
+        if (!content.trim()) {
+            contentError.style.display = 'block';
+            contentError.textContent = '⚠️ Please enter some content in the editor';
+            hasError = true;
+            
+            // Focus on CKEditor if available
+            if (typeof CKEDITOR !== 'undefined' && CKEDITOR.instances.id_content) {
+                CKEDITOR.instances.id_content.focus();
+            }
+            
+            showMessage('❌ Please enter content for the post', 'error');
+            return;
+        }
+        
+        if (hasError) return;
+        
+        // Show loading state
+        isSubmitting = true;
+        uploadBtn.disabled = true;
+        btnText.textContent = 'Uploading...';
+        spinner.style.display = 'block';
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        console.log("Submitting form with content length:", content.length);
+        
+        // Send request
+        fetch('{% url "upload_blog_post" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Response received:", data);
+            
+            if (data.success) {
+                showMessage(`✅ ${data.message}`, 'success');
+                
+                // Redirect to success page after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '{% url "success_page" %}';
+                }, 2000);
+                
+            } else {
+                // Show errors
+                let errorHtml = '❌ Please fix the following errors:<br><ul>';
+                
+                if (typeof data.errors === 'object') {
+                    for (const field in data.errors) {
+                        const fieldLabel = field.charAt(0).toUpperCase() + field.slice(1);
+                        const errorMsg = Array.isArray(data.errors[field]) 
+                            ? data.errors[field][0] 
+                            : data.errors[field];
+                        errorHtml += `<li><strong>${fieldLabel}:</strong> ${errorMsg}</li>`;
+                    }
+                } else if (data.errors) {
+                    errorHtml += `<li>${data.errors}</li>`;
+                } else {
+                    errorHtml += '<li>An unknown error occurred</li>';
+                }
+                
+                errorHtml += '</ul>';
+                showMessage(errorHtml, 'error');
+                
+                // Re-enable button
+                resetButtonState();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage(`❌ Network error: ${error.message}`, 'error');
+            resetButtonState();
+        });
+    }
+    
+    function showMessage(message, type) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.innerHTML = message;
+        messageDiv.className = type;
+        messageDiv.style.display = 'block';
+        
+        // Scroll to message
+        messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    
+    function resetButtonState() {
+        isSubmitting = false;
+        const uploadBtn = document.getElementById('uploadBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('spinner');
+        
+        uploadBtn.disabled = false;
+        btnText.textContent = '🚀 Upload & Publish Post';
+        spinner.style.display = 'none';
+    }
+    
+    // Allow form submission with Enter key (except in textareas)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.target.matches('textarea, [contenteditable="true"]')) {
+            e.preventDefault();
+            uploadPost();
+        }
+    });
+    
+    // Initialize CKEditor with auto-update on blur
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("Upload form initialized");
+        
+        // Make sure status is set to PUBLISHED by default
+        const statusRadios = document.querySelectorAll('[name="status"]');
+        if (statusRadios.length > 0) {
+            let hasPublished = false;
+            statusRadios.forEach(radio => {
+                if (radio.value === 'PUBLISHED' && !radio.checked) {
+                    radio.checked = true;
+                    hasPublished = true;
+                }
+            });
+            
+            if (!hasPublished && statusRadios.length > 0) {
+                statusRadios[0].checked = true;
+            }
+        }
+        
+        // Setup CKEditor to auto-update on blur
+        if (typeof CKEDITOR !== 'undefined') {
+            CKEDITOR.on('instanceReady', function(event) {
+                event.editor.on('blur', function() {
+                    event.editor.updateElement();
+                    console.log("CKEditor content updated on blur");
+                });
+                
+                event.editor.on('change', function() {
+                    // Hide content error when user starts typing
+                    document.getElementById('contentError').style.display = 'none';
+                });
+            });
+        }
+        
+        // Also update CKEditor when user interacts with other fields
+        document.querySelectorAll('input, select').forEach(element => {
+            element.addEventListener('focus', function() {
+                updateCKEditorData();
+            });
+        });
+    });
+    
+    // Add a manual sync button for debugging (optional)
+    function manualSyncCKEditor() {
+        updateCKEditorData();
+        alert("CKEditor content synced to form!");
+        
+        // Show current content length
+        const content = document.querySelector('[name="content"]').value || '';
+        console.log("Content length after sync:", content.length);
+    }
+    </script>
+</body>
+</html>

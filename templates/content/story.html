@@ -1,0 +1,264 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}{{ story.title }}{% endblock %}
+
+{% block extra_head %}
+    <meta name="description" content="{{ story.snippet|default:"Read this story" }}">
+    <style>
+        /* Story Detail - Minimal additional styles */
+        .story-detail-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .story-header {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .story-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: var(--spacing-md);
+            line-height: 1.3;
+        }
+        
+        .story-meta {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-lg);
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+        
+        .story-author {
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+        
+        .story-featured-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: var(--radius-lg);
+            margin: var(--spacing-lg) 0;
+        }
+        
+        .story-content {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            margin: var(--spacing-xl) 0;
+        }
+        
+        .story-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            padding: var(--spacing-lg) 0;
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            margin: var(--spacing-xl) 0;
+        }
+        
+        /* Related Stories */
+        .related-stories {
+            margin-top: var(--spacing-2xl);
+            padding-top: var(--spacing-xl);
+            border-top: 2px solid var(--border-color);
+        }
+        
+        .related-stories h2 {
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .related-stories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+        }
+        
+        .related-story-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-fast);
+        }
+        
+        .related-story-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary-red);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .story-title {
+                font-size: 1.75rem;
+            }
+            
+            .story-featured-image {
+                height: 250px;
+            }
+            
+            .story-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-sm);
+            }
+            
+            .related-stories-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="story-detail-container">
+        <!-- Story Header -->
+        <div class="story-header">
+            <h1 class="story-title">{{ story.title }}</h1>
+            
+            <div class="story-meta">
+                {% if story.date_and_time %}
+                <div class="meta-item">
+                    <i class="far fa-calendar"></i>
+                    <span>{{ story.date_and_time }}</span>
+                </div>
+                {% endif %}
+                
+                {% if story.author %}
+                <div class="meta-item">
+                    <i class="far fa-user"></i>
+                    <span class="story-author">{{ story.author }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Featured Image -->
+        {% if story.image_url %}
+        <img src="{{ story.image_url }}" 
+             alt="{{ story.title }}" 
+             class="story-featured-image"
+             onerror="this.src='/static/default-story.jpg'">
+        {% endif %}
+        
+        <!-- Story Content -->
+        <div class="story-content">
+            {{ story.content|safe }}
+        </div>
+        
+        <!-- Story Actions -->
+        <div class="story-actions">
+            <button class="btn btn-secondary" onclick="shareStory()">
+                <i class="fas fa-share-alt"></i> Share
+            </button>
+            <button class="btn btn-secondary" onclick="saveStory()">
+                <i class="far fa-bookmark"></i> Save
+            </button>
+        </div>
+        
+        <!-- Related Stories -->
+        {% if related_stories %}
+        <div class="related-stories">
+            <h2 class="section-title">Related Stories</h2>
+            <div class="related-stories-grid">
+                {% for related_story in related_stories %}
+                <a href="{% url 'story' related_story.id %}" class="related-story-card">
+                    <h3 class="story-title" style="font-size: 1.1rem; margin-bottom: var(--spacing-sm);">
+                        {{ related_story.title }}
+                    </h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        {{ related_story.snippet|safe|truncatewords:30 }}
+                    </p>
+                    {% if related_story.date_and_time %}
+                    <div style="margin-top: var(--spacing-sm); color: var(--text-secondary); font-size: 0.85rem;">
+                        <i class="far fa-calendar"></i> {{ related_story.date_and_time }}
+                    </div>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        // Share Story Function
+        function shareStory() {
+            const title = document.querySelector('.story-title').textContent;
+            const url = window.location.href;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: 'Check out this story: ' + title,
+                    url: url
+                });
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(`${title}\n${url}`).then(() => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Link Copied!',
+                        text: 'Story link copied to clipboard',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        background: 'var(--card-bg)',
+                        color: 'var(--text-primary)'
+                    });
+                });
+            }
+        }
+        
+        // Save Story Function
+        async function saveStory() {
+            const storyId = window.location.pathname.split('/')[2];
+            
+            try {
+                const response = await fetchData('/api/save-story/', {
+                    method: 'POST',
+                    body: JSON.stringify({ story_id: storyId })
+                });
+                
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Story Saved!',
+                        text: 'Story added to your saved items',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        background: 'var(--card-bg)',
+                        color: 'var(--text-primary)'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Login Required',
+                        text: 'Please login to save stories',
+                        confirmButtonColor: 'var(--primary-red)'
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to save story. Please try again.',
+                    confirmButtonColor: 'var(--primary-red)'
+                });
+            }
+        }
+        
+        // Make functions available globally
+        window.shareStory = shareStory;
+        window.saveStory = saveStory;
+    </script>
+{% endblock %}

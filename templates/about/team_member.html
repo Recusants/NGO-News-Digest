@@ -1,0 +1,58 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}{{ team_member.user.get_full_name }} - NGO News Digest{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 60px auto; padding: 20px;">
+    <a href="{% url 'about_page' %}" style="color: #007bff; text-decoration: none; margin-bottom: 20px; display: inline-block;">
+        ← Back to Team
+    </a>
+    
+    <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); padding: 40px; text-align: center; color: white;">
+            <div style="width: 150px; height: 150px; border-radius: 50%; background: rgba(255,255,255,0.2); 
+                        margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 60px;">
+                {{ team_member.user.first_name|first }}{{ team_member.user.last_name|first }}
+            </div>
+            
+            <h1 style="margin: 0; font-size: 2.2rem;">{{ team_member.user.get_full_name }}</h1>
+            <p style="font-size: 1.2rem; opacity: 0.9; margin: 10px 0 0 0;">{{ team_member.position }}</p>
+        </div>
+        
+        <!-- Content -->
+        <div style="padding: 40px;">
+            {% if team_member.bio %}
+            <div style="margin-bottom: 40px;">
+                <h2 style="color: #333; margin-bottom: 20px;">About</h2>
+                <div style="color: #555; line-height: 1.8; font-size: 1.1rem;">
+                    {{ team_member.bio|safe|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Social Links -->
+            {% if team_member.twitter_url or team_member.linkedin_url %}
+            <div>
+                <h2 style="color: #333; margin-bottom: 20px;">Connect</h2>
+                <div style="display: flex; gap: 15px;">
+                    {% if team_member.twitter_url %}
+                    <a href="{{ team_member.twitter_url }}" target="_blank" 
+                       style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: #1da1f2; color: white; text-decoration: none; border-radius: 5px;">
+                        🐦 Twitter
+                    </a>
+                    {% endif %}
+                    
+                    {% if team_member.linkedin_url %}
+                    <a href="{{ team_member.linkedin_url }}" target="_blank" 
+                       style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; background: #0077b5; color: white; text-decoration: none; border-radius: 5px;">
+                        💼 LinkedIn
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

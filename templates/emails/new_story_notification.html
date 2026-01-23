@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #007bff; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f9f9f9; }
+        .story-title { color: #007bff; font-size: 20px; margin-bottom: 15px; }
+        .story-excerpt { color: #666; margin-bottom: 20px; }
+        .button { display: inline-block; background: #007bff; color: white; padding: 12px 24px; 
+                 text-decoration: none; border-radius: 4px; margin: 10px 0; }
+        .footer { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; 
+                 color: #666; font-size: 12px; }
+        .unsubscribe { color: #999; font-size: 11px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📰 NGO News Digest</h1>
+        </div>
+        
+        <div class="content">
+            <h2 class="story-title">{{ post.title }}</h2>
+            
+            <div class="story-excerpt">
+                {{ post.content|striptags|truncatewords:50 }}...
+            </div>
+            
+            <a href="{{ site_url }}/story/{{ post.id }}/" class="button">
+                Read Full Story
+            </a>
+            
+            <p>Thank you for subscribing to NGO News Digest!</p>
+        </div>
+        
+        <div class="footer">
+            <p>You're receiving this email because you subscribed to NGO News Digest.</p>
+            
+            <div class="unsubscribe">
+                <p>
+                    Don't want to receive these emails anymore? 
+                    <a href="{{ site_url }}/subscriptions/unsubscribe/?email=YOUR_EMAIL">Unsubscribe</a>
+                </p>
+                <p>© {% now "Y" %} NGO News Digest. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

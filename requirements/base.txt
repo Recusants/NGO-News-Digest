@@ -1,0 +1,7 @@
+Django>=5.2
+python-decouple
+dj-database-url
+whitenoise
+gunicorn
+psycopg2-binary
+django-ckeditor

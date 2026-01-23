@@ -1,0 +1,178 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}Unsubscribe from Newsletter{% endblock %}
+
+{% block content %}
+<style>
+    .unsubscribe-container {
+        max-width: 500px;
+        margin: 100px auto;
+        padding: 30px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .unsubscribe-header {
+        margin-bottom: 30px;
+    }
+    
+    .unsubscribe-header h1 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .unsubscribe-header p {
+        color: #666;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+    
+    .btn-unsubscribe {
+        width: 100%;
+        padding: 12px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .btn-unsubscribe:hover {
+        background: #c82333;
+    }
+    
+    .status-message {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 4px;
+        display: none;
+    }
+</style>
+
+<div class="unsubscribe-container">
+    <div class="unsubscribe-header">
+        <h1>Unsubscribe from Newsletter</h1>
+        <p>We're sorry to see you go!</p>
+    </div>
+    
+    <div class="form-group">
+        <label for="unsubscribe-email">Email Address</label>
+        <input type="email" id="unsubscribe-email" class="form-control" placeholder="Enter your email">
+    </div>
+    
+    <button type="button" id="unsubscribe-btn" class="btn-unsubscribe" onclick="unsubscribe()">
+        Unsubscribe
+    </button>
+    
+    <div id="unsubscribe-status" class="status-message"></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    $(document).ready(function() {
+        $('#unsubscribe-email').keypress(function(e) {
+            if (e.which === 13) {
+                unsubscribe();
+            }
+        });
+    });
+    
+    function unsubscribe() {
+        var email = document.getElementById('unsubscribe-email').value.trim().toLowerCase();
+        var statusDiv = document.getElementById('unsubscribe-status');
+        var unsubscribeBtn = document.getElementById('unsubscribe-btn');
+        
+        statusDiv.className = '';
+        statusDiv.innerHTML = '';
+        
+        var errors = "";
+        
+        if(email == "") {
+            errors = "Email field cannot be blank";
+        } else if(!isValidEmail(email)) {
+            errors = "Please enter a valid email address";
+        }
+        
+        if(errors != "") {
+            Swal.fire({
+                title: "Error",
+                text: errors,
+                type: "error"
+            });
+            return;
+        }
+        
+        var originalBtnText = unsubscribeBtn.innerHTML;
+        unsubscribeBtn.innerHTML = 'Processing...';
+        unsubscribeBtn.disabled = true;
+        
+        $.ajax({
+            url: "{% url 'unsubscribe' %}",
+            data: {
+                email: email
+            },
+            success: function(responseData) {
+                if(responseData.custome_status == "Error") {
+                    Swal.fire({
+                        title: "Error",
+                        text: responseData.message,
+                        type: "error"
+                    });
+                    statusDiv.className = 'status-error';
+                    statusDiv.innerHTML = responseData.message;
+                } else {
+                    Swal.fire({
+                        title: "Success",
+                        text: responseData.message,
+                        type: "success"
+                    });
+                    statusDiv.className = 'status-success';
+                    statusDiv.innerHTML = responseData.message;
+                    document.getElementById('unsubscribe-email').value = '';
+                }
+            },
+            error: function(responseData, error) {
+                Swal.fire({
+                    title: "Error",
+                    text: "An error occurred! " + error,
+                    type: "error"
+                });
+                statusDiv.className = 'status-error';
+                statusDiv.innerHTML = "An error occurred. Please try again.";
+            },
+            complete: function() {
+                unsubscribeBtn.innerHTML = originalBtnText;
+                unsubscribeBtn.disabled = false;
+            }
+        });
+    }
+    
+    function isValidEmail(email) {
+        var pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return pattern.test(email);
+    }
+</script>
+{% endblock %}

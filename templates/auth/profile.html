@@ -1,0 +1,42 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}Profile - NGO News Digest{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; padding: var(--spacing-2xl) 0;">
+    <h1 style="margin-bottom: var(--spacing-xl);">Your Profile</h1>
+    
+    <div class="card" style="margin-bottom: var(--spacing-xl);">
+        <h3 style="margin-bottom: var(--spacing-md);">Account Information</h3>
+        <div style="display: grid; gap: var(--spacing-md);">
+            <div>
+                <strong style="color: var(--text-secondary);">Username:</strong>
+                <p style="margin-top: var(--spacing-xs);">{{ user.username }}</p>
+            </div>
+            <div>
+                <strong style="color: var(--text-secondary);">Email:</strong>
+                <p style="margin-top: var(--spacing-xs);">{{ user.email|default:"Not set" }}</p>
+            </div>
+            <div>
+                <strong style="color: var(--text-secondary);">Member since:</strong>
+                <p style="margin-top: var(--spacing-xs);">{{ user.date_joined|date:"F j, Y" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3 style="margin-bottom: var(--spacing-md);">Quick Actions</h3>
+        <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+            <a href="{% url 'saved_stories' %}" class="btn">
+                <i class="fas fa-bookmark"></i> Saved Stories
+            </a>
+            <a href="#" class="btn btn-secondary">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+            <a href="{% url 'logout' %}" class="btn btn-secondary" style="background: rgba(209, 0, 0, 0.1); color: var(--primary-red);">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

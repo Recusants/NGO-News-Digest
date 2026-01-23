@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NGO News Digest{% endblock %}</title>
+    
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            /* Light Theme - Red & White */
+            --primary-red: #d10000;
+            --primary-red-dark: #b30000;
+            --primary-red-light: #ff3333;
+            --white: #ffffff;
+            --white-dark: #f8f9fa;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --card-bg: #ffffff;
+            --nav-bg: #ffffff;
+            --footer-bg: #1a1a1a;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+            
+            /* Spacing */
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            --spacing-2xl: 3rem;
+            
+            /* Border Radius */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-full: 9999px;
+            
+            /* Transitions */
+            --transition-fast: 150ms;
+            --transition-normal: 300ms;
+            --transition-slow: 500ms;
+        }
+        
+        [data-theme="dark"] {
+            /* Dark Theme - Red & Dark */
+            --primary-red: #ff3333;
+            --primary-red-dark: #ff6666;
+            --primary-red-light: #ff9999;
+            --white: #1a1a1a;
+            --white-dark: #0d0d0d;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --border-color: #333333;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --card-bg: #262626;
+            --nav-bg: #262626;
+            --footer-bg: #0d0d0d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: var(--white);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color var(--transition-normal), color var(--transition-normal);
+        }
+        
+        /* Header & Navigation */
+        .header {
+            background-color: var(--nav-bg);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 3px solid var(--primary-red);
+            box-shadow: 0 2px 10px var(--shadow-color);
+            transition: all var(--transition-normal);
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+        
+        /* Logo Section */
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            text-decoration: none;
+            transition: transform var(--transition-fast);
+        }
+        
+        .logo:hover {
+            transform: translateY(-1px);
+        }
+        
+        .logo-img {
+            height: 45px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-red);
+            letter-spacing: -0.5px;
+        }
+        
+        /* Navigation Menu */
+        .nav-menu {
+            display: flex;
+            gap: var(--spacing-md);
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        
+        .nav-link {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 600;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            position: relative;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-red);
+            background-color: rgba(209, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+        
+        .nav-link.active {
+            color: var(--primary-red);
+            background-color: rgba(209, 0, 0, 0.1);
+        }
+        
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 3px;
+            background-color: var(--primary-red);
+            border-radius: var(--radius-full);
+        }
+        
+        /* Theme Toggle */
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-full);
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            margin-left: var(--spacing-md);
+        }
+        
+        .theme-toggle:hover {
+            border-color: var(--primary-red);
+            color: var(--primary-red);
+            transform: rotate(15deg);
+        }
+        
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+        
+        .mobile-menu-btn:hover {
+            color: var(--primary-red);
+            background-color: rgba(209, 0, 0, 0.05);
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--spacing-2xl) var(--spacing-lg);
+            width: 100%;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: var(--footer-bg);
+            color: var(--text-primary);
+            margin-top: auto;
+            border-top: 3px solid var(--primary-red);
+        }
+        
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--spacing-2xl) var(--spacing-lg);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-2xl);
+        }
+        
+        .footer-section h3 {
+            color: var(--primary-red);
+            margin-bottom: var(--spacing-lg);
+            font-size: 1.2rem;
+            position: relative;
+            padding-bottom: var(--spacing-sm);
+        }
+        
+        .footer-section h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background-color: var(--primary-red);
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary-red);
+            transform: translateX(5px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding: var(--spacing-lg);
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* Newsletter Form */
+        .newsletter-form {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+        
+        .newsletter-input {
+            flex: 1;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background-color: var(--white-dark);
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+        }
+        
+        .newsletter-input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px rgba(209, 0, 0, 0.1);
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .nav-menu {
+                gap: var(--spacing-xs);
+            }
+            
+            .nav-link {
+                padding: var(--spacing-xs) var(--spacing-sm);
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .nav-menu {
+                position: fixed;
+                top: 70px;
+                left: 0;
+                right: 0;
+                background-color: var(--nav-bg);
+                flex-direction: column;
+                padding: var(--spacing-lg);
+                gap: var(--spacing-sm);
+                box-shadow: 0 10px 20px var(--shadow-color);
+                transform: translateY(-100%);
+                opacity: 0;
+                visibility: hidden;
+                transition: all var(--transition-normal);
+                z-index: 999;
+            }
+            
+            .nav-menu.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+            
+            .nav-link {
+                width: 100%;
+                justify-content: center;
+                padding: var(--spacing-md);
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: var(--spacing-xl);
+            }
+            
+            .footer-section h3::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .newsletter-form {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav-container {
+                padding: 0 var(--spacing-md);
+            }
+            
+            .main-content {
+                padding: var(--spacing-xl) var(--spacing-md);
+            }
+            
+            .logo-text {
+                font-size: 1.2rem;
+            }
+            
+            .logo-img {
+                height: 35px;
+            }
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(209, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary-red);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: var(--spacing-2xl) auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Utility Classes */
+        .btn {
+            background-color: var(--primary-red);
+            color: var(--white);
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            white-space: nowrap;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-red-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(209, 0, 0, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background-color: var(--white-dark);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--white);
+            border-color: var(--primary-red);
+            color: var(--primary-red);
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            box-shadow: 0 4px 6px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-normal);
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px var(--shadow-color);
+        }
+        
+        .section-title {
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xl);
+            font-size: 2rem;
+            position: relative;
+            padding-bottom: var(--spacing-md);
+            font-weight: 700;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background-color: var(--primary-red);
+            border-radius: var(--radius-full);
+        }
+        
+        .section-title.center::after {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-xl);
+        }
+        
+        .error-message {
+            background-color: rgba(209, 0, 0, 0.1);
+            border-left: 4px solid var(--primary-red);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin: var(--spacing-lg) 0;
+            color: var(--text-primary);
+        }
+        
+        .error-message i {
+            color: var(--primary-red);
+            margin-right: var(--spacing-sm);
+        }
+        
+        .success-message {
+            background-color: rgba(40, 167, 69, 0.1);
+            border-left: 4px solid var(--success);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin: var(--spacing-lg) 0;
+            color: var(--text-primary);
+        }
+        
+        /* Smooth Fade In Animation */
+        .fade-in {
+            animation: fadeIn var(--transition-normal) ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus Styles for Accessibility */
+        :focus {
+            outline: 3px solid var(--primary-red);
+            outline-offset: 2px;
+        }
+        
+        :focus:not(:focus-visible) {
+            outline: none;
+        }
+        
+        :focus-visible {
+            outline: 3px solid var(--primary-red);
+            outline-offset: 2px;
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>NGO News Digest</h3>
+                <p>Your trusted source for the latest NGO news, stories, vacancies, and notices. Stay informed with our comprehensive coverage.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul class="footer-links">
+                    <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="/stories/"><i class="fas fa-newspaper"></i> Stories</a></li>
+                    <li><a href="/vacancies/"><i class="fas fa-briefcase"></i> Vacancies</a></li>
+                    <li><a href="/notices/"><i class="fas fa-bullhorn"></i> Notices</a></li>
+                    <li><a href="/about/"><i class="fas fa-info-circle"></i> About</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Connect With Us</h3>
+                <ul class="footer-links">
+                    <li><a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i> Facebook</a></li>
+                    <li><a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i> Twitter</a></li>
+                    <li><a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i> LinkedIn</a></li>
+                    <li><a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i> Instagram</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Newsletter</h3>
+                <p>Get the latest updates directly in your inbox</p>
+                <div class="newsletter-form">
+                    <input type="email" id="footerEmail" 
+                           placeholder="Your email" 
+                           class="newsletter-input"
+                           aria-label="Email for newsletter subscription">
+                    <button class="btn" onclick="subscribeNewsletter()">
+                        <i class="fas fa-paper-plane"></i> Subscribe
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            © <span id="currentYear"></span> NGO News Digest. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Base JavaScript -->
+    <script>
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current year in footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            // Set active nav link based on current page
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(link => {
+                const linkPath = link.getAttribute('href');
+                if (currentPath === linkPath || 
+                    (currentPath.startsWith(linkPath) && linkPath !== '/')) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        });
+        
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('appTheme', theme);
+            themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        
+        // Load saved theme or prefer color scheme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('appTheme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme) {
+                setTheme(savedTheme);
+            } else if (prefersDark) {
+                setTheme('dark');
+            } else {
+                setTheme('light');
+            }
+        }
+        
+        loadTheme();
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        });
+        
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+            mobileMenuBtn.setAttribute('aria-expanded', !isExpanded);
+            navMenu.classList.toggle('active');
+            
+            const icon = mobileMenuBtn.querySelector('i');
+            icon.className = navMenu.classList.contains('active') ? 'fas fa-times' : 'fas fa-bars';
+        });
+        
+        // Close mobile menu when clicking a link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+                mobileMenuBtn.querySelector('i').className = 'fas fa-bars';
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            });
+        });
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!navMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+                navMenu.classList.remove('active');
+                mobileMenuBtn.querySelector('i').className = 'fas fa-bars';
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+        
+        // Newsletter Subscription
+        async function subscribeNewsletter() {
+            const emailInput = document.getElementById('footerEmail');
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Email Required',
+                    text: 'Please enter your email address',
+                    confirmButtonColor: '#d10000'
+                });
+                emailInput.focus();
+                return;
+            }
+            
+            if (!validateEmail(email)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Email',
+                    text: 'Please enter a valid email address',
+                    confirmButtonColor: '#d10000'
+                });
+                emailInput.focus();
+                return;
+            }
+            
+            try {
+                // Show loading state
+                const submitBtn = emailInput.nextElementSibling;
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subscribing...';
+                submitBtn.disabled = true;
+                
+                // Simulate API call (replace with actual API endpoint)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // For demo purposes - simulate success
+                const success = true; // Replace with actual API response check
+                
+                if (success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Subscribed!',
+                        text: 'Thank you for subscribing to our newsletter!',
+                        timer: 3000,
+                        showConfirmButton: false,
+                        background: getComputedStyle(document.documentElement).getPropertyValue('--card-bg'),
+                        color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary')
+                    });
+                    emailInput.value = '';
+                } else {
+                    throw new Error('Subscription failed');
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Subscription Failed',
+                    text: 'Please try again later or contact support',
+                    confirmButtonColor: '#d10000'
+                });
+            } finally {
+                // Reset button state
+                const submitBtn = emailInput.nextElementSibling;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Subscribe';
+                submitBtn.disabled = false;
+            }
+        }
+        
+        // Utility Functions
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        function getCSRFToken() {
+            const name = 'csrftoken';
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        // AJAX Helper Functions
+        async function fetchData(url, options = {}) {
+            try {
+                const defaultOptions = {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                };
+                
+                const mergedOptions = { ...defaultOptions, ...options };
+                const response = await fetch(url, mergedOptions);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        }
+        
+        // Loading Indicator
+        function showLoading(container) {
+            if (container) {
+                container.innerHTML = '<div class="spinner"></div>';
+                container.classList.add('fade-in');
+            }
+        }
+        
+        function showError(container, message) {
+            if (container) {
+                container.innerHTML = `
+                    <div class="error-message fade-in">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        <strong>Error:</strong> ${message}
+                    </div>
+                `;
+            }
+        }
+        
+        function showSuccess(container, message) {
+            if (container) {
+                container.innerHTML = `
+                    <div class="success-message fade-in">
+                        <i class="fas fa-check-circle"></i> 
+                        ${message}
+                    </div>
+                `;
+            }
+        }
+        
+        // Make functions available globally
+        window.showLoading = showLoading;
+        window.showError = showError;
+        window.showSuccess = showSuccess;
+        window.getCSRFToken = getCSRFToken;
+        window.fetchData = fetchData;
+        
+        // Handle Enter key in newsletter form
+        document.getElementById('footerEmail').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                subscribeNewsletter();
+            }
+        });
+        
+        // Listen for theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('appTheme')) {
+                setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+    </script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
