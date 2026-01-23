@@ -1,5 +1,6 @@
 """
 WSGI config for newsletter project.
+
 """
 
 import os
