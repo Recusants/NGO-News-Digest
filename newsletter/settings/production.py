@@ -53,7 +53,7 @@ from .base import *
 import os
 
 # Override base settings for production
-DEBUG = False
+DEBUG = True
 
 # SECURITY: Railway-specific settings
 ALLOWED_HOSTS = [
