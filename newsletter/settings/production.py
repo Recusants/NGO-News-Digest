@@ -55,6 +55,7 @@ import os
 # Override base settings for production
 DEBUG = True
 
+
 # SECURITY: Railway-specific settings
 ALLOWED_HOSTS = [
     '.railway.app',           # All Railway domains
