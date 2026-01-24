@@ -4,8 +4,10 @@ Production settings for Railway deployment
 from .base import *
 import os
 
+from dotenv import load_dotenv
+load_dotenv()
 # Override base settings for production
-DEBUG = True
+DEBUG = False
 
 # CRITICAL: Railway domain settings
 # Get domain from environment or use wildcards
@@ -58,9 +60,9 @@ CSRF_TRUSTED_ORIGINS = list(set(CSRF_TRUSTED_ORIGINS))
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Security settings - DISABLE TEMPORARILY for testing
-SECURE_SSL_REDIRECT = False  # Set to True after testing
-SESSION_COOKIE_SECURE = False  # Set to True after testing
-CSRF_COOKIE_SECURE = False  # Set to True after testing
+SECURE_SSL_REDIRECT = True  # Set to True after testing
+SESSION_COOKIE_SECURE = True  # Set to True after testing
+CSRF_COOKIE_SECURE = True  # Set to True after testing
 SECURE_HSTS_SECONDS = 0  # Set to 31536000 after testing
 
 # Database
@@ -76,11 +78,11 @@ os.environ.setdefault("PGPORT", "5432")
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ["PGDATABASE"],
-        'USER': os.environ["PGUSER"],
-        'PASSWORD': os.environ["PGPASSWORD"],
-        'HOST': os.environ["PGHOST"],
-        'PORT': os.environ["PGPORT"],
+        'NAME': os.getenv("PG_DATABASE"),
+        'USER': os.getenv("PG_USER"),
+        'PASSWORD': os.getenv("PG_PASSWORD"),
+        'HOST': os.getenv("PG_HOST"),
+        'PORT': os.getenv("PG_PORT"),
     }
 }
 

@@ -8,6 +8,9 @@ django-js-asset==3.1.2
 gunicorn==24.0.0
 packaging==26.0
 pillow==12.1.0
+psycopg==3.3.2
+psycopg-binary==3.3.2
+psycopg-pool==3.3.0
 psycopg2-binary==2.9.11
 python-decouple==3.8
 python-dotenv==1.2.1
