@@ -4,7 +4,7 @@ Production settings.
 from .base import *
 
 DEBUG = False
-
+USE_X_FORWARDED_HOST = True
 # Security settings
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
