@@ -5,7 +5,7 @@ from .base import *
 import os
 
 # Override base settings for production
-DEBUG = False
+DEBUG = True
 
 # CRITICAL: Railway domain settings
 # Get domain from environment or use wildcards
