@@ -24,6 +24,14 @@ CSRF_COOKIE_SECURE = False
 # Email settings for development
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER = 'tinashemphisa45@gmail.com'
+EMAIL_HOST_PASSWORD = 'ztej qsoa dngh zcgu'  #← Get from below
+DEFAULT_FROM_EMAIL = 'tinashemphisa45@gmail.com'
+
 # Additional development apps (like debug toolbar)
 try:
     import django_extensions
