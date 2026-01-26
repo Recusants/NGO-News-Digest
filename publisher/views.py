@@ -85,6 +85,9 @@ def send_email_in_background(subject, plain_message, html_message, recipient_lis
 
 
 def home(request):
+
+    print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
+    print(settings.DEBUG)
     return render(request, 'home.html')
 
 
