@@ -71,11 +71,11 @@ SECURE_HSTS_SECONDS = 0  # Set to 31536000 after testing
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 # Set default values for the environment variables if they’re not already set
-os.environ.setdefault("PGDATABASE", "liftoff_dev")
-os.environ.setdefault("PGUSER", "username")
-os.environ.setdefault("PGPASSWORD", "")
-os.environ.setdefault("PGHOST", "localhost")
-os.environ.setdefault("PGPORT", "5432")
+# os.environ.setdefault("PGDATABASE", "liftoff_dev")
+# os.environ.setdefault("PGUSER", "username")
+# os.environ.setdefault("PGPASSWORD", "")
+# os.environ.setdefault("PGHOST", "localhost")
+# os.environ.setdefault("PGPORT", "5432")
 
 DATABASES = {
     'default': {

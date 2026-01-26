@@ -56,12 +56,7 @@
                             'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
                         },
                         success: function(responseData) {
-                            Swal.fire({
-                                title: responseData.title,
-                                text: responseData.message,
-                                icon: responseData.icon,
-                                timer: 1500,
-                            })
+                            window.location.href = '{% url "subscription_result_page" %}'
                             
                         },
                         error: function(jqXHR) {
