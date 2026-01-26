@@ -71,20 +71,28 @@ SECURE_HSTS_SECONDS = 0  # Set to 31536000 after testing
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 # Set default values for the environment variables if they’re not already set
-# os.environ.setdefault("PGDATABASE", "liftoff_dev")
-# os.environ.setdefault("PGUSER", "username")
-# os.environ.setdefault("PGPASSWORD", "")
-# os.environ.setdefault("PGHOST", "localhost")
-# os.environ.setdefault("PGPORT", "5432")
+# os.environ.setdefault("PG_DATABASE", "liftoff_dev")
+# os.environ.setdefault("PG_USER", "username")
+# os.environ.setdefault("PG_PASSWORD", "")
+# os.environ.setdefault("PG_HOST", "localhost")
+# os.environ.setdefault("PG_PORT", "5432")
+
+
+    # DB_NAME=railway
+    # DB_USER=postgres
+    # DB_PASSWORD=EUXNpjaqSdRQUllBCEslWUlpOtZnGkMi
+    # DB_HOST=postgres.railway.internal
+    # DB_PORT=5432
+
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("PG_DATABASE"),
-        'USER': os.getenv("PG_USER"),
-        'PASSWORD': os.getenv("PG_PASSWORD"),
-        'HOST': os.getenv("PG_HOST"),
-        'PORT': os.getenv("PG_PORT"),
+        'NAME': os.getenv("PGDATABASE"),
+        'USER': os.getenv("PGUSER"),
+        'PASSWORD': os.getenv("PGPASSWORD"),
+        'HOST': os.getenv("PGHOST"),
+        'PORT': os.getenv("PGPORT"),
     }
 }
 
