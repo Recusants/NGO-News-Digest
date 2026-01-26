@@ -85,16 +85,16 @@ SECURE_HSTS_SECONDS = 0  # Set to 31536000 after testing
     # DB_PORT=5432
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("PGDATABASE"),
-        'USER': os.getenv("PGUSER"),
-        'PASSWORD': os.getenv("PGPASSWORD"),
-        'HOST': os.getenv("PGHOST"),
-        'PORT': os.getenv("PGPORT"),
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv("PGDATABASE"),
+#         'USER': os.getenv("PGUSER"),
+#         'PASSWORD': os.getenv("PGPASSWORD"),
+#         'HOST': os.getenv("PGHOST"),
+#         'PORT': os.getenv("PGPORT"),
+#     }
+# }
 
 # Static files
 STATIC_ROOT = BASE_DIR / 'staticfiles'

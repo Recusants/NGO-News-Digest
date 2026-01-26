@@ -84,9 +84,8 @@ DATABASES = {
 
 # Use PostgreSQL in production (Railway will provide DATABASE_URL)
 if os.environ.get('DATABASE_URL'):
-    DATABASES['default'] = dj_database_url.config(
+    DATABASES['default'] = dj_database_url.config(default='postgresql://postgres:EUXNpjaqSdRQUllBCEslWUlpOtZnGkMi@postgres.railway.internal:5432/railway',
         conn_max_age=600,
-        conn_health_checks=True,
     )
 
 # Password validation
