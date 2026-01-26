@@ -15,7 +15,7 @@
                 <button class="filter-btn" data-filter="livelihoods">Livelihoods</button>
             </div>
             
-            <div class="stories-grid">
+            <div class="stories-grid" id="stories-grid">
                 <div class="story-card" data-category="health">
                     <img src="https://images.unsplash.com/photo-1576765974257-b414b9ea0051?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Maternal Health" class="story-image">
                     <div class="story-content">
@@ -58,12 +58,126 @@
             </div>
             
             <div class="action-buttons">
-                <a href="{% url 'stories_page' %}" class="read-more-btn">
+                <div href="" class="read-more-btn" id="read-more-stories-btn">
                     <i class="fas fa-book-open"></i> More Stories
-                </a>
+                </div>
             </div>
         </div>
     </section>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        // State variables
+        let currentPage = 1;
+        let pageSize = 6;
+        let storyCategory = "";
+        let sortBy = 'created_at';
+        let sortOrder = 'desc';
+
+        $(document).ready(function() {
+            clearStories()
+            getStories()
+        })
+
+        function clearStories(){
+            const storiesGrid = $('#stories-grid');
+            storiesGrid.empty();
+        }
+
+
+        function getStories(){
+            let loadingAlert = Swal.fire({
+                title: 'Loading...',
+                text: 'Please wait while we fetch stories',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            $.ajax({
+                url: '{% url "stories" %}',
+                method: 'GET',
+                dataType: 'json',
+                data: {
+                    page: currentPage,
+                    page_size: pageSize,
+                    category: storyCategory,
+                    sort_by: sortBy,
+                    sort_order: sortOrder
+                },
+                success: function(responseData) {
+                    loadingAlert.close();
+                    renderStories(responseData.stories)
+                },
+                error: function(jqXHR) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: jqXHR.responseJSON?.error || 'Server error. Try again',
+                        icon: 'error'
+                    });
+                },
+            })
+        }
+
+        function renderStories(stories){
+            const storiesGrid = $('#stories-grid');
+            
+            if (stories.length < pageSize ) {
+                $('#read-more-stories-btn').hide();
+            }
+
+
+            if (stories.length === 0 && currentPage == 1 ) {
+                storiesGrid.html(`
+                    <div class="story-card" data-category="health">
+                        <div class="story-content">
+                            <div class="story-meta">
+                                <span class="story-category">No Stories</span>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                return;
+            }
+
+            
+            stories.forEach(story => {
+                storiesGrid.append(`
+                    <div class="story-card" data-category="health">
+                        <img src="https://images.unsplash.com/photo-1576765974257-b414b9ea0051?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Maternal Health" class="story-image">
+                        <div class="story-content">
+                            <div class="story-meta">
+                                <span class="story-category">Health & WASH</span>
+                                <span>May 10, 2023</span>
+                            </div>
+                            <h3 class="story-title">Maternal Health Program Reduces Mortality by 40%</h3>
+                            <p class="story-excerpt">Partnership between Ministry of Health and NGO consortium trains midwives and equips clinics in 5 provinces.</p>
+                            <div class="story-footer">
+                                <span class="story-author">By Dr. Lisa Mangwana</span>
+                                <div class="share-buttons">
+                                    <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                                    <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
+                                    <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `)
+            })
+        }
+
+
+        /*EVENT LISTNERS -------------------------------------------------------------------------------------------------------------->>*/
+        $('#read-more-stories-btn').on('click', function() {
+            currentPage = currentPage + 1
+            getStories()
+        })
+        /*EVENT LISTNERS --------------------------------------------------------------------------------------------------------------<<*/
+
+        
+
+    </script>
     {% include 'partials/footer.html' %}
 {% endblock %}
 

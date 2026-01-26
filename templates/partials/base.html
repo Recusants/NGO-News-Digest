@@ -1683,48 +1683,17 @@
     </button>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-       /* // DOM Elements
+        // DOM Elements for theme and mobile menu only
         const themeToggle = document.getElementById('themeToggle');
         const hamburger = document.getElementById('hamburger');
-        const navLinks = document.getElementById('navLinks');
-        const heroSubscribeBtn = document.getElementById('heroSubscribeBtn');
-        const mainSubscribeBtn = document.getElementById('mainSubscribeBtn');
-        const heroName = document.getElementById('heroName');
-        const heroEmail = document.getElementById('heroEmail');
-        const mainName = document.getElementById('mainName');
-        const mainEmail = document.getElementById('mainEmail');
-        const confirmUnsubscribeBtn = document.getElementById('confirmUnsubscribeBtn');
-        const unsubscribeEmail = document.getElementById('unsubscribeEmail');
-        const notification = document.getElementById('notification');
-        const notificationTitle = document.getElementById('notificationTitle');
-        const notificationMessage = document.getElementById('notificationMessage');
-        const backToTop = document.getElementById('backToTop');
         
         // Initialize the page
         function initPage() {
             // Set up event listeners
             setupEventListeners();
             
-            // Set up smooth scrolling
-            setupSmoothScrolling();
-            
-            // Initialize category tabs
-            initCategoryTabs();
-            
-            // Initialize filters
-            initFilters();
-            
-            // Initialize share buttons
-            initShareButtons();
-            
             // Check for saved theme preference
             checkSavedTheme();
-            
-            // Initialize back to top button
-            initBackToTop();
-            
-            // Initialize mobile menu
-            initMobileMenu();
         }
         
         // Set up event listeners
@@ -1734,235 +1703,8 @@
             
             // Hamburger menu
             hamburger.addEventListener('click', toggleMobileMenu);
-            
-            // Subscription buttons
-            heroSubscribeBtn.addEventListener('click', () => handleSubscription(heroName, heroEmail));
-            mainSubscribeBtn.addEventListener('click', () => handleSubscription(mainName, mainEmail));
-            
-            // Unsubscribe button
-            confirmUnsubscribeBtn.addEventListener('click', handleUnsubscribe);
-            
-            // Close notification when clicked
-            notification.addEventListener('click', () => {
-                notification.classList.remove('show');
-            });
-            
-            // Back to top button
-            backToTop.addEventListener('click', scrollToTop);
-            
-            // Scroll event for back to top button
-            window.addEventListener('scroll', toggleBackToTop);
-            
-            // Close mobile menu when clicking outside
-            document.addEventListener('click', (e) => {
-                if (window.innerWidth <= 992) {
-                    if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
-                        navLinks.classList.remove('active');
-                    }
-                }
-            });
         }
-        
-        // Initialize mobile menu
-        function initMobileMenu() {
-            if (window.innerWidth <= 992) {
-                // Close menu when clicking a link
-                document.querySelectorAll('.nav-links a').forEach(link => {
-                    link.addEventListener('click', () => {
-                        navLinks.classList.remove('active');
-                    });
-                });
-            }
-        }
-        
-        // Initialize category tabs
-        function initCategoryTabs() {
-            const categoryTabs = document.querySelectorAll('.category-tab');
-            const categoryStories = document.querySelectorAll('.category-stories');
-            
-            if (categoryTabs.length > 0) {
-                categoryTabs.forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        // Remove active class from all tabs
-                        categoryTabs.forEach(t => t.classList.remove('active'));
-                        // Add active class to clicked tab
-                        tab.classList.add('active');
-                        
-                        // Get category
-                        const category = tab.getAttribute('data-category');
-                        
-                        // Hide all story sections
-                        categoryStories.forEach(section => {
-                            section.classList.remove('active');
-                        });
-                        
-                        // Show selected category stories
-                        const targetSection = document.getElementById(`${category}-stories`);
-                        if (targetSection) {
-                            targetSection.classList.add('active');
-                        }
-                    });
-                });
-            }
-        }
-        
-        // Initialize filters
-        function initFilters() {
-            // Story filters
-            document.querySelectorAll('#stories .filter-btn').forEach(filter => {
-                filter.addEventListener('click', () => {
-                    // Remove active class from all filters in this section
-                    document.querySelectorAll('#stories .filter-btn').forEach(f => f.classList.remove('active'));
-                    // Add active class to clicked filter
-                    filter.classList.add('active');
-                    
-                    const filterValue = filter.getAttribute('data-filter');
-                    const storyCards = document.querySelectorAll('#stories .story-card');
-                    
-                    // Filter story cards
-                    storyCards.forEach(card => {
-                        if (filterValue === 'all' || card.getAttribute('data-category') === filterValue) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                });
-            });
-            
-            // Vacancy filters
-            document.querySelectorAll('#vacancies .filter-btn').forEach(filter => {
-                filter.addEventListener('click', () => {
-                    // Remove active class from all filters in this section
-                    document.querySelectorAll('#vacancies .filter-btn').forEach(f => f.classList.remove('active'));
-                    // Add active class to clicked filter
-                    filter.classList.add('active');
-                    
-                    const filterValue = filter.getAttribute('data-filter');
-                    const vacancyCards = document.querySelectorAll('#vacancies .vacancy-card');
-                    
-                    // Filter vacancy cards
-                    vacancyCards.forEach(card => {
-                        if (filterValue === 'all' || card.getAttribute('data-category') === filterValue) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                });
-            });
-            
-            // Notice filters
-            document.querySelectorAll('#notices .filter-btn').forEach(filter => {
-                filter.addEventListener('click', () => {
-                    // Remove active class from all filters in this section
-                    document.querySelectorAll('#notices .filter-btn').forEach(f => f.classList.remove('active'));
-                    // Add active class to clicked filter
-                    filter.classList.add('active');
-                    
-                    const filterValue = filter.getAttribute('data-filter');
-                    const noticeCards = document.querySelectorAll('#notices .notice-card');
-                    
-                    // Filter notice cards
-                    noticeCards.forEach(card => {
-                        if (filterValue === 'all' || card.getAttribute('data-category') === filterValue) {
-                            card.style.display = 'block';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                });
-            });
-        }
-        
-        // Initialize share buttons
-        function initShareButtons() {
-            document.querySelectorAll('.share-btn').forEach(button => {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    const platform = this.getAttribute('data-platform');
-                    let title = 'Check out NGO News Digest';
-                    let url = window.location.href;
-                    
-                    let shareUrl = '';
-                    let message = '';
-                    
-                    switch(platform) {
-                        case 'facebook':
-                            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
-                            message = `Shared on Facebook`;
-                            break;
-                        case 'twitter':
-                            shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent('Check out NGO News Digest')}&url=${encodeURIComponent(url)}`;
-                            message = `Shared on Twitter`;
-                            break;
-                        case 'linkedin':
-                            shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
-                            message = `Shared on LinkedIn`;
-                            break;
-                        case 'email':
-                            shareUrl = `mailto:?subject=${encodeURIComponent('NGO News Digest')}&body=${encodeURIComponent(`Check out NGO News Digest: ${url}`)}`;
-                            message = `Email share opened`;
-                            break;
-                        case 'share':
-                            // Use Web Share API if available
-                            if (navigator.share) {
-                                navigator.share({
-                                    title: 'NGO News Digest',
-                                    url: url
-                                });
-                                message = `Content shared`;
-                            } else {
-                                // Fallback to copying to clipboard
-                                navigator.clipboard.writeText(url);
-                                message = `Link copied to clipboard`;
-                            }
-                            break;
-                        default:
-                            message = `Shared`;
-                    }
-                    
-                    if (shareUrl && platform !== 'share') {
-                        window.open(shareUrl, '_blank', 'width=600,height=400');
-                    }
-                    
-                    showNotification('Share Successful', message, 'success');
-                });
-            });
-        }
-        
-        // Set up smooth scrolling
-        function setupSmoothScrolling() {
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    const targetId = this.getAttribute('href');
-                    if (targetId === '#') return;
-                    
-                    scrollToSection(targetId.substring(1));
-                });
-            });
-        }
-        
-        // Helper function to scroll to sections
-        function scrollToSection(sectionId) {
-            const targetElement = document.getElementById(sectionId);
-            if (targetElement) {
-                window.scrollTo({
-                    top: targetElement.offsetTop - 70,
-                    behavior: 'smooth'
-                });
-                
-                // Close mobile menu if open
-                if (window.innerWidth <= 992) {
-                    navLinks.classList.remove('active');
-                }
-            }
-        }
-        
+
         // Toggle dark/light theme
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
@@ -1972,17 +1714,16 @@
                 icon.classList.remove('fa-moon');
                 icon.classList.add('fa-sun');
                 localStorage.setItem('theme', 'dark');
-                showNotification('Theme Changed', 'Switched to dark mode', 'success');
             } else {
                 icon.classList.remove('fa-sun');
                 icon.classList.add('fa-moon');
                 localStorage.setItem('theme', 'light');
-                showNotification('Theme Changed', 'Switched to light mode', 'success');
             }
         }
         
         // Toggle mobile menu
         function toggleMobileMenu() {
+            const navLinks = document.getElementById('navLinks');
             navLinks.classList.toggle('active');
         }
         
@@ -1997,113 +1738,8 @@
             }
         }
         
-        // Handle subscription
-        function handleSubscription(nameInput, emailInput) {
-            const name = nameInput.value.trim();
-            const email = emailInput.value.trim();
-            
-            if (!name || !email) {
-                showNotification('Please Complete All Fields', 'Please enter both your name and email address.', 'error');
-                return;
-            }
-            
-            if (!validateEmail(email)) {
-                showNotification('Invalid Email Address', 'Please enter a valid email address.', 'error');
-                return;
-            }
-            
-            // Clear form fields
-            nameInput.value = '';
-            emailInput.value = '';
-            
-            // Show success notification
-            showNotification('Subscription Started', `Thank you ${name}! Please check your email to confirm.`, 'success');
-            
-            // Scroll to email confirmation section
-            setTimeout(() => {
-                scrollToSection('emailConfirmationPage');
-                showNotification('Email Confirmation', 'Please check your email to complete subscription.', 'success');
-            }, 1000);
-        }
-        
-        // Handle unsubscribe
-        function handleUnsubscribe() {
-            const email = unsubscribeEmail.value.trim();
-            
-            if (!email || !validateEmail(email)) {
-                showNotification('Invalid Email', 'Please enter a valid email address.', 'error');
-                return;
-            }
-            
-            // Clear form field
-            unsubscribeEmail.value = '';
-            
-            // Scroll to unsubscribe success
-            setTimeout(() => {
-                scrollToSection('unsubscribeSuccessPage');
-                showNotification('Unsubscribed Successfully', 'You have been unsubscribed.', 'success');
-            }, 1000);
-        }
-        
-        // Show elegant notification
-        function showNotification(title, message, type = 'success') {
-            notificationTitle.textContent = title;
-            notificationMessage.textContent = message;
-            
-            // Set icon based on type
-            const icon = notification.querySelector('.notification-icon i');
-            if (type === 'error') {
-                icon.className = 'fas fa-exclamation-circle';
-                notification.style.borderLeftColor = '#f44336';
-                notification.querySelector('.notification-icon').style.backgroundColor = '#f44336';
-            } else if (type === 'warning') {
-                icon.className = 'fas fa-exclamation-triangle';
-                notification.style.borderLeftColor = '#ff9800';
-                notification.querySelector('.notification-icon').style.backgroundColor = '#ff9800';
-            } else {
-                icon.className = 'fas fa-check-circle';
-                notification.style.borderLeftColor = 'var(--primary-color)';
-                notification.querySelector('.notification-icon').style.backgroundColor = 'var(--primary-color)';
-            }
-            
-            notification.classList.add('show');
-            
-            // Auto-hide after 5 seconds
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 5000);
-        }
-        
-        // Initialize back to top button
-        function initBackToTop() {
-            toggleBackToTop();
-        }
-        
-        // Toggle back to top button visibility
-        function toggleBackToTop() {
-            if (window.scrollY > 300) {
-                backToTop.classList.add('visible');
-            } else {
-                backToTop.classList.remove('visible');
-            }
-        }
-        
-        // Scroll to top
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-        
-        // Validate email format
-        function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
-        }
-        
         // Initialize the page when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initPage);*/
-    </script>
+        document.addEventListener('DOMContentLoaded', initPage);
+</script>
 </body>
 </html>

@@ -103,9 +103,33 @@ def story(request, pk):
 
 
 def stories(request):
-    latest_stories = BlogPost.objects.filter(status="PUBLISHED").order_by('-created_at')[:50]
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 6))
+    category = request.GET.get('category', '')
+    sort_by = request.GET.get('sort_by', 'created_at')
+    sort_order = request.GET.get('sort_order', 'asc')
+    
 
-    latest_stories_list = [
+    # Start with all stories
+    stories = BlogPost.objects.all()
+    
+    # Apply sorting
+    if sort_order.lower() == 'desc':
+        sort_by = f'-{sort_by}'
+
+    stories = stories.order_by(sort_by)
+    
+    # Calculate pagination
+    total_stories = stories.count()
+    total_pages = (total_stories + page_size - 1) // page_size
+    
+    # Apply pagination
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+    paginated_stories = stories[start_index:end_index]
+
+
+    stories_list = [
         {
             'id': story.id,
             'title': story.title,
@@ -115,11 +139,11 @@ def stories(request):
             'date_and_time': str(story.created_at)[:10],
             'image_url': story.get_thumbnail_url(),
         }
-        for story in latest_stories
+        for story in paginated_stories
     ]
     
     return JsonResponse({
-        "stories": latest_stories_list,
+        "stories": stories_list,
     })
 
 
