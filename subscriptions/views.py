@@ -178,11 +178,17 @@ Newsletter Team""",
             fail_silently=False,
         )
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        return JsonResponse({
+            'title': "Success",
+            'message': f'Failed to send email: {e}',
+            'icon': "success",
+        })
+
     
     return JsonResponse({
-        'custome_status': "",
-        'message': f'Thank you {name}! Please check your email ({email}) for verification.'
+        'title': "Success",
+        'message': f'Thank you {name}! Please check your email ({email}) for verification.',
+        'icon': "success",
     })
 
 

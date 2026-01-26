@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
     <title>{% block title %}NGO News Digest{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -1680,8 +1681,9 @@
     <button class="back-to-top" id="backToTop">
         <i class="fas fa-chevron-up"></i>
     </button>
+    <script src="{% static '' %}sweetalert2.all.js"></script>
     <script>
-        // DOM Elements
+       /* // DOM Elements
         const themeToggle = document.getElementById('themeToggle');
         const hamburger = document.getElementById('hamburger');
         const navLinks = document.getElementById('navLinks');
@@ -2101,7 +2103,7 @@
         }
         
         // Initialize the page when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initPage);
+        document.addEventListener('DOMContentLoaded', initPage);*/
     </script>
 </body>
 </html>

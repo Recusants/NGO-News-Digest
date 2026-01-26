@@ -1,8 +1,10 @@
 {% extends 'partials/base.html' %}
+{% load static %}
 
 {% block title %}NGO News Digest - Home{% endblock %}
 {% block content %}
     {% include 'partials/header.html' %}
+    {% csrf_token %}
     <section id="home" class="hero">
         <div class="hero-container">
             <div class="hero-content">
@@ -13,10 +15,10 @@
                     <h3>Subscribe to Our Newsletter</h3>
                     <div class="subscribe-form" id="heroSubscribeForm">
                         <div class="form-row">
-                            <input type="text" class="form-input" placeholder="Your Full Name" id="heroName">
-                            <input type="email" class="form-input" placeholder="Your Email Address" id="heroEmail">
+                            <input type="text" class="form-input" placeholder="Your Full Name" id="home-subscriber-name">
+                            <input type="email" class="form-input" placeholder="Your Email Address" id="home-subscriber-email">
                         </div>
-                        <button class="subscribe-btn" id="heroSubscribeBtn">Subscribe Now</button>
+                        <button class="subscribe-btn" id="subscribe-button">Subscribe Now</button>
                     </div>
                 </div>
             </div>
@@ -172,6 +174,64 @@
             </div>
         </div>
     </section>
+
+    <script src="{% static '' %}jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#subscribe-button').on('click', function(e) {
+                var name = document.getElementById('home-subscriber-name').value
+                var email = document.getElementById('home-subscriber-email').value
+
+                var errors = ""
+
+                if(name == ""){
+                    errors = "Please enter your name"
+                }else if(email == ""){
+                    errors = "Please enter a valid email"
+                }
+
+                if(errors == ""){
+                    $.ajax({
+                        url: '{% url "subscribe" %}',
+                        method: 'POST',
+                        dataType: 'json',
+                        data: {
+                            'name': name,
+                            'email': email,
+                        },
+                        headers: {
+                            'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+                        },
+                        success: function(responseData) {
+                            Swal.fire({
+                                title: responseData.title,
+                                text: responseData.message,
+                                icon: responseData.icon,
+                            })
+                            
+                        },
+                        error: function(jqXHR) {
+                            Swal.fire({
+                                title: 'Error',
+                                text: jqXHR.responseJSON?.error || 'Server error. Try again',
+                                icon: 'error'
+                            });
+                        },
+                        complete: function(){
+                            //pass
+                        }
+                    });
+                }else{
+                    Swal.fire({
+                        title: 'Error',
+                        text: errors,
+                        icon: 'error'
+                    });
+                }
+            });
+        })
+
+    </script>
 
     {% include 'partials/footer.html' %}
 {% endblock %}

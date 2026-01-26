@@ -1,247 +1,90 @@
 {% extends 'partials/base.html' %}
+{% load static %}
 
-{% block title %}Subscribe to Newsletter{% endblock %}
-
+{% block title %}NGO News Digest - Home{% endblock %}
 {% block content %}
-<style>
-    .subscribe-container {
-        max-width: 600px;
-        margin: 50px auto;
-        padding: 30px;
-        background: #f8f9fa;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    
-    .subscribe-header {
-        text-align: center;
-        margin-bottom: 30px;
-    }
-    
-    .subscribe-header h1 {
-        color: #333;
-        margin-bottom: 10px;
-    }
-    
-    .subscribe-header p {
-        color: #666;
-    }
-    
-    .form-group {
-        margin-bottom: 20px;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        color: #333;
-        font-weight: 500;
-    }
-    
-    .form-control {
-        width: 100%;
-        padding: 12px 15px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 16px;
-    }
-    
-    .form-control:focus {
-        outline: none;
-        border-color: #007bff;
-    }
-    
-    .btn-subscribe {
-        width: 100%;
-        padding: 12px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-    
-    .btn-subscribe:hover {
-        background: #0056b3;
-    }
-    
-    .btn-subscribe:disabled {
-        background: #6c757d;
-        cursor: not-allowed;
-    }
-    
-    .status-message {
-        margin-top: 15px;
-        padding: 10px;
-        border-radius: 4px;
-        display: none;
-    }
-    
-    .status-success {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-        display: block;
-    }
-    
-    .status-error {
-        background: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-        display: block;
-    }
-</style>
-
-<div class="subscribe-container">
-    <div class="subscribe-header">
-        <h1>Subscribe to Our Newsletter</h1>
-        <p>Stay updated with the latest NGO news and stories</p>
-    </div>
-    
-    <form id="subscribeForm">
-        {% csrf_token %} <!-- ADD THIS LINE -->
-        
-        <div class="form-group">
-            <label for="subscriber-name">Your Name</label>
-            <input type="text" id="subscriber-name" class="form-control" placeholder="Enter your name" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="subscriber-email">Email Address</label>
-            <input type="email" id="subscriber-email" class="form-control" placeholder="Enter your email" required>
-        </div>
-        
-        <button type="button" id="subscribe-btn" class="btn-subscribe" onclick="subscribe()">
-            Subscribe
-        </button>
-        
-        <div id="subscribe-status" class="status-message"></div>
-    </form>
-</div>
-{% endblock %}
-
-{% block extra_scripts %}
-<script>
-    $(document).ready(function() {
-        $('#subscribe-email').keypress(function(e) {
-            if (e.which === 13) {
-                subscribe();
-            }
-        });
-    });
-    
-    function subscribe() {
-        var name = document.getElementById('subscriber-name').value.trim();
-        var email = document.getElementById('subscriber-email').value.trim().toLowerCase();
-        var statusDiv = document.getElementById('subscribe-status');
-        var subscribeBtn = document.getElementById('subscribe-btn');
-        
-        statusDiv.className = 'status-message';
-        statusDiv.innerHTML = '';
-        
-        var errors = "";
-        
-        if(name == "") {
-            errors = "Name field cannot be blank";
-        } else if(email == "") {
-            errors = "Email field cannot be blank";
-        } else if(!isValidEmail(email)) {
-            errors = "Please enter a valid email address";
-        }
-        
-        if(errors != "") {
-            statusDiv.className = 'status-error';
-            statusDiv.innerHTML = errors;
-            return;
-        }
-        
-        var originalBtnText = subscribeBtn.innerHTML;
-        subscribeBtn.innerHTML = 'Subscribing...';
-        subscribeBtn.disabled = true;
-        
-        // Get CSRF token from form or cookie
-        var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
-        if (!csrfToken) {
-            csrfToken = getCookie('csrftoken');
-        }
-        
-        var formData = new FormData();
-        formData.append('name', name);
-        formData.append('email', email);
-        
-        $.ajax({
-            url: "{% url 'subscribe' %}",
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRFToken': csrfToken
-            },
-            success: function(responseData) {
-                if(responseData.custome_status == "Error") {
-                    // Use alert instead of Swal for now
-                    alert("Error: " + responseData.message);
-                    statusDiv.className = 'status-error';
-                    statusDiv.innerHTML = responseData.message;
-                } else {
-                    alert("Success: " + responseData.message);
-                    statusDiv.className = 'status-success';
-                    statusDiv.innerHTML = responseData.message;
-                    document.getElementById('subscriber-name').value = '';
-                    document.getElementById('subscriber-email').value = '';
-                }
-            },
-            error: function(xhr, textStatus, error) {
-                console.log("Error details:", xhr.status, xhr.responseText);
+    {% csrf_token %}
+    {% include 'partials/header.html' %}
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Amplifying <span>Civil Society Impact</span> in Zimbabwe</h1>
+                <p class="hero-description">NGO News Digest is dedicated to sharing, amplifying, and celebrating the work of non-governmental organisations across Zimbabwe. We document grassroots impact, showcase development innovation, and connect stakeholders through impactful storytelling.</p>
                 
-                var errorMessage = "An error occurred. Please try again.";
-                if (xhr.status === 403) {
-                    errorMessage = "CSRF token error. Please refresh the page.";
-                } else if (xhr.responseText) {
-                    try {
-                        var response = JSON.parse(xhr.responseText);
-                        if (response.message) {
-                            errorMessage = response.message;
-                        } else if (response.error) {
-                            errorMessage = response.error;
+                <div class="hero-subscribe">
+                    <h3>Subscribe to Our Newsletter</h3>
+                    <div class="subscribe-form" id="heroSubscribeForm">
+                        <div class="form-row">
+                            <input type="text" class="form-input" placeholder="Your Full Name" id="subscriber-name">
+                            <input type="email" class="form-input" placeholder="Your Email Address" id="subscriber-email">
+                        </div>
+                        <button class="subscribe-btn" id="subscribe-button">Subscribe Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <script src="{% static '' %}jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#subscribe-button').on('click', function(e) {
+                var name = document.getElementById('subscriber-name').value
+                var email = document.getElementById('subscriber-email').value
+
+                var errors = ""
+
+                if(name == ""){
+                    errors = "Please enter your name"
+                }else if(email == ""){
+                    errors = "Please enter a valid email"
+                }
+
+                if(errors == ""){
+                    $.ajax({
+                        url: '{% url "subscribe" %}',
+                        method: 'POST',
+                        dataType: 'json',
+                        data: {
+                            'name': name,
+                            'email': email,
+                        },
+                        headers: {
+                            'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+                        },
+                        success: function(responseData) {
+                            Swal.fire({
+                                title: responseData.title,
+                                text: responseData.message,
+                                icon: responseData.icon,
+                                timer: 1500,
+                            })
+                            
+                        },
+                        error: function(jqXHR) {
+                            Swal.fire({
+                                title: 'Error',
+                                text: jqXHR.responseJSON?.error || 'Server error. Try again',
+                                icon: 'error'
+                            });
+                        },
+                        complete: function(){
+                            //pass
                         }
-                    } catch (e) {
-                        errorMessage = xhr.responseText;
-                    }
+                    });
+                }else{
+                    Swal.fire({
+                        title: 'Error',
+                        text: errors,
+                        icon: 'error'
+                    });
                 }
-                
-                alert("Error: " + errorMessage);
-                statusDiv.className = 'status-error';
-                statusDiv.innerHTML = errorMessage;
-            },
-            complete: function() {
-                subscribeBtn.innerHTML = originalBtnText;
-                subscribeBtn.disabled = false;
-            }
-        });
-    }
-    
-    function isValidEmail(email) {
-        var pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return pattern.test(email);
-    }
-    
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-</script>
+            });
+        })
+
+    </script>
+    {% include 'partials/footer.html' %}
 {% endblock %}
+
