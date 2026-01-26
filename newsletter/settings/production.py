@@ -29,11 +29,13 @@ if RAILWAY_STATIC_URL:
 
 # Add common Railway patterns
 ALLOWED_HOSTS.extend([
-    '.railway.app',
-    '.up.railway.app',
-    'localhost',
-    '127.0.0.1',
+    'https://*.up.railway.app',
+    'https://your-app-name.up.railway.app',
+    'https://localhost',
+    'https://127.0.0.1',
 ])
+
+
 
 # Remove duplicates and empty strings
 ALLOWED_HOSTS = list(set([h for h in ALLOWED_HOSTS if h]))
