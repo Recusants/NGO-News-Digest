@@ -51,6 +51,9 @@ def unsubscribe_page(request):
     """Render unsubscribe page"""
     return render(request, 'subscriptions/unsubscribe.html')
 
+def subscription_result_page(request):
+    return render(request, 'subscriptions/subscription_result_page.html')
+
 
 @login_required
 def subscriber_list(request):

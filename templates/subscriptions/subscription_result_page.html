@@ -1,0 +1,23 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}NGO News Digest - Home{% endblock %}
+{% block content %}
+    {% csrf_token %}
+    <div id="emailConfirmationPage" class="status-page">
+        <div class="status-container">
+            <div class="status-icon">
+                <i class="fas fa-envelope-open-text"></i>
+            </div>
+            <h2 class="status-title">Confirm Your Email</h2>
+            <p class="status-message">We've sent a confirmation link to your email address. Please check your inbox and click the link to complete your subscription to NGO News Digest.</p>
+            <p class="status-message">If you don't see the email, please check your spam folder.</p>
+            <div class="action-buttons">
+                <a href="{% url 'home' %}" class="read-more-btn">
+                    <i class="fas fa-home"></i> Return to Home
+                </a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+

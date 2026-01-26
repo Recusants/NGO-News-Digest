@@ -4,7 +4,10 @@ from . import views
 urlpatterns = [
     # Subscription pages
     path('subscribe/', views.subscribe_page, name='subscribe_page'),
+
     path('subscribe/action/', views.subscribe, name='subscribe'),
+    path('subscription_result_page/', views.subscription_result_page, name='subscription_result_page'),
+
     path('verify/<str:token>/', views.verify_email, name='verify_email'),
     path('unsubscribe/', views.unsubscribe_page, name='unsubscribe_page'),
     path('unsubscribe/action/', views.unsubscribe, name='unsubscribe'),

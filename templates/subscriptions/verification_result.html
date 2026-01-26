@@ -1,119 +1,23 @@
 {% extends 'partials/base.html' %}
+{% load static %}
 
-{% block title %}{{ title }}{% endblock %}
-
+{% block title %}NGO News Digest - Home{% endblock %}
 {% block content %}
-<style>
-    .verification-container {
-        max-width: 600px;
-        margin: 100px auto;
-        padding: 40px;
-        background: #f8f9fa;
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        text-align: center;
-    }
-    
-    .verification-icon {
-        font-size: 60px;
-        margin-bottom: 20px;
-    }
-    
-    .icon-success {
-        color: #28a745;
-    }
-    
-    .icon-error {
-        color: #dc3545;
-    }
-    
-    .verification-title {
-        font-size: 28px;
-        margin-bottom: 20px;
-        color: #333;
-    }
-    
-    .verification-message {
-        font-size: 18px;
-        color: #666;
-        margin-bottom: 30px;
-        line-height: 1.6;
-    }
-    
-    .email-display {
-        background: white;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 20px 0;
-        border-left: 4px solid #007bff;
-        text-align: left;
-    }
-    
-    .action-buttons {
-        margin-top: 30px;
-    }
-    
-    .btn {
-        padding: 12px 30px;
-        border-radius: 5px;
-        text-decoration: none;
-        font-weight: 500;
-        display: inline-block;
-        margin: 0 10px;
-        transition: all 0.3s;
-    }
-    
-    .btn-primary {
-        background: #007bff;
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background: #0056b3;
-        color: white;
-    }
-    
-    .btn-secondary {
-        background: #6c757d;
-        color: white;
-    }
-    
-    .btn-secondary:hover {
-        background: #545b62;
-        color: white;
-    }
-</style>
-
-<div class="verification-container">
-    {% if success %}
-    <div class="verification-icon icon-success">✅</div>
-    <h1 class="verification-title">{{ title }}</h1>
-    <div class="verification-message">
-        {{ message }}
+    {% csrf_token %}
+    <div id="subscriptionSuccessPage" class="status-page">
+        <div class="status-container">
+            <div class="status-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2 class="status-title">Subscription Confirmed!</h2>
+            <p class="status-message">Thank you for subscribing to NGO News Digest. You will now receive our weekly newsletter with the latest stories, vacancies, and notices from Zimbabwe's civil society sector.</p>
+            <p class="status-message">Your first newsletter will arrive within 24 hours.</p>
+            <div class="action-buttons">
+                <a href="{% url 'stories_page' %}" class="read-more-btn">
+                    <i class="fas fa-newspaper"></i> Browse Latest Stories
+                </a>
+            </div>
+        </div>
     </div>
-    
-    {% if email %}
-    <div class="email-display">
-        <strong>Email:</strong> {{ email }}
-    </div>
-    {% endif %}
-    
-    <div class="action-buttons">
-        <a href="/" class="btn btn-primary">Go to Homepage</a>
-        <a href="{% url 'subscribe_page' %}" class="btn btn-secondary">Subscribe Again</a>
-    </div>
-    
-    {% else %}
-    <div class="verification-icon icon-error">❌</div>
-    <h1 class="verification-title">{{ title }}</h1>
-    <div class="verification-message">
-        {{ message }}
-    </div>
-    
-    <div class="action-buttons">
-        <a href="/" class="btn btn-primary">Go to Homepage</a>
-        <a href="{% url 'subscribe_page' %}" class="btn btn-secondary">Try Again</a>
-    </div>
-    {% endif %}
-</div>
 {% endblock %}
+
