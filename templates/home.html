@@ -1,927 +1,178 @@
 {% extends 'partials/base.html' %}
 
-
 {% block title %}NGO News Digest - Home{% endblock %}
-
-{% block extra_head %}
-
-{% include 'partials/header.html' %}
-    <meta name="description" content="Stay updated with the latest NGO news, stories, vacancies, and notices">
-    <style>
-        /* Hero Section */
-        .hero-section {
-            min-height: 70vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: var(--spacing-2xl) var(--spacing-lg);
-            background: linear-gradient(135deg, rgba(209, 0, 0, 0.1) 0%, rgba(209, 0, 0, 0.05) 100%);
-            border-radius: var(--radius-lg);
-            margin-bottom: var(--spacing-2xl);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .hero-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d10000' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
-            opacity: 0.5;
-        }
-        
-        .hero-title {
-            font-size: 3rem;
-            font-weight: 800;
-            color: var(--primary-red);
-            margin-bottom: var(--spacing-sm);
-            position: relative;
-            z-index: 1;
-        }
-        
-        .hero-subtitle {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            margin-bottom: var(--spacing-xl);
-            max-width: 600px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        /* Home Newsletter Form */
-        .home-newsletter {
-            background: var(--card-bg);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-xl);
-            border: 2px solid var(--border-color);
-            max-width: 600px;
-            width: 100%;
-            position: relative;
-            z-index: 1;
-            margin-top: var(--spacing-lg);
-        }
-        
-        .home-newsletter h3 {
-            color: var(--text-primary);
-            margin-bottom: var(--spacing-md);
-            font-size: 1.3rem;
-        }
-        
-        .home-newsletter-form {
-            display: flex;
-            gap: var(--spacing-sm);
-        }
-        
-        .home-newsletter-input {
-            flex: 1;
-            padding: var(--spacing-md);
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-md);
-            background-color: var(--white);
-            color: var(--text-primary);
-            font-size: 1rem;
-            transition: all var(--transition-fast);
-        }
-        
-        .home-newsletter-input:focus {
-            outline: none;
-            border-color: var(--primary-red);
-            box-shadow: 0 0 0 3px rgba(209, 0, 0, 0.1);
-        }
-        
-        /* Content Sections */
-        .content-section {
-            margin: var(--spacing-2xl) 0;
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-xl);
-        }
-        
-        .section-title {
-            color: var(--text-primary);
-            margin: 0;
-            font-size: 1.8rem;
-            position: relative;
-            padding-bottom: var(--spacing-sm);
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background-color: var(--primary-red);
-            border-radius: var(--radius-full);
-        }
-        
-        .view-all {
-            color: var(--primary-red);
-            text-decoration: none;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-xs);
-            transition: all var(--transition-fast);
-        }
-        
-        .view-all:hover {
-            gap: var(--spacing-sm);
-        }
-        
-        /* Story Cards */
-        .stories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: var(--spacing-lg);
-            margin-top: var(--spacing-lg);
-        }
-        
-        .story-card {
-            background: var(--card-bg);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            transition: all var(--transition-normal);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .story-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 24px var(--shadow-color);
-            border-color: var(--primary-red);
-        }
-        
-        .story-image {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            display: block;
-        }
-        
-        .story-content {
-            padding: var(--spacing-lg);
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .story-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0 0 var(--spacing-sm) 0;
-            line-height: 1.4;
-        }
-        
-        .story-excerpt {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: var(--spacing-md);
-            flex: 1;
-        }
-        
-        .story-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            padding-top: var(--spacing-md);
-            border-top: 1px solid var(--border-color);
-        }
-        
-        .story-date {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-xs);
-        }
-        
-        .story-author {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-xs);
-            color: var(--primary-red);
-            font-weight: 600;
-        }
-        
-        /* Vacancies & Notices Cards */
-        .items-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: var(--spacing-lg);
-            margin-top: var(--spacing-lg);
-        }
-        
-        .item-card {
-            background: var(--card-bg);
-            border-radius: var(--radius-lg);
-            padding: var(--spacing-lg);
-            border: 1px solid var(--border-color);
-            transition: all var(--transition-normal);
-        }
-        
-        .item-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 16px var(--shadow-color);
-            border-color: var(--primary-red);
-        }
-        
-        .item-card.featured {
-            border-left: 4px solid var(--primary-red);
-            background: linear-gradient(135deg, rgba(209, 0, 0, 0.05) 0%, rgba(209, 0, 0, 0.02) 100%);
-        }
-        
-        .item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: var(--spacing-sm);
-        }
-        
-        .item-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0;
-            line-height: 1.4;
-        }
-        
-        .item-badge {
-            background: var(--primary-red);
-            color: white;
-            padding: 2px 8px;
-            border-radius: var(--radius-sm);
-            font-size: 0.75rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        
-        .item-organization {
-            color: var(--primary-red);
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: var(--spacing-xs);
-        }
-        
-        .item-details {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: var(--spacing-md);
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-        }
-        
-        .item-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: var(--spacing-md);
-            padding-top: var(--spacing-md);
-            border-top: 1px solid var(--border-color);
-        }
-        
-        .item-deadline {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-xs);
-            font-size: 0.85rem;
-        }
-        
-        .item-deadline.urgent {
-            color: var(--primary-red);
-            font-weight: 600;
-        }
-        
-        .item-link {
-            color: var(--primary-red);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-xs);
-            transition: all var(--transition-fast);
-        }
-        
-        .item-link:hover {
-            gap: var(--spacing-sm);
-        }
-        
-        /* Loading States */
-        .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: var(--spacing-2xl);
-            color: var(--text-secondary);
-        }
-        
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(209, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top-color: var(--primary-red);
-            animation: spin 1s ease-in-out infinite;
-            margin-bottom: var(--spacing-md);
-        }
-        
-        /* Empty States */
-        .empty-state {
-            text-align: center;
-            padding: var(--spacing-2xl);
-            color: var(--text-secondary);
-            background: var(--card-bg);
-            border-radius: var(--radius-lg);
-            border: 2px dashed var(--border-color);
-        }
-        
-        .empty-state i {
-            font-size: 3rem;
-            color: var(--border-color);
-            margin-bottom: var(--spacing-md);
-        }
-        
-        /* Responsive */
-        @media (max-width: 992px) {
-            .hero-title {
-                font-size: 2.5rem;
-            }
-            
-            .stories-grid {
-                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            }
-            
-            .home-newsletter-form {
-                flex-direction: column;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2rem;
-            }
-            
-            .hero-subtitle {
-                font-size: 1.1rem;
-            }
-            
-            .stories-grid,
-            .items-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: var(--spacing-sm);
-            }
-            
-            .home-newsletter {
-                padding: var(--spacing-lg);
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .hero-section {
-                padding: var(--spacing-xl) var(--spacing-md);
-            }
-            
-            .hero-title {
-                font-size: 1.75rem;
-            }
-            
-            .section-title {
-                font-size: 1.5rem;
-            }
-            
-            .home-newsletter-form {
-                flex-direction: column;
-            }
-        }
-    </style>
-{% endblock %}
-
 {% block content %}
-    <!-- Hero Section -->
-    <section class="hero-section fade-in">
-        <h1 class="hero-title">NGO News Digest</h1>
-        <p class="hero-subtitle">Stay updated with the latest news, stories, vacancies, and notices from the NGO sector</p>
-        
-        <div class="home-newsletter">
-            <h3>Subscribe to Our Newsletter</h3>
-            <div class="home-newsletter-form">
-                <input type="text" 
-                       id="subscribe-name" 
-                       class="home-newsletter-input" 
-                       placeholder="Your Name" 
-                       aria-label="Your Name">
+    {% include 'partials/header.html' %}
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Amplifying <span>Civil Society Impact</span> in Zimbabwe</h1>
+                <p class="hero-description">NGO News Digest is dedicated to sharing, amplifying, and celebrating the work of non-governmental organisations across Zimbabwe. We document grassroots impact, showcase development innovation, and connect stakeholders through impactful storytelling.</p>
                 
-                <input type="email" 
-                       id="subscribe-email" 
-                       class="home-newsletter-input" 
-                       placeholder="Your Email" 
-                       aria-label="Your Email">
+                <div class="hero-subscribe">
+                    <h3>Subscribe to Our Newsletter</h3>
+                    <div class="subscribe-form" id="heroSubscribeForm">
+                        <div class="form-row">
+                            <input type="text" class="form-input" placeholder="Your Full Name" id="heroName">
+                            <input type="email" class="form-input" placeholder="Your Email Address" id="heroEmail">
+                        </div>
+                        <button class="subscribe-btn" id="heroSubscribeBtn">Subscribe Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- stories highlighlite -->
+    <section id="stories" class="section stories-section">
+        <div class="container">
+            <h2 class="section-title">NGO Success Stories</h2>
+            
+            <div class="stories-filters">
+                <button class="filter-btn active" data-filter="all">All Stories</button>
+                <button class="filter-btn" data-filter="health">Health & WASH</button>
+                <button class="filter-btn" data-filter="agriculture">Agriculture</button>
+                <button class="filter-btn" data-filter="education">Education</button>
+                <button class="filter-btn" data-filter="livelihoods">Livelihoods</button>
+            </div>
+            
+            <div class="stories-grid">
+                <div class="story-card" data-category="health">
+                    <img src="https://images.unsplash.com/photo-1576765974257-b414b9ea0051?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Maternal Health" class="story-image">
+                    <div class="story-content">
+                        <div class="story-meta">
+                            <span class="story-category">Health & WASH</span>
+                            <span>May 10, 2023</span>
+                        </div>
+                        <h3 class="story-title">Maternal Health Program Reduces Mortality by 40%</h3>
+                        <p class="story-excerpt">Partnership between Ministry of Health and NGO consortium trains midwives and equips clinics in 5 provinces.</p>
+                        <div class="story-footer">
+                            <span class="story-author">By Dr. Lisa Mangwana</span>
+                            <div class="share-buttons">
+                                <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                                <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
+                                <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
-                <button type="button" 
-                        id="subscribe-btn" 
-                        class="btn">
-                    <i class="fas fa-paper-plane"></i> Subscribe
+                <div class="story-card" data-category="education">
+                    <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="School Children" class="story-image">
+                    <div class="story-content">
+                        <div class="story-meta">
+                            <span class="story-category">Education</span>
+                            <span>May 8, 2023</span>
+                        </div>
+                        <h3 class="story-title">Digital Learning Reaches 10,000 Rural Students</h3>
+                        <p class="story-excerpt">Save the Children's tablet-based learning program bridges the education gap in remote communities.</p>
+                        <div class="story-footer">
+                            <span class="story-author">By Farai Chikwava</span>
+                            <div class="share-buttons">
+                                <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                                <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
+                                <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="{% url 'stories_page' %}" class="read-more-btn">
+                    <i class="fas fa-book-open"></i> More Stories
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. Vacancies Section -->
+    <section id="vacancies" class="section">
+        <div class="container">
+            <h2 class="section-title">NGO Job Vacancies</h2>
+            
+            <div class="stories-filters">
+                <button class="filter-btn active" data-filter="all">All Vacancies</button>
+                <button class="filter-btn" data-filter="programme">Programme</button>
+                <button class="filter-btn" data-filter="finance">Finance</button>
+                <button class="filter-btn" data-filter="monitoring">M&E</button>
+                <button class="filter-btn" data-filter="management">Management</button>
+            </div>
+            
+            <div class="vacancies-grid">
+                <div class="vacancy-card" data-category="programme">
+                    <h3 class="vacancy-title">Programme Manager - Health</h3>
+                    <span class="vacancy-organization">Health Innovation Trust Zimbabwe</span>
+                    <div class="vacancy-details">
+                        <div class="vacancy-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Harare, with travel</span>
+                        </div>
+                        <div class="vacancy-detail">
+                            <i class="fas fa-clock"></i>
+                            <span>Full-time</span>
+                        </div>
+                        <div class="vacancy-detail">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Competitive NGO Package</span>
+                        </div>
+                    </div>
+                    <p class="vacancy-description">Lead the implementation of health programmes across 3 provinces, manage partnerships with Ministry of Health.</p>
+                    <div class="story-footer">
+                        <span>Deadline: 30 May 2023</span>
+                        <div class="share-buttons">
+                            <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                            <button class="share-btn" data-platform="linkedin"><i class="fab fa-linkedin-in"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('detailedVacancyPage')">
+                    <i class="fas fa-briefcase"></i> View Full Job Details
                 </button>
             </div>
-            <div id="subscribe-message" 
-                 class="subscribe-message" 
-                 role="alert" 
-                 aria-live="polite"
-                 style="margin-top: var(--spacing-md); font-size: 0.9rem; display: none;">
-            </div>
         </div>
     </section>
 
-    <!-- Latest Stories Section -->
-    <section class="content-section" id="latestStoriesSection">
-        <div class="section-header">
-            <h2 class="section-title">Latest Stories</h2>
-            <a href="{% url 'stories' %}" class="view-all">
-                View All <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-        <div id="latest-stories" class="stories-grid">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p>Loading latest stories...</p>
+
+    <!-- 9. Notices Section -->
+    <section id="notices" class="section notices-section">
+        <div class="container">
+            <h2 class="section-title">Important Notices & Updates</h2>
+            
+            <div class="stories-filters">
+                <button class="filter-btn active" data-filter="all">All Notices</button>
+                <button class="filter-btn" data-filter="funding">Funding Opportunities</button>
+                <button class="filter-btn" data-filter="events">Events & Workshops</button>
+                <button class="filter-btn" data-filter="policy">Policy Updates</button>
+                <button class="filter-btn" data-filter="reports">Reports & Publications</button>
             </div>
-        </div>
-    </section>
-
-    <!-- Top Stories Section -->
-    <section class="content-section" id="topStoriesSection">
-        <div class="section-header">
-            <h2 class="section-title">Top Stories</h2>
-            <a href="{% url 'stories' %}" class="view-all">
-                View All <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-        <div id="top-stories" class="stories-grid">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p>Loading top stories...</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Editor's Pick Section -->
-    <section class="content-section" id="editorsPickSection">
-        <div class="section-header">
-            <h2 class="section-title">Editor's Pick</h2>
-            <a href="{% url 'stories' %}" class="view-all">
-                View All <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-        <div id="editors-pick-stories" class="stories-grid">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p>Loading editor's picks...</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Vacancies Section -->
-    <section class="content-section" id="vacanciesSection">
-        <div class="section-header">
-            <h2 class="section-title">Latest Vacancies</h2>
-            <a href="{% url 'vacancy_list' %}" class="view-all">
-                View All <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-        <div id="vacancies" class="items-grid">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p>Loading vacancies...</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Notices Section -->
-    <section class="content-section" id="noticesSection">
-        <div class="section-header">
-            <h2 class="section-title">Important Notices</h2>
-            <a href="{% url 'notice_list' %}" class="view-all">
-                View All <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-        <div id="notices" class="items-grid">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-                <p>Loading notices...</p>
-            </div>
-        </div>
-    </section>
-{% endblock %}
-
-{% block extra_scripts %}
-    <script>
-        $(document).ready(function() {
-            // Load all content
-            loadLatestStories();
-            loadTopStories();
-            loadEditorsPickStories();
-            loadVacancies();
-            loadNotices();
             
-            // Subscribe button click handler
-            $('#subscribe-btn').click(handleSubscribe);
-            
-            // Allow Enter key to trigger subscription
-            $('#subscribe-name, #subscribe-email').keypress(function(e) {
-                if (e.which === 13) {
-                    handleSubscribe();
-                }
-            });
-        });
-
-        function handleSubscribe() {
-            const nameInput = $('#subscribe-name');
-            const emailInput = $('#subscribe-email');
-            const subscribeBtn = $('#subscribe-btn');
-            const messageDiv = $('#subscribe-message');
-            
-            const name = nameInput.val().trim();
-            const email = emailInput.val().trim().toLowerCase();
-            
-            // Clear previous messages
-            messageDiv.removeClass('message-success message-error').hide().text('');
-            
-            // Validation
-            if (!name) {
-                showMessage('Please enter your name', 'error');
-                nameInput.focus();
-                return;
-            }
-            
-            if (!email) {
-                showMessage('Please enter your email address', 'error');
-                emailInput.focus();
-                return;
-            }
-            
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showMessage('Please enter a valid email address', 'error');
-                emailInput.focus();
-                return;
-            }
-            
-            // Disable button and show loading
-            const originalBtnText = subscribeBtn.html();
-            subscribeBtn.html('<i class="fas fa-spinner fa-spin"></i> Subscribing...').prop('disabled', true);
-            
-            // Get CSRF token
-            const csrftoken = getCSRFToken();
-            
-            // Prepare form data
-            const postData = new FormData();
-            postData.append('name', name);
-            postData.append('email', email);
-            
-            // Send AJAX request - using your original URL
-            $.ajax({
-                url: '{% url "subscribe" %}',
-                method: 'POST',
-                data: postData,
-                processData: false,
-                contentType: false,
-                headers: {
-                    'X-CSRFToken': csrftoken
-                },
-                success: function(response) {
-                    if (response.custome_status === "Error") {
-                        showMessage(response.message, 'error');
-                    } else {
-                        showMessage(response.message, 'success');
-                        // Clear form inputs
-                        nameInput.val('');
-                        emailInput.val('');
-                    }
-                },
-                error: function(xhr) {
-                    console.log("Error details:", xhr.status, xhr.responseText);
-                    
-                    var errorMessage = "An error occurred. Please try again.";
-                    if (xhr.status === 403) {
-                        errorMessage = "CSRF token error. Please refresh the page.";
-                    } else if (xhr.responseText) {
-                        try {
-                            var response = JSON.parse(xhr.responseText);
-                            if (response.message) {
-                                errorMessage = response.message;
-                            } else if (response.error) {
-                                errorMessage = response.error;
-                            }
-                        } catch (e) {
-                            errorMessage = xhr.responseText;
-                        }
-                    }
-                    showMessage(errorMessage, 'error');
-                },
-                complete: function() {
-                    // Re-enable button
-                    subscribeBtn.html(originalBtnText).prop('disabled', false);
-                }
-            });
-        }
-        
-        function showMessage(message, type) {
-            const messageDiv = $('#subscribe-message');
-            const isSuccess = type === 'success';
-            
-            messageDiv.removeClass('message-success message-error')
-                     .addClass(isSuccess ? 'message-success' : 'message-error')
-                     .css({
-                         'background-color': isSuccess ? 'rgba(40, 167, 69, 0.1)' : 'rgba(209, 0, 0, 0.1)',
-                         'border-left': `4px solid ${isSuccess ? 'var(--success)' : 'var(--primary-red)'}`,
-                         'color': isSuccess ? '#155724' : 'var(--text-primary)',
-                         'padding': 'var(--spacing-md)',
-                         'border-radius': 'var(--radius-md)',
-                         'margin-top': 'var(--spacing-md)'
-                     })
-                     .text(message)
-                     .show();
-            
-            // Auto-hide success messages after 8 seconds
-            if (isSuccess) {
-                setTimeout(() => {
-                    messageDiv.fadeOut(500);
-                }, 8000);
-            }
-        }
-
-        function loadLatestStories() {
-            $.ajax({
-                url: '{% url "get_latest_stories" %}',
-                method: 'GET',
-                dataType: 'json',
-                success: function(responseData) {
-                    const container = $('#latest-stories');
-                    const stories = responseData.stories || [];
-                    
-                    displayStories(container, stories, 'latest');
-                },
-                error: function() {
-                    showError($('#latest-stories'), 'Error loading latest stories.');
-                }
-            });
-        }
-
-        function loadTopStories() {
-            $.ajax({
-                url: '{% url "get_top_stories" %}',
-                method: 'GET',
-                dataType: 'json',
-                success: function(responseData) {
-                    const container = $('#top-stories');
-                    const stories = responseData.stories || [];
-                    
-                    displayStories(container, stories, 'top');
-                },
-                error: function() {
-                    showError($('#top-stories'), 'Error loading top stories.');
-                }
-            });
-        }
-
-        function loadEditorsPickStories() {
-            $.ajax({
-                url: '{% url "get_editors_pick_stories" %}',
-                method: 'GET',
-                dataType: 'json',
-                success: function(responseData) {
-                    const container = $('#editors-pick-stories');
-                    const stories = responseData.stories || [];
-                    
-                    displayStories(container, stories, 'editors-pick');
-                },
-                error: function() {
-                    showError($('#editors-pick-stories'), 'Error loading editor\'s pick stories.');
-                }
-            });
-        }
-
-        function loadVacancies() {
-            $.ajax({
-                url: '{% url "get_vacancies" %}',
-                method: 'GET',
-                success: function(response) {
-                    const container = $('#vacancies');
-                    
-                    if (response.featured.length === 0 && response.recent.length === 0) {
-                        container.html(`
-                            <div class="empty-state">
-                                <i class="far fa-briefcase"></i>
-                                <h3>No vacancies available</h3>
-                                <p>Check back later for new opportunities</p>
-                            </div>
-                        `);
-                        return;
-                    }
-                    
-                    let html = '';
-                    const allVacancies = [...response.featured, ...response.recent].slice(0, 6);
-                    
-                    allVacancies.forEach(v => {
-                        const isFeatured = response.featured.some(fv => fv.id === v.id);
-                        const isUrgent = v.days_left <= 3;
-                        
-                        html += `
-                            <div class="item-card ${isFeatured ? 'featured' : ''}">
-                                <div class="item-header">
-                                    <h3 class="item-title">${v.title}</h3>
-                                    <span class="item-badge">${v.job_type || 'Full-time'}</span>
-                                </div>
-                                <p class="item-organization">${v.organization}</p>
-                                <div class="item-details">
-                                    <span><i class="fas fa-map-marker-alt"></i> ${v.location}</span>
-                                </div>
-                                <div class="item-footer">
-                                    <span class="item-deadline ${isUrgent ? 'urgent' : ''}">
-                                        <i class="fas fa-hourglass-half"></i>
-                                        ${isUrgent ? 'Urgent: ' : ''}${v.days_left} days left
-                                    </span>
-                                    <a href="/vacancies/${v.id}/" class="item-link">
-                                        Details <i class="fas fa-arrow-right"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    container.html(html);
-                },
-                error: function() {
-                    showError($('#vacancies'), 'Error loading vacancies.');
-                }
-            });
-        }
-
-        function loadNotices() {
-            $.ajax({
-                url: '{% url "get_notices" %}',
-                method: 'GET',
-                success: function(response) {
-                    const container = $('#notices');
-                    
-                    if (response.important.length === 0 && response.recent.length === 0) {
-                        container.html(`
-                            <div class="empty-state">
-                                <i class="far fa-bullhorn"></i>
-                                <h3>No notices available</h3>
-                                <p>Check back later for announcements</p>
-                            </div>
-                        `);
-                        return;
-                    }
-                    
-                    let html = '';
-                    const allNotices = [...response.important, ...response.recent].slice(0, 6);
-                    
-                    allNotices.forEach(n => {
-                        const isImportant = response.important.some(inNotice => inNotice.id === n.id);
-                        const hasAttachment = n.has_file;
-                        
-                        html += `
-                            <div class="item-card ${isImportant ? 'featured' : ''}">
-                                <div class="item-header">
-                                    <h3 class="item-title">${n.title}</h3>
-                                    ${hasAttachment ? '<span class="item-badge"><i class="fas fa-paperclip"></i> Attachment</span>' : ''}
-                                </div>
-                                <p class="item-organization">${n.organization}</p>
-                                <p class="item-details" style="font-size: 0.9rem; color: var(--text-secondary);">
-                                    ${n.description || ''}
-                                </p>
-                                <div class="item-footer">
-                                    <span class="item-date">
-                                        <i class="far fa-calendar"></i>
-                                        ${formatDate(n.created_at)}
-                                    </span>
-                                    <a href="/notices/${n.id}/" class="item-link">
-                                        Read More <i class="fas fa-arrow-right"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    container.html(html);
-                },
-                error: function() {
-                    showError($('#notices'), 'Error loading notices.');
-                }
-            });
-        }
-
-        // Display Stories Helper
-        function displayStories(container, stories, type = 'latest') {
-            if (stories.length === 0) {
-                container.html(`
-                    <div class="empty-state">
-                        <i class="far fa-newspaper"></i>
-                        <h3>No ${type.replace('-', ' ')} stories available</h3>
-                        <p>Check back later for new content</p>
+            <div class="notices-grid">
+                <div class="notice-card" data-category="funding">
+                    <span class="notice-date">Deadline: 15 June 2023</span>
+                    <h3 class="notice-title">EU Call for Proposals: Climate Resilience in Rural Communities</h3>
+                    <p class="notice-content">The European Union has announced a €5 million funding window for NGOs working on climate adaptation and resilience building in Zimbabwe's rural communities.</p>
+                    <div class="story-footer">
+                        <span>Category: Funding Opportunity</span>
+                        <div class="share-buttons">
+                            <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                            <button class="share-btn" data-platform="email"><i class="fas fa-envelope"></i></button>
+                        </div>
                     </div>
-                `);
-                return;
-            }
-            
-            let html = '';
-            stories.forEach(story => {
-                html += `
-                    <article class="story-card">
-                        <a href="publisher/story/${story.id}" style="text-decoration: none; color: inherit;">
-                            <img src="${story.image_url || '/static/default-story.jpg'}" 
-                                 alt="${story.title}" 
-                                 class="story-image"
-                                 onerror="this.src='/static/default-story.jpg'">
-                            <div class="story-content">
-                                <h3 class="story-title">${story.title}</h3>
-                                <p class="story-excerpt">${story.snippet || ''}</p>
-                                <div class="story-meta">
-                                    <span class="story-date">
-                                        <i class="far fa-calendar"></i>
-                                        ${story.date_and_time || 'Recently'}
-                                    </span>
-                                    ${story.author ? `
-                                        <span class="story-author">
-                                            <i class="far fa-user"></i>
-                                            ${story.author}
-                                        </span>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </a>
-                    </article>
-                `;
-            });
-            
-            container.html(html);
-        }
-
-        // Utility Functions
-        function formatDate(dateString) {
-            if (!dateString) return 'Recently';
-            
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-            
-            if (diffDays === 0) return 'Today';
-            if (diffDays === 1) return 'Yesterday';
-            if (diffDays < 7) return `${diffDays} days ago`;
-            
-            return date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-            });
-        }
-
-        // Error display helper
-        function showError(container, message) {
-            container.html(`
-                <div class="empty-state" style="border-color: var(--primary-red);">
-                    <i class="fas fa-exclamation-triangle" style="color: var(--primary-red);"></i>
-                    <h3>Error Loading Content</h3>
-                    <p>${message}</p>
-                    <button onclick="location.reload()" class="btn" style="margin-top: var(--spacing-md);">
-                        <i class="fas fa-redo"></i> Retry
-                    </button>
                 </div>
-            `);
-        }
+            </div>
+            
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('detailedNoticePage')">
+                    <i class="fas fa-file-alt"></i> View Full Notice Details
+                </button>
+            </div>
+        </div>
+    </section>
 
-        // Make functions available globally
-        window.loadLatestStories = loadLatestStories;
-        window.loadTopStories = loadTopStories;
-        window.loadEditorsPickStories = loadEditorsPickStories;
-        window.loadVacancies = loadVacancies;
-        window.loadNotices = loadNotices;
-        window.handleSubscribe = handleSubscribe;
-    </script>
+    {% include 'partials/footer.html' %}
 {% endblock %}
+

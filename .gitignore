@@ -52,3 +52,6 @@ env/
 # Static files
 /staticfiles/
 /media/
+
+# html
+/origin.html

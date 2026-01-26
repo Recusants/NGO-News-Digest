@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}NGO News Digest{% endblock %}</title>
+    <title>NGO News Digest - Celebrating Civil Society Impact in Zimbabwe</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -1673,13 +1673,677 @@
         }
     </style>
 </head>
-
 <body>
-    {% block content %}{% endblock %}
+    <!-- Navigation -->
+    <nav class="sticky-nav">
+        <div class="nav-container">
+            <a href="#home" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <div class="logo-text">
+                    <div class="logo-main">NGO News Digest</div>
+                    <div class="logo-tagline">Civil Society Impact in Zimbabwe</div>
+                </div>
+            </a>
+            
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#stories">Stories</a></li>
+                <li><a href="#vacancies">Vacancies</a></li>
+                <li><a href="#notices">Notices</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#editors">Editors</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="hamburger" id="hamburger">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
     <!-- Back to Top Button -->
     <button class="back-to-top" id="backToTop">
         <i class="fas fa-chevron-up"></i>
     </button>
+
+    <!-- ALL SECTIONS VISIBLE IN ORDER -->
+
+    <!-- 1. Home/Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Amplifying <span>Civil Society Impact</span> in Zimbabwe</h1>
+                <p class="hero-description">NGO News Digest is dedicated to sharing, amplifying, and celebrating the work of non-governmental organisations across Zimbabwe. We document grassroots impact, showcase development innovation, and connect stakeholders through impactful storytelling.</p>
+                
+                <div class="hero-subscribe">
+                    <h3>Subscribe to Our Newsletter</h3>
+                    <div class="subscribe-form" id="heroSubscribeForm">
+                        <div class="form-row">
+                            <input type="text" class="form-input" placeholder="Your Full Name" id="heroName">
+                            <input type="email" class="form-input" placeholder="Your Email Address" id="heroEmail">
+                        </div>
+                        <button class="subscribe-btn" id="heroSubscribeBtn">Subscribe Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Email Confirmation Page -->
+    <div id="emailConfirmationPage" class="status-page">
+        <div class="status-container">
+            <div class="status-icon">
+                <i class="fas fa-envelope-open-text"></i>
+            </div>
+            <h2 class="status-title">Confirm Your Email</h2>
+            <p class="status-message">We've sent a confirmation link to your email address. Please check your inbox and click the link to complete your subscription to NGO News Digest.</p>
+            <p class="status-message">If you don't see the email, please check your spam folder.</p>
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('home')">
+                    <i class="fas fa-home"></i> Return to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Subscription Success Page -->
+    <div id="subscriptionSuccessPage" class="status-page">
+        <div class="status-container">
+            <div class="status-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2 class="status-title">Subscription Confirmed!</h2>
+            <p class="status-message">Thank you for subscribing to NGO News Digest. You will now receive our weekly newsletter with the latest stories, vacancies, and notices from Zimbabwe's civil society sector.</p>
+            <p class="status-message">Your first newsletter will arrive within 24 hours.</p>
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('stories')">
+                    <i class="fas fa-newspaper"></i> Browse Latest Stories
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Independent Subscribe Section -->
+    <section class="subscribe-section">
+        <div class="container">
+            <h2 class="section-title">Stay Informed About NGO Impact</h2>
+            <p>Get weekly updates on humanitarian action, development innovation, and community transformation across Zimbabwe. Our newsletter connects you with the stories behind NGO work.</p>
+            <div class="subscribe-form" id="mainSubscribeForm">
+                <div class="form-row">
+                    <input type="text" class="form-input" placeholder="Your Full Name" id="mainName">
+                    <input type="email" class="form-input" placeholder="Your Email Address" id="mainEmail">
+                </div>
+                <button class="subscribe-btn" id="mainSubscribeBtn">Subscribe to NGO News Digest</button>
+            </div>
+            <p class="mt-20" style="font-size: 0.85rem; opacity: 0.9;">We respect your privacy. Unsubscribe at any time.</p>
+        </div>
+    </section>
+
+    <!-- 5. Stories Section -->
+    <section id="stories" class="section stories-section">
+        <div class="container">
+            <h2 class="section-title">NGO Success Stories</h2>
+            
+            <div class="stories-filters">
+                <button class="filter-btn active" data-filter="all">All Stories</button>
+                <button class="filter-btn" data-filter="health">Health & WASH</button>
+                <button class="filter-btn" data-filter="agriculture">Agriculture</button>
+                <button class="filter-btn" data-filter="education">Education</button>
+                <button class="filter-btn" data-filter="livelihoods">Livelihoods</button>
+            </div>
+            
+            <div class="stories-grid">
+                <div class="story-card" data-category="health">
+                    <img src="https://images.unsplash.com/photo-1576765974257-b414b9ea0051?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Maternal Health" class="story-image">
+                    <div class="story-content">
+                        <div class="story-meta">
+                            <span class="story-category">Health & WASH</span>
+                            <span>May 10, 2023</span>
+                        </div>
+                        <h3 class="story-title">Maternal Health Program Reduces Mortality by 40%</h3>
+                        <p class="story-excerpt">Partnership between Ministry of Health and NGO consortium trains midwives and equips clinics in 5 provinces.</p>
+                        <div class="story-footer">
+                            <span class="story-author">By Dr. Lisa Mangwana</span>
+                            <div class="share-buttons">
+                                <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                                <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
+                                <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="story-card" data-category="education">
+                    <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="School Children" class="story-image">
+                    <div class="story-content">
+                        <div class="story-meta">
+                            <span class="story-category">Education</span>
+                            <span>May 8, 2023</span>
+                        </div>
+                        <h3 class="story-title">Digital Learning Reaches 10,000 Rural Students</h3>
+                        <p class="story-excerpt">Save the Children's tablet-based learning program bridges the education gap in remote communities.</p>
+                        <div class="story-footer">
+                            <span class="story-author">By Farai Chikwava</span>
+                            <div class="share-buttons">
+                                <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                                <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
+                                <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('detailedStoryPage')">
+                    <i class="fas fa-book-open"></i> Read Full Story
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. Detailed Story Page -->
+    <div id="detailedStoryPage" class="detailed-page">
+        <div class="detailed-container">
+            <div class="detailed-header">
+                <span class="detailed-category">Health & WASH</span>
+                <h1 class="detailed-title">Clean Water Access Transforms Rural Community in Masvingo</h1>
+                <div class="detailed-meta">
+                    <span>By Tendai Moyo</span>
+                    <span>May 18, 2023</span>
+                    <span>5 min read</span>
+                </div>
+            </div>
+            
+            <img src="https://images.unsplash.com/photo-1551601651-2a8555f1a136?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80" alt="Clean Water Initiative" class="detailed-image">
+            
+            <div class="detailed-content">
+                <p>A partnership between WaterAid Zimbabwe and local NGOs has brought clean water to over 5,000 households in the Masvingo province, reducing waterborne diseases by 70% and transforming the lives of rural communities.</p>
+                
+                <h3>Community Transformation</h3>
+                <p>The initiative, launched in 2021, focused on drilling boreholes, constructing water kiosks, and training community water committees to manage and maintain the water points.</p>
+                
+                <h3>Health Impacts</h3>
+                <p>Local health clinics report a significant decrease in cases of diarrhea, cholera, and other waterborne diseases. School attendance has improved, particularly for girls.</p>
+            </div>
+            
+            <div class="detailed-footer">
+                <div class="share-buttons" style="justify-content: center; margin-top: 20px;">
+                    <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                    <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
+                    <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
+                    <button class="share-btn" data-platform="linkedin"><i class="fab fa-linkedin-in"></i></button>
+                </div>
+                <div class="action-buttons">
+                    <button class="read-more-btn" onclick="scrollToSection('stories')">
+                        <i class="fas fa-arrow-left"></i> Back to Stories
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Vacancies Section -->
+    <section id="vacancies" class="section">
+        <div class="container">
+            <h2 class="section-title">NGO Job Vacancies</h2>
+            
+            <div class="stories-filters">
+                <button class="filter-btn active" data-filter="all">All Vacancies</button>
+                <button class="filter-btn" data-filter="programme">Programme</button>
+                <button class="filter-btn" data-filter="finance">Finance</button>
+                <button class="filter-btn" data-filter="monitoring">M&E</button>
+                <button class="filter-btn" data-filter="management">Management</button>
+            </div>
+            
+            <div class="vacancies-grid">
+                <div class="vacancy-card" data-category="programme">
+                    <h3 class="vacancy-title">Programme Manager - Health</h3>
+                    <span class="vacancy-organization">Health Innovation Trust Zimbabwe</span>
+                    <div class="vacancy-details">
+                        <div class="vacancy-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Harare, with travel</span>
+                        </div>
+                        <div class="vacancy-detail">
+                            <i class="fas fa-clock"></i>
+                            <span>Full-time</span>
+                        </div>
+                        <div class="vacancy-detail">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Competitive NGO Package</span>
+                        </div>
+                    </div>
+                    <p class="vacancy-description">Lead the implementation of health programmes across 3 provinces, manage partnerships with Ministry of Health.</p>
+                    <div class="story-footer">
+                        <span>Deadline: 30 May 2023</span>
+                        <div class="share-buttons">
+                            <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                            <button class="share-btn" data-platform="linkedin"><i class="fab fa-linkedin-in"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('detailedVacancyPage')">
+                    <i class="fas fa-briefcase"></i> View Full Job Details
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. Detailed Vacancy Page -->
+    <div id="detailedVacancyPage" class="detailed-page">
+        <div class="detailed-container">
+            <div class="detailed-header">
+                <span class="detailed-category">Programme Management</span>
+                <h1 class="detailed-title">Programme Manager - Health</h1>
+                <div class="detailed-meta">
+                    <span>Health Innovation Trust Zimbabwe</span>
+                    <span>Deadline: 30 May 2023</span>
+                    <span>Harare, with travel</span>
+                </div>
+            </div>
+            
+            <div class="detailed-content">
+                <h3>Position Overview</h3>
+                <p>We are seeking an experienced Programme Manager to lead the implementation of health programmes across 3 provinces in Zimbabwe.</p>
+                
+                <h3>Key Responsibilities</h3>
+                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                    <li>Lead programme planning, implementation, monitoring, and evaluation</li>
+                    <li>Manage partnerships with government, donors, and other stakeholders</li>
+                    <li>Oversee programme budgets and ensure financial accountability</li>
+                </ul>
+                
+                <h3>Qualifications & Experience</h3>
+                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                    <li>Master's degree in Public Health, Development Studies, or related field</li>
+                    <li>Minimum 7 years of experience in health programme management</li>
+                    <li>Proven experience working with Ministry of Health and donors</li>
+                </ul>
+            </div>
+            
+            <div class="detailed-footer">
+                <div class="share-buttons" style="justify-content: center; margin-top: 20px;">
+                    <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                    <button class="share-btn" data-platform="linkedin"><i class="fab fa-linkedin-in"></i></button>
+                    <button class="share-btn" data-platform="email"><i class="fas fa-envelope"></i></button>
+                </div>
+                <div class="action-buttons">
+                    <button class="read-more-btn" onclick="scrollToSection('vacancies')">
+                        <i class="fas fa-arrow-left"></i> Back to Vacancies
+                    </button>
+                    <button class="read-more-btn" style="background-color: var(--accent-color);">
+                        <i class="fas fa-paper-plane"></i> Apply Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9. Notices Section -->
+    <section id="notices" class="section notices-section">
+        <div class="container">
+            <h2 class="section-title">Important Notices & Updates</h2>
+            
+            <div class="stories-filters">
+                <button class="filter-btn active" data-filter="all">All Notices</button>
+                <button class="filter-btn" data-filter="funding">Funding Opportunities</button>
+                <button class="filter-btn" data-filter="events">Events & Workshops</button>
+                <button class="filter-btn" data-filter="policy">Policy Updates</button>
+                <button class="filter-btn" data-filter="reports">Reports & Publications</button>
+            </div>
+            
+            <div class="notices-grid">
+                <div class="notice-card" data-category="funding">
+                    <span class="notice-date">Deadline: 15 June 2023</span>
+                    <h3 class="notice-title">EU Call for Proposals: Climate Resilience in Rural Communities</h3>
+                    <p class="notice-content">The European Union has announced a €5 million funding window for NGOs working on climate adaptation and resilience building in Zimbabwe's rural communities.</p>
+                    <div class="story-footer">
+                        <span>Category: Funding Opportunity</span>
+                        <div class="share-buttons">
+                            <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                            <button class="share-btn" data-platform="email"><i class="fas fa-envelope"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('detailedNoticePage')">
+                    <i class="fas fa-file-alt"></i> View Full Notice Details
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10. Detailed Notice Page -->
+    <div id="detailedNoticePage" class="detailed-page">
+        <div class="detailed-container">
+            <div class="detailed-header">
+                <span class="detailed-category">Funding Opportunity</span>
+                <h1 class="detailed-title">EU Call for Proposals: Climate Resilience in Rural Communities</h1>
+                <div class="detailed-meta">
+                    <span>European Union Delegation to Zimbabwe</span>
+                    <span>Deadline: 15 June 2023</span>
+                    <span>€5 Million Funding Window</span>
+                </div>
+            </div>
+            
+            <div class="detailed-content">
+                <h3>Funding Overview</h3>
+                <p>The European Union has announced a €5 million funding window for NGOs working on climate adaptation and resilience building in Zimbabwe's rural communities.</p>
+                
+                <h3>Eligibility Criteria</h3>
+                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                    <li>Registered NGOs with at least 3 years of experience in Zimbabwe</li>
+                    <li>Demonstrated experience in climate change adaptation or related fields</li>
+                    <li>Strong community engagement approach</li>
+                </ul>
+                
+                <h3>Thematic Focus Areas</h3>
+                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                    <li>Climate-smart agriculture and sustainable livelihoods</li>
+                    <li>Water resource management and conservation</li>
+                    <li>Renewable energy solutions for rural communities</li>
+                </ul>
+            </div>
+            
+            <div class="detailed-footer">
+                <div class="share-buttons" style="justify-content: center; margin-top: 20px;">
+                    <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                    <button class="share-btn" data-platform="email"><i class="fas fa-envelope"></i></button>
+                </div>
+                <div class="action-buttons">
+                    <button class="read-more-btn" onclick="scrollToSection('notices')">
+                        <i class="fas fa-arrow-left"></i> Back to Notices
+                    </button>
+                    <button class="read-more-btn" style="background-color: var(--accent-color);">
+                        <i class="fas fa-download"></i> Download Guidelines
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 11. About Section -->
+    <section id="about" class="section">
+        <div class="container">
+            <h2 class="section-title">About NGO News Digest</h2>
+            
+            <div class="about-content">
+                <div class="about-card">
+                    <h3><i class="fas fa-info-circle"></i> Who We Are</h3>
+                    <p>NGO News Digest is a Zimbabwe-based news and media initiative dedicated to sharing, amplifying, and celebrating the work of non-governmental organisations operating across Zimbabwe.</p>
+                </div>
+                
+                <div class="about-card">
+                    <h3><i class="fas fa-bullseye"></i> Our Mission & Vision</h3>
+                    <p><strong>Vision:</strong> To be Zimbabwe's leading platform for celebrating and amplifying civil society impact.</p>
+                    <p><strong>Mission:</strong> To document, share, and elevate the work of NGOs in Zimbabwe through timely coverage.</p>
+                </div>
+                
+                <div class="about-card">
+                    <h3><i class="fas fa-star"></i> What Makes Us Unique</h3>
+                    <ul>
+                        <li>Documenting grassroots impact</li>
+                        <li>Showing linkages between NGO programmes and national development goals</li>
+                        <li>Serving as a repository of positive change</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('editors')">
+                    <i class="fas fa-users"></i> Meet Our Team
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 12. Editors Section - FIXED -->
+    <section id="editors" class="section editors-section">
+        <div class="container">
+            <h2 class="section-title">Our Editors & Contributors</h2>
+            
+            <div class="editors-grid">
+                <div class="editor-card">
+                    <img src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Tariro Maseko" class="editor-image">
+                    <div class="editor-content">
+                        <h3 class="editor-name">Tariro Maseko</h3>
+                        <span class="editor-role">Editor-in-Chief</span>
+                        <p class="editor-bio">With 15 years of experience in development journalism, Tariro has covered civil society work across Southern Africa. She previously worked with The Herald and UNDP Zimbabwe.</p>
+                        <div class="editor-social">
+                            <button class="share-btn" data-platform="email"><i class="fas fa-envelope"></i></button>
+                            <button class="share-btn" data-platform="linkedin"><i class="fab fa-linkedin-in"></i></button>
+                            <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="editor-card">
+                    <img src="https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Takudzwa Chikomo" class="editor-image">
+                    <div class="editor-content">
+                        <h3 class="editor-name">Takudzwa Chikomo</h3>
+                        <span class="editor-role">Senior Development Editor</span>
+                        <p class="editor-bio">Takudzwa specializes in agriculture and livelihoods reporting. He holds a Masters in Development Studies from University of Zimbabwe and has worked with FAO and WFP.</p>
+                        <div class="editor-social">
+                            <button class="share-btn" data-platform="email"><i class="fas fa-envelope"></i></button>
+                            <button class="share-btn" data-platform="linkedin"><i class="fab fa-linkedin-in"></i></button>
+                            <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('detailedEditorPage')">
+                    <i class="fas fa-user-circle"></i> View Editor Profile
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 13. Detailed Editor Page -->
+    <div id="detailedEditorPage" class="detailed-editor-page">
+        <div class="editor-detailed-container">
+            <div class="editor-detailed-header">
+                <img src="https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Tariro Maseko" class="editor-detailed-image">
+                <h1 class="editor-detailed-name">Tariro Maseko</h1>
+                <span class="editor-detailed-role">Editor-in-Chief</span>
+            </div>
+            
+            <div class="editor-detailed-content">
+                <p>Tariro Maseko is a veteran development journalist with over 15 years of experience covering civil society work across Southern Africa. Her passion for storytelling that highlights grassroots impact has made her a respected voice in Zimbabwe's NGO sector.</p>
+                
+                <h3>Professional Background</h3>
+                <p>Before joining NGO News Digest, Tariro worked as a senior reporter at The Herald, where she covered development and humanitarian issues. She later served as Communications Specialist at UNDP Zimbabwe, where she helped amplify the impact of development programmes across the country.</p>
+                
+                <h3>Expertise</h3>
+                <p>Tariro specializes in health, education, and livelihoods reporting. She has trained over 50 journalists in development journalism and has been recognized for her commitment to ethical reporting that centers community voices.</p>
+            </div>
+            
+            <div class="editor-detailed-stats">
+                <div class="stat-item">
+                    <div class="stat-number">15+</div>
+                    <div class="stat-label">Years Experience</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Stories Published</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">50+</div>
+                    <div class="stat-label">Journalists Trained</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Awards Won</div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('editors')">
+                    <i class="fas fa-arrow-left"></i> Back to Editors
+                </button>
+                <button class="read-more-btn" style="background-color: var(--accent-color);">
+                    <i class="fas fa-envelope"></i> Contact Editor
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 14. Contact Section -->
+    <section id="contact" class="section">
+        <div class="container">
+            <h2 class="section-title">Contact Us</h2>
+            
+            <div class="contact-content">
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h3>Email</h3>
+                    <p>editor@ngonewsdigest.co.zw</p>
+                    <p>subscriptions@ngonewsdigest.co.zw</p>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <h3>Phone</h3>
+                    <p>+263 242 123 456</p>
+                    <p>+263 772 987 654</p>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3>Address</h3>
+                    <p>156 Jason Moyo Avenue</p>
+                    <p>Harare, Zimbabwe</p>
+                </div>
+            </div>
+            
+            <div class="social-links">
+                <a href="#" class="social-link">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fas fa-share-alt"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 15. Unsubscribe Page -->
+    <div id="unsubscribePage" class="status-page">
+        <div class="status-container">
+            <div class="status-icon">
+                <i class="fas fa-envelope-slash"></i>
+            </div>
+            <h2 class="status-title">Unsubscribe from Newsletter</h2>
+            <p class="status-message">We're sorry to see you go. Please confirm that you want to unsubscribe from NGO News Digest newsletters.</p>
+            <div class="subscribe-form" style="max-width: 400px; margin: 30px auto;">
+                <input type="email" class="form-input" placeholder="Your Email Address" id="unsubscribeEmail">
+                <button class="subscribe-btn" id="confirmUnsubscribeBtn" style="width: 100%; margin-top: 15px;">Confirm Unsubscription</button>
+            </div>
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('home')">
+                    <i class="fas fa-times"></i> Cancel and Return
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 16. Unsubscribe Success Page -->
+    <div id="unsubscribeSuccessPage" class="status-page">
+        <div class="status-container">
+            <div class="status-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2 class="status-title">Successfully Unsubscribed</h2>
+            <p class="status-message">You have been unsubscribed from NGO News Digest newsletters. You will no longer receive our updates.</p>
+            <p class="status-message">If this was a mistake, you can <a href="#home" style="color: var(--primary-color); text-decoration: underline;" onclick="scrollToSection('home')">resubscribe here</a>.</p>
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('home')">
+                    <i class="fas fa-home"></i> Return to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification System -->
+    <div class="notification" id="notification">
+        <div class="notification-icon">
+            <i class="fas fa-check"></i>
+        </div>
+        <div class="notification-content">
+            <h4 id="notificationTitle">Success</h4>
+            <p id="notificationMessage">Your action was completed successfully.</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>NGO News Digest</h3>
+                    <p>Celebrating and amplifying civil society impact in Zimbabwe through impactful storytelling and comprehensive coverage of NGO work.</p>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#home" onclick="scrollToSection('home')">Home</a></li>
+                        <li><a href="#stories" onclick="scrollToSection('stories')">Stories</a></li>
+                        <li><a href="#vacancies" onclick="scrollToSection('vacancies')">Vacancies</a></li>
+                        <li><a href="#notices" onclick="scrollToSection('notices')">Notices</a></li>
+                        <li><a href="#unsubscribePage" onclick="scrollToSection('unsubscribePage')">Unsubscribe</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>All Sections</h3>
+                    <ul class="footer-links">
+                        <li><a href="#emailConfirmationPage" onclick="scrollToSection('emailConfirmationPage')">Email Confirmation</a></li>
+                        <li><a href="#detailedStoryPage" onclick="scrollToSection('detailedStoryPage')">Story Details</a></li>
+                        <li><a href="#detailedVacancyPage" onclick="scrollToSection('detailedVacancyPage')">Vacancy Details</a></li>
+                        <li><a href="#detailedNoticePage" onclick="scrollToSection('detailedNoticePage')">Notice Details</a></li>
+                        <li><a href="#detailedEditorPage" onclick="scrollToSection('detailedEditorPage')">Editor Details</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Sectors We Cover</h3>
+                    <p>Health • WASH • Agriculture • Food Security • Education • Livelihoods • Economic Empowerment • Protection • Community Resilience</p>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2023 NGO News Digest. All rights reserved. | Celebrating Civil Society Impact in Zimbabwe</p>
+            </div>
+        </div>
+    </footer>
+
     <script>
         // DOM Elements
         const themeToggle = document.getElementById('themeToggle');

@@ -1,0 +1,56 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}NGO News Digest - Home{% endblock %}
+{% block content %}
+    {% include 'partials/header.html' %}
+    <section id="vacancies" class="section">
+        <div class="container">
+            <h2 class="section-title">NGO Job Vacancies</h2>
+            
+            <div class="stories-filters">
+                <button class="filter-btn active" data-filter="all">All Vacancies</button>
+                <button class="filter-btn" data-filter="programme">Programme</button>
+                <button class="filter-btn" data-filter="finance">Finance</button>
+                <button class="filter-btn" data-filter="monitoring">M&E</button>
+                <button class="filter-btn" data-filter="management">Management</button>
+            </div>
+            
+            <div class="vacancies-grid">
+                <div class="vacancy-card" data-category="programme">
+                    <h3 class="vacancy-title">Programme Manager - Health</h3>
+                    <span class="vacancy-organization">Health Innovation Trust Zimbabwe</span>
+                    <div class="vacancy-details">
+                        <div class="vacancy-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Harare, with travel</span>
+                        </div>
+                        <div class="vacancy-detail">
+                            <i class="fas fa-clock"></i>
+                            <span>Full-time</span>
+                        </div>
+                        <div class="vacancy-detail">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Competitive NGO Package</span>
+                        </div>
+                    </div>
+                    <p class="vacancy-description">Lead the implementation of health programmes across 3 provinces, manage partnerships with Ministry of Health.</p>
+                    <div class="story-footer">
+                        <span>Deadline: 30 May 2023</span>
+                        <div class="share-buttons">
+                            <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                            <button class="share-btn" data-platform="linkedin"><i class="fab fa-linkedin-in"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('detailedVacancyPage')">
+                    <i class="fas fa-briefcase"></i> View Full Job Details
+                </button>
+            </div>
+        </div>
+    </section>
+    {% include 'partials/footer.html' %}
+{% endblock %}
+

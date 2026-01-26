@@ -19,6 +19,32 @@ from accounts.models import Subscriber
 from django.contrib import messages
 
 
+# html
+def about_page(request):
+    return render(request, 'publisher/about_page.html')
+
+
+def contact_page(request):
+    return render(request, 'publisher/contact_page.html')
+
+
+def editors_page(request):
+    return render(request, 'publisher/editors_page.html')
+
+
+def vacancies_page(request):
+    return render(request, 'publisher/vacancies_page.html')
+
+
+def stories_page(request):
+    return render(request, 'publisher/stories_page.html')
+
+
+def notices_page(request):
+    return render(request, 'publisher/notices_page.html')
+
+
+
 
 
 # Email sending in background thread

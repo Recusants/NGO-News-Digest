@@ -1,0 +1,64 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}NGO News Digest - Home{% endblock %}
+{% block content %}
+    {% include 'partials/header.html' %}
+    <!-- 14. Contact Section -->
+    <section id="contact" class="section">
+        <div class="container">
+            <h2 class="section-title">Contact Us</h2>
+            
+            <div class="contact-content">
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h3>Email</h3>
+                    <p>editor@ngonewsdigest.co.zw</p>
+                    <p>subscriptions@ngonewsdigest.co.zw</p>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <h3>Phone</h3>
+                    <p>+263 242 123 456</p>
+                    <p>+263 772 987 654</p>
+                </div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <h3>Address</h3>
+                    <p>156 Jason Moyo Avenue</p>
+                    <p>Harare, Zimbabwe</p>
+                </div>
+            </div>
+            
+            <div class="social-links">
+                <a href="#" class="social-link">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fas fa-envelope"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fas fa-share-alt"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+    {% include 'partials/footer.html' %}
+{% endblock %}
+

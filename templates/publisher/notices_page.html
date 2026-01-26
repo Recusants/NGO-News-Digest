@@ -1,0 +1,43 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}NGO News Digest - Home{% endblock %}
+{% block content %}
+    {% include 'partials/header.html' %}
+    <!-- 9. Notices Section -->
+    <section id="notices" class="section notices-section">
+        <div class="container">
+            <h2 class="section-title">Important Notices & Updates</h2>
+            
+            <div class="stories-filters">
+                <button class="filter-btn active" data-filter="all">All Notices</button>
+                <button class="filter-btn" data-filter="funding">Funding Opportunities</button>
+                <button class="filter-btn" data-filter="events">Events & Workshops</button>
+                <button class="filter-btn" data-filter="policy">Policy Updates</button>
+                <button class="filter-btn" data-filter="reports">Reports & Publications</button>
+            </div>
+            
+            <div class="notices-grid">
+                <div class="notice-card" data-category="funding">
+                    <span class="notice-date">Deadline: 15 June 2023</span>
+                    <h3 class="notice-title">EU Call for Proposals: Climate Resilience in Rural Communities</h3>
+                    <p class="notice-content">The European Union has announced a €5 million funding window for NGOs working on climate adaptation and resilience building in Zimbabwe's rural communities.</p>
+                    <div class="story-footer">
+                        <span>Category: Funding Opportunity</span>
+                        <div class="share-buttons">
+                            <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                            <button class="share-btn" data-platform="email"><i class="fas fa-envelope"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="read-more-btn" onclick="scrollToSection('detailedNoticePage')">
+                    <i class="fas fa-file-alt"></i> View Full Notice Details
+                </button>
+            </div>
+        </div>
+    </section>
+    {% include 'partials/footer.html' %}
+{% endblock %}
+

@@ -1,22 +1,41 @@
-<!-- footer.html - Only if absolutely needed for specific pages -->
 <footer class="footer">
-    <div class="footer-content">
-        <!-- Content will be loaded dynamically via AJAX -->
+    <div class="footer-container">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>NGO News Digest</h3>
+                <p>Celebrating and amplifying civil society impact in Zimbabwe through impactful storytelling and comprehensive coverage of NGO work.</p>
+            </div>
+            
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul class="footer-links">
+                    <li><a href="#home" onclick="scrollToSection('home')">Home</a></li>
+                    <li><a href="#stories" onclick="scrollToSection('stories')">Stories</a></li>
+                    <li><a href="#vacancies" onclick="scrollToSection('vacancies')">Vacancies</a></li>
+                    <li><a href="#notices" onclick="scrollToSection('notices')">Notices</a></li>
+                    <li><a href="#unsubscribePage" onclick="scrollToSection('unsubscribePage')">Unsubscribe</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-column">
+                <h3>All Sections</h3>
+                <ul class="footer-links">
+                    <li><a href="#emailConfirmationPage" onclick="scrollToSection('emailConfirmationPage')">Email Confirmation</a></li>
+                    <li><a href="#detailedStoryPage" onclick="scrollToSection('detailedStoryPage')">Story Details</a></li>
+                    <li><a href="#detailedVacancyPage" onclick="scrollToSection('detailedVacancyPage')">Vacancy Details</a></li>
+                    <li><a href="#detailedNoticePage" onclick="scrollToSection('detailedNoticePage')">Notice Details</a></li>
+                    <li><a href="#detailedEditorPage" onclick="scrollToSection('detailedEditorPage')">Editor Details</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-column">
+                <h3>Sectors We Cover</h3>
+                <p>Health • WASH • Agriculture • Food Security • Education • Livelihoods • Economic Empowerment • Protection • Community Resilience</p>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>&copy; 2023 NGO News Digest. All rights reserved. | Celebrating Civil Society Impact in Zimbabwe</p>
+        </div>
     </div>
 </footer>
-
-<script>
-// Load footer content via AJAX
-document.addEventListener('DOMContentLoaded', function() {
-    fetch('/api/footer/')
-        .then(response => response.text())
-        .then(html => {
-            document.querySelector('.footer-content').innerHTML = html;
-        })
-        .catch(error => {
-            console.error('Error loading footer:', error);
-            document.querySelector('.footer-content').innerHTML = 
-                '<p>&copy; ' + new Date().getFullYear() + ' NGO News Digest</p>';
-        });
-});
-</script>

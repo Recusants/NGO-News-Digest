@@ -1,0 +1,69 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}NGO News Digest - Home{% endblock %}
+{% block content %}
+    {% include 'partials/header.html' %}
+    <section id="stories" class="section stories-section">
+        <div class="container">
+            <h2 class="section-title">NGO Success Stories</h2>
+            
+            <div class="stories-filters">
+                <button class="filter-btn active" data-filter="all">All Stories</button>
+                <button class="filter-btn" data-filter="health">Health & WASH</button>
+                <button class="filter-btn" data-filter="agriculture">Agriculture</button>
+                <button class="filter-btn" data-filter="education">Education</button>
+                <button class="filter-btn" data-filter="livelihoods">Livelihoods</button>
+            </div>
+            
+            <div class="stories-grid">
+                <div class="story-card" data-category="health">
+                    <img src="https://images.unsplash.com/photo-1576765974257-b414b9ea0051?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Maternal Health" class="story-image">
+                    <div class="story-content">
+                        <div class="story-meta">
+                            <span class="story-category">Health & WASH</span>
+                            <span>May 10, 2023</span>
+                        </div>
+                        <h3 class="story-title">Maternal Health Program Reduces Mortality by 40%</h3>
+                        <p class="story-excerpt">Partnership between Ministry of Health and NGO consortium trains midwives and equips clinics in 5 provinces.</p>
+                        <div class="story-footer">
+                            <span class="story-author">By Dr. Lisa Mangwana</span>
+                            <div class="share-buttons">
+                                <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                                <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
+                                <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="story-card" data-category="education">
+                    <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="School Children" class="story-image">
+                    <div class="story-content">
+                        <div class="story-meta">
+                            <span class="story-category">Education</span>
+                            <span>May 8, 2023</span>
+                        </div>
+                        <h3 class="story-title">Digital Learning Reaches 10,000 Rural Students</h3>
+                        <p class="story-excerpt">Save the Children's tablet-based learning program bridges the education gap in remote communities.</p>
+                        <div class="story-footer">
+                            <span class="story-author">By Farai Chikwava</span>
+                            <div class="share-buttons">
+                                <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
+                                <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
+                                <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="{% url 'stories_page' %}" class="read-more-btn">
+                    <i class="fas fa-book-open"></i> More Stories
+                </a>
+            </div>
+        </div>
+    </section>
+    {% include 'partials/footer.html' %}
+{% endblock %}
+
