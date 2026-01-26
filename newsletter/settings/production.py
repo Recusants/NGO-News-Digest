@@ -100,10 +100,13 @@ SECURE_HSTS_SECONDS = 0  # Set to 31536000 after testing
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Add debug logging to see values
-print("="*60)
-print("PRODUCTION SETTINGS LOADED")
-print(f"DEBUG: {DEBUG}")
-print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
-print(f"CSRF_TRUSTED_ORIGINS: {CSRF_TRUSTED_ORIGINS}")
-print("="*60)
+
+
+# Email settings for development
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'tinashemphisa45@gmail.com'
+EMAIL_HOST_PASSWORD = 'ztej qsoa dngh zcgu'  # ← Get from below
+DEFAULT_FROM_EMAIL = 'tinashemphisa45@gmail.com'
