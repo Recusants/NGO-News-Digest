@@ -191,6 +191,14 @@
                 }
 
                 if(errors == ""){
+                    let loadingAlert = Swal.fire({
+                        title: 'Loading...',
+                        text: 'Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
                     $.ajax({
                         url: '{% url "subscribe" %}',
                         method: 'POST',
@@ -203,6 +211,7 @@
                             'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
                         },
                         success: function(responseData) {
+                            loadingAlert.close()
                             window.location.href = '{% url "subscription_result_page" %}'
                             
                         },
