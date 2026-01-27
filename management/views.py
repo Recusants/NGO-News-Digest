@@ -35,7 +35,7 @@ from django.utils import timezone
 from django.contrib import messages
 from publisher.models import BlogPost, Category
 
-@login_required
+# @login_required
 def create_story(request, story_id=None):
     story = None
     if story_id:
