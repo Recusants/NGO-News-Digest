@@ -122,6 +122,8 @@
 
         function renderStories(stories){
             const storiesGrid = $('#stories-grid');
+
+
             
             if (stories.length < pageSize ) {
                 $('#read-more-stories-btn').hide();
@@ -130,10 +132,31 @@
 
             if (stories.length === 0 && currentPage == 1 ) {
                 storiesGrid.html(`
-                    <div class="story-card" data-category="health">
+                    <div class="story-card no-stories-card text-center">
+                        <div class="story-image-placeholder no-stories-image">
+                            <i class="fas fa-inbox fa-3x"></i>
+                        </div>
+                        
                         <div class="story-content">
-                            <div class="story-meta">
-                                <span class="story-category">No Stories</span>
+                            <div class="story-meta justify-content-center mb-3">
+                                <span class="story-category no-stories-category">
+                                    <i class="fas fa-exclamation-circle me-1"></i>Empty
+                                </span>
+                            </div>
+                            
+                            <h3 class="story-title no-stories-title mb-3">
+                                No Stories Available
+                            </h3>
+                            
+                            <p class="story-excerpt no-stories-excerpt mb-4">
+                                There are no stories matching your criteria.<br>
+                                Try adjusting your filters or check back later.
+                            </p>
+                            
+                            <div class="story-footer">
+                                <button class="btn btn-outline-primary" onclick="clearFilters()">
+                                    <i class="fas fa-filter me-1"></i>Clear Filters
+                                </button>
                             </div>
                         </div>
                     </div>
