@@ -1,0 +1,91 @@
+{% extends 'management/management_base.html' %}
+
+{% block title %}NGO News Digest - Home{% endblock %}
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    <main class="main-content" id="mainContent">
+            <section class="section" id="dashboard">
+                <div class="section-header">
+                    <h2 class="section-title">Dashboard Overview</h2>
+                    <div class="text-sm text-muted" id="dashboardDate"></div>
+                </div>
+                <div class="section-body">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="text-sm text-muted">Total Stories</div>
+                            <div class="stat-value">{{ total_stories }}</div>
+                            <div class="text-sm">↑ {{ new_stories }} from last month</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="text-sm text-muted">Published</div>
+                            <div class="stat-value">{{ stories_published }}</div>
+                            <div class="text-sm">{{ publishing_rate }}% published rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="text-sm text-muted">Pending</div>
+                            <div class="stat-value">{{ pending }}</div>
+                            <div class="text-sm">Needs review</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="text-sm text-muted">Subscribers</div>
+                            <div class="stat-value">{{ subscribers }}</div>
+                            <div class="text-sm">↑ {{ new_subscribers }} this month</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-header">
+                            <h3 class="section-title">Quick Actions</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="flex gap-1">
+                                <button class="btn btn-primary" onclick="scrollToSection('editor')">
+                                    ✏️ Write New Story
+                                </button>
+                                <button class="btn btn-secondary" onclick="scrollToSection('stories')">
+                                    👁️ Review Queue (24)
+                                </button>
+                                <button class="btn btn-secondary">
+                                    📧 Email Subscribers
+                                </button>
+                                <button class="btn btn-secondary">
+                                    📊 View Analytics
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- <div class="section mt-2">
+                        <div class="section-header">
+                            <h3 class="section-title">Recent Activity</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="table-container">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>Just now</td>
+                                            <td>You published "Flood Relief Efforts"</td>
+                                            <td><span class="badge badge-published">Published</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>2 hours ago</td>
+                                            <td>Jane edited "Education Program Launch"</td>
+                                            <td><span class="badge badge-pending">Pending</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Yesterday</td>
+                                            <td>45 new subscribers joined</td>
+                                            <td><span class="badge badge-published">Active</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div> -->
+                </div>
+            </section>
+        </main>
+    {% include 'management/management_footer.html' %}
+{% endblock %}

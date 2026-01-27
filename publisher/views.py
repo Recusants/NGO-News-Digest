@@ -20,6 +20,18 @@ from django.contrib import messages
 
 
 # html
+def story_page(request, pk):
+    story = BlogPost.objects.get(id=pk)
+    context = {
+        'category': story.category,
+        'title': story.title,
+        'author': story.author,
+        'date_and_time': str(story.created_at)[:10],
+        'content': story.content,
+        'image_url': story.thumbnail,
+    }
+    return render(request, 'publisher/story_page.html', context)
+
 def about_page(request):
     return render(request, 'publisher/about_page.html')
 
@@ -91,14 +103,14 @@ def home(request):
     return render(request, 'home.html')
 
 
-def story(request, pk):
-    story = BlogPost.objects.get(id=pk)
-    related_stories = BlogPost.objects.filter(status='PUBLISHED').exclude(id=pk)[:3]
-    context = {
-        'story': story,
-        'related_stories': related_stories,
-    }
-    return render(request, 'content/story.html', context)
+# def story(request, pk):
+#     story = BlogPost.objects.get(id=pk)
+#     related_stories = BlogPost.objects.filter(status='PUBLISHED').exclude(id=pk)[:3]
+#     context = {
+#         'story': story,
+#         'related_stories': related_stories,
+#     }
+#     return render(request, 'content/story.html', context)
 
 
 
@@ -133,11 +145,14 @@ def stories(request):
         {
             'id': story.id,
             'title': story.title,
-            'snippet': strip_tags(f"{story.content[:200]}..."),
+            'snippet': "Story snippet mist be here. Story snippet mist be custome and come here. Story and come here. Story snippet mist be custome and come here",
             'content': story.content,
             'author': f"{story.author.first_name} {story.author.last_name}",
+            'author_twitter': f"{story.author.twitter}",
+            'author_facebook': f"{story.author.facebook}",
             'date_and_time': str(story.created_at)[:10],
             'image_url': story.get_thumbnail_url(),
+            'category': "Health",
         }
         for story in paginated_stories
     ]

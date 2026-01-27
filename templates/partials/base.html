@@ -1687,6 +1687,25 @@
     </button>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+
+        const shareBtn = document.querySelector('.share-native');
+
+if (navigator.share) {
+    shareBtn.addEventListener('click', async () => {
+        try {
+            await navigator.share({
+                title: 'Check this out!',
+                text: 'Look at this interesting content',
+                url: window.location.href
+            });
+        } catch (err) {
+            console.log('Share cancelled');
+        }
+    });
+} else {
+    // Hide the native share button if not supported
+    shareBtn.style.display = 'none';
+}
         // DOM Elements for theme and mobile menu only
         const themeToggle = document.getElementById('themeToggle');
         const hamburger = document.getElementById('hamburger');

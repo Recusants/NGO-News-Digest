@@ -166,22 +166,32 @@
 
             
             stories.forEach(story => {
+                console.log(story.snippet)
                 storiesGrid.append(`
-                    <div class="story-card" data-category="health">
-                        <img src="https://images.unsplash.com/photo-1576765974257-b414b9ea0051?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Maternal Health" class="story-image">
+                    <div class="story-card" data-category="${story.category}">
+                        ${story.image_url ? `
+                            <img src="${story.image_url}" class="card-img-top"
+                                 alt="${story.title}" style="height: 200px; object-fit: cover;">
+                        ` : ''}
                         <div class="story-content">
                             <div class="story-meta">
-                                <span class="story-category">Health & WASH</span>
-                                <span>May 10, 2023</span>
+                                <span class="story-category">${story.category}</span>
+                                <span>${story.date_and_time}</span>
                             </div>
-                            <h3 class="story-title">Maternal Health Program Reduces Mortality by 40%</h3>
-                            <p class="story-excerpt">Partnership between Ministry of Health and NGO consortium trains midwives and equips clinics in 5 provinces.</p>
+                            <h3 class="story-title">${story.title}</h3>
+                            <a href="story_page/${story.id}" class="story-excerpt">${story.snippet}</a>
                             <div class="story-footer">
-                                <span class="story-author">By Dr. Lisa Mangwana</span>
+                                <span class="story-author">By ${story.author}</span>
                                 <div class="share-buttons">
-                                    <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
-                                    <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
-                                    <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
+                                    <button class="share-btn" onclick="window.open('https://www.facebook.com/${story.author_facebook}', '_blank')">
+                                        <i class="fab fa-facebook-f"></i>
+                                    </button>
+                                    <button class="share-btn" onclick="window.open('https://www.twitter.com/${story.author_twitter}', '_blank')">
+                                        <i class="fab fa-twitter"></i>
+                                    </button>
+                                    <button class="share-btn share-native" type="button" title="Share">
+                                        <i class="fas fa-share-alt"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>

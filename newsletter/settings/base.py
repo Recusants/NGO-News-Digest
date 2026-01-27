@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "accounts",
     "publisher",
     "subscriptions",
+    "management",
 
     "ckeditor",
 ]

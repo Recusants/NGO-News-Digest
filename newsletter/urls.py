@@ -9,6 +9,7 @@ urlpatterns = [
     path('', include('publisher.urls')),
     path('publisher/', include('publisher.urls')),
     path('subscriptions/', include('subscriptions.urls')),
+    path('management/', include('management.urls')),
 ]
 
 

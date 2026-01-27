@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Admin Dashboard</title>
+    <!-- CKEditor -->
+    <script src="https://cdn.ckeditor.com/4.20.1/standard/ckeditor.js"></script>
+    <style>
+        /* RESET & BASE */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        /* UTILITIES */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .space-between { justify-content: space-between; }
+        .align-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .gap-1 { gap: 1rem; }
+        .gap-2 { gap: 2rem; }
+        .mt-1 { margin-top: 1rem; }
+        .mt-2 { margin-top: 2rem; }
+        .mb-1 { margin-bottom: 1rem; }
+        .mb-2 { margin-bottom: 2rem; }
+        .p-1 { padding: 1rem; }
+        .p-2 { padding: 2rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-muted { color: #666; }
+        .text-center { text-align: center; }
+        .w-100 { width: 100%; }
+        
+        /* LAYOUT */
+        .app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* HEADER - FIXED */
+        .header {
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e1e5eb;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #2563eb;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #2563eb;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* SIDEBAR - FIXED WIDTH */
+        .sidebar {
+            width: 240px;
+            background: white;
+            border-right: 1px solid #e1e5eb;
+            padding: 2rem 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 99;
+        }
+        
+        .sidebar.collapsed {
+            transform: translateX(-240px);
+        }
+        
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #4b5563;
+            padding: 0.5rem;
+        }
+        
+        .nav-item {
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #4b5563;
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .nav-item:hover {
+            background: #f8fafc;
+            color: #2563eb;
+        }
+        
+        .nav-item.active {
+            background: #eff6ff;
+            color: #2563eb;
+            border-left-color: #2563eb;
+        }
+        
+        /* MAIN CONTENT AREA */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 2rem;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 0;
+        }
+        
+        /* SECTION STYLES */
+        .section {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e1e5eb;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e1e5eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .section-body {
+            padding: 2rem;
+        }
+        
+        /* LOGIN/AUTH SECTION */
+        .auth-section {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid #e1e5eb;
+            margin-bottom: 2rem;
+        }
+        
+        .auth-tab {
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .auth-tab.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+            font-weight: 600;
+        }
+        
+        .auth-content {
+            padding: 1rem 0;
+        }
+        
+        .auth-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        /* PASSWORD RECOVERY */
+        .recovery-steps {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 2rem;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        
+        .step.active .step-number {
+            background: #2563eb;
+            color: white;
+        }
+        
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e1e5eb;
+            background: white;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            color: #1f2937;
+        }
+        
+        /* TABLES */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e1e5eb;
+            background: white;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            color: #4b5563;
+            border-bottom: 2px solid #e1e5eb;
+            background: #f8fafc;
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e1e5eb;
+        }
+        
+        tr:hover {
+            background: #f8fafc;
+        }
+        
+        /* BADGES */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .badge-draft {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-published {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-pending {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        /* BUTTONS */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+        
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+        
+        /* FORM ELEMENTS */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        /* EDITOR */
+        .editor-wrapper {
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #d1d5db;
+        }
+        
+        /* SCROLL TO TOP BUTTON */
+        .scroll-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: #2563eb;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+        
+        .scroll-top.visible {
+            opacity: 1;
+        }
+        
+        /* SECTION ANCHOR HIGHLIGHT */
+        .section.highlighted {
+            animation: highlight 2s ease;
+        }
+        
+        @keyframes highlight {
+            0%, 100% { border-color: #e1e5eb; }
+            50% { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        }
+        
+        /* MOBILE DISABLED - Only tablets and above */
+        @media (max-width: 768px) {
+            .app {
+                display: none;
+            }
+            
+            .mobile-message {
+                display: flex;
+                height: 100vh;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem;
+                text-align: center;
+                background: #f5f7fa;
+                color: #4b5563;
+            }
+        }
+        
+        /* TABLET OPTIMIZATIONS */
+        @media (max-width: 1024px) {
+            .sidebar {
+                position: fixed;
+                z-index: 1000;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            }
+            
+            .sidebar:not(.collapsed) ~ .main-content {
+                margin-left: 240px;
+            }
+        }
+        
+        /* SCROLLBAR STYLING */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* MODAL */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        /* NOTIFICATIONS */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- MOBILE MESSAGE -->
+    <div class="mobile-message hidden">
+        <div>
+            <h2>📱 Desktop Only</h2>
+            <p>This admin dashboard is optimized for tablets and desktop devices only.</p>
+            <p>Please access from a device with a larger screen.</p>
+        </div>
+    </div>
+    
+    <!-- MAIN APP - ALL SECTIONS VISIBLE -->
+    <div class="app">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="flex align-center gap-2">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    ☰
+                </button>
+                <div class="logo">NGO Admin Dashboard</div>
+            </div>
+            
+            <div class="user-menu">
+                <div class="text-sm text-muted" id="currentTime"></div>
+                <div class="user-avatar" onclick="scrollToSection('profile')">
+                    <span id="userInitials">AD</span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- SIDEBAR -->
+        <nav class="sidebar" id="sidebar">
+            <div class="nav-item active" onclick="scrollToSection('login')">
+                <span>🔐</span>
+                <span>Login</span>
+            </div>
+            <div class="nav-item" onclick="scrollToSection('dashboard')">
+                <span>📊</span>
+                <span>Dashboard</span>
+            </div>
+            <div class="nav-item" onclick="scrollToSection('stories')">
+                <span>📝</span>
+                <span>Stories</span>
+            </div>
+            <div class="nav-item" onclick="scrollToSection('editor')">
+                <span>✏️</span>
+                <span>New Story</span>
+            </div>
+            <div class="nav-item" onclick="scrollToSection('subscribers')">
+                <span>👥</span>
+                <span>Subscribers</span>
+            </div>
+            <div class="nav-item" onclick="scrollToSection('profile')">
+                <span>👤</span>
+                <span>Profile</span>
+            </div>
+            <div class="nav-item" onclick="scrollToSection('settings')">
+                <span>⚙️</span>
+                <span>Settings</span>
+            </div>
+        </nav>
+        
+        <!-- MAIN CONTENT - ALL SECTIONS VISIBLE -->
+        <main class="main-content" id="mainContent">
+            <!-- LOGIN SECTION -->
+            <section class="section auth-section" id="login">
+                <div class="section-header">
+                    <h2 class="section-title">Account Management</h2>
+                </div>
+                <div class="section-body">
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" onclick="showAuthTab('login')">Login</button>
+                        <button class="auth-tab" onclick="showAuthTab('forgot')">Forgot Password</button>
+                        <button class="auth-tab" onclick="showAuthTab('register')">Register</button>
+                    </div>
+                    
+                    <!-- LOGIN TAB -->
+                    <div id="loginTab" class="auth-content">
+                        <form id="loginForm" class="auth-form">
+                            <div class="form-group">
+                                <label for="loginEmail">Email Address</label>
+                                <input type="email" id="loginEmail" class="form-control" placeholder="admin@ngo.org" value="admin@ngo.org">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="loginPassword">Password</label>
+                                <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" value="password123">
+                            </div>
+                            
+                            <div class="form-group flex align-center space-between">
+                                <label class="flex align-center">
+                                    <input type="checkbox" id="rememberMe" checked>
+                                    <span class="text-sm ml-1">Remember me</span>
+                                </label>
+                            </div>
+                            
+                            <button type="button" class="btn btn-primary w-100" onclick="handleLogin()">
+                                Sign In
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- FORGOT PASSWORD TAB -->
+                    <div id="forgotTab" class="auth-content hidden">
+                        <div class="recovery-steps">
+                            <div class="step active" data-step="1">
+                                <div class="step-number">1</div>
+                                <span class="text-sm">Enter Email</span>
+                            </div>
+                            <div class="step" data-step="2">
+                                <div class="step-number">2</div>
+                                <span class="text-sm">Verify Code</span>
+                            </div>
+                            <div class="step" data-step="3">
+                                <div class="step-number">3</div>
+                                <span class="text-sm">New Password</span>
+                            </div>
+                        </div>
+                        
+                        <!-- STEP 1: Email -->
+                        <div id="step1">
+                            <p class="text-muted mb-2">Enter your email address and we'll send you a verification code.</p>
+                            <form id="forgotPasswordForm" class="auth-form">
+                                <div class="form-group">
+                                    <label for="recoveryEmail">Email Address</label>
+                                    <input type="email" id="recoveryEmail" class="form-control" placeholder="your@email.com">
+                                </div>
+                                
+                                <div class="flex gap-1 mt-2">
+                                    <button type="button" class="btn btn-secondary" onclick="showAuthTab('login')">Back to Login</button>
+                                    <button type="button" class="btn btn-primary" onclick="goToStep(2)">Send Code</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- STEP 2: Verification Code -->
+                        <div id="step2" class="hidden">
+                            <p class="text-muted mb-2">Enter the 6-digit code sent to your email.</p>
+                            <form id="verifyCodeForm" class="auth-form">
+                                <div class="form-group">
+                                    <label for="verificationCode">Verification Code</label>
+                                    <div class="flex gap-1">
+                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
+                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
+                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
+                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
+                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
+                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
+                                    </div>
+                                </div>
+                                
+                                <div class="text-sm text-muted mb-2">
+                                    Didn't receive code? 
+                                    <a href="#" onclick="resendCode()">Resend</a>
+                                    <span id="countdown">(60s)</span>
+                                </div>
+                                
+                                <div class="flex gap-1 mt-2">
+                                    <button type="button" class="btn btn-secondary" onclick="backToStep1()">Back</button>
+                                    <button type="button" class="btn btn-primary" onclick="goToStep(3)">Verify Code</button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- STEP 3: New Password -->
+                        <div id="step3" class="hidden">
+                            <p class="text-muted mb-2">Create a new secure password.</p>
+                            <form id="newPasswordForm" class="auth-form">
+                                <div class="form-group">
+                                    <label for="newPassword">New Password</label>
+                                    <input type="password" id="newPassword" class="form-control" placeholder="••••••••">
+                                    <div class="text-sm text-muted mt-1">
+                                        Password must be at least 8 characters with uppercase, lowercase, and numbers.
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="confirmPassword">Confirm Password</label>
+                                    <input type="password" id="confirmPassword" class="form-control" placeholder="••••••••">
+                                </div>
+                                
+                                <div class="flex gap-1 mt-2">
+                                    <button type="button" class="btn btn-secondary" onclick="backToStep2()">Back</button>
+                                    <button type="button" class="btn btn-primary" onclick="resetPassword()">Reset Password</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- REGISTER TAB -->
+                    <div id="registerTab" class="auth-content hidden">
+                        <p class="text-muted mb-2">Contact your system administrator to create a new account.</p>
+                        <form class="auth-form">
+                            <div class="form-group">
+                                <label>Contact Administrator</label>
+                                <div class="p-2 bg-blue-50 rounded-lg">
+                                    <p class="text-sm mb-1">Email: admin@ngo.org</p>
+                                    <p class="text-sm mb-1">Phone: +1 (555) 123-4567</p>
+                                    <p class="text-sm">Office Hours: Mon-Fri, 9AM-5PM</p>
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn btn-secondary w-100" onclick="showAuthTab('login')">
+                                Back to Login
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- DASHBOARD SECTION -->
+            <section class="section" id="dashboard">
+                <div class="section-header">
+                    <h2 class="section-title">Dashboard Overview</h2>
+                    <div class="text-sm text-muted" id="dashboardDate"></div>
+                </div>
+                <div class="section-body">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="text-sm text-muted">Total Stories</div>
+                            <div class="stat-value">142</div>
+                            <div class="text-sm">↑ 12 from last month</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="text-sm text-muted">Published</div>
+                            <div class="stat-value">118</div>
+                            <div class="text-sm">83% published rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="text-sm text-muted">Pending</div>
+                            <div class="stat-value">24</div>
+                            <div class="text-sm">Needs review</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="text-sm text-muted">Subscribers</div>
+                            <div class="stat-value">2,847</div>
+                            <div class="text-sm">↑ 345 this month</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-header">
+                            <h3 class="section-title">Quick Actions</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="flex gap-1">
+                                <button class="btn btn-primary" onclick="scrollToSection('editor')">
+                                    ✏️ Write New Story
+                                </button>
+                                <button class="btn btn-secondary" onclick="scrollToSection('stories')">
+                                    👁️ Review Queue (24)
+                                </button>
+                                <button class="btn btn-secondary">
+                                    📧 Email Subscribers
+                                </button>
+                                <button class="btn btn-secondary">
+                                    📊 View Analytics
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="section mt-2">
+                        <div class="section-header">
+                            <h3 class="section-title">Recent Activity</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="table-container">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>Just now</td>
+                                            <td>You published "Flood Relief Efforts"</td>
+                                            <td><span class="badge badge-published">Published</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>2 hours ago</td>
+                                            <td>Jane edited "Education Program Launch"</td>
+                                            <td><span class="badge badge-pending">Pending</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Yesterday</td>
+                                            <td>45 new subscribers joined</td>
+                                            <td><span class="badge badge-published">Active</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- STORIES SECTION -->
+            <section class="section" id="stories">
+                <div class="section-header">
+                    <h2 class="section-title">Story Management</h2>
+                    <button class="btn btn-primary" onclick="scrollToSection('editor')">
+                        ＋ New Story
+                    </button>
+                </div>
+                <div class="section-body">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Helping Communities Rebuild After Floods</td>
+                                    <td>John Doe</td>
+                                    <td><span class="badge badge-published">Published</span></td>
+                                    <td>Oct 15, 2023</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-secondary">Edit</button>
+                                        <button class="btn btn-sm btn-secondary">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Education for All Initiative</td>
+                                    <td>Jane Smith</td>
+                                    <td><span class="badge badge-published">Published</span></td>
+                                    <td>Oct 12, 2023</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-secondary">Edit</button>
+                                        <button class="btn btn-sm btn-secondary">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Health Camp in Rural Areas</td>
+                                    <td>Robert Johnson</td>
+                                    <td><span class="badge badge-pending">Pending Review</span></td>
+                                    <td>Oct 10, 2023</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary">Review</button>
+                                        <button class="btn btn-sm btn-secondary">Edit</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- EDITOR SECTION -->
+            <section class="section" id="editor">
+                <div class="section-header">
+                    <h2 class="section-title">Create New Story</h2>
+                    <button class="btn btn-secondary" onclick="scrollToSection('stories')">
+                        ← Back to Stories
+                    </button>
+                </div>
+                <div class="section-body">
+                    <div class="form-group">
+                        <label for="storyTitle">Story Title *</label>
+                        <input type="text" id="storyTitle" class="form-control" 
+                               placeholder="Enter a compelling title..." 
+                               value="Helping Communities Rebuild After Floods">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="storyExcerpt">Excerpt (Short Summary)</label>
+                        <textarea id="storyExcerpt" class="form-control" rows="3">
+Our team worked tirelessly to help communities affected by recent floods rebuild their homes and lives. With your support, we provided essential supplies and rebuilding materials.
+                        </textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="storyCategory">Category</label>
+                        <select id="storyCategory" class="form-control">
+                            <option value="relief">Disaster Relief</option>
+                            <option value="education" selected>Education</option>
+                            <option value="health">Health</option>
+                            <option value="environment">Environment</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Story Content *</label>
+                        <div class="editor-wrapper">
+                            <textarea id="ckeditor" name="ckeditor">
+                                <p>The recent floods devastated communities across the region, leaving thousands without homes or basic necessities. Our NGO immediately mobilized resources to provide relief.</p>
+                                <p><strong>Key actions we took:</strong></p>
+                                <ul>
+                                    <li>Distributed food packages to 500 families</li>
+                                    <li>Provided temporary shelter materials</li>
+                                    <li>Set up clean water stations</li>
+                                    <li>Offered medical assistance to affected communities</li>
+                                </ul>
+                                <p>Thanks to generous donors like you, we're helping families rebuild their lives and restore hope in these challenging times.</p>
+                            </textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2 mt-2">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="storyStatus">Status</label>
+                            <select id="storyStatus" class="form-control">
+                                <option value="draft">Save as Draft</option>
+                                <option value="pending" selected>Submit for Review</option>
+                                <option value="publish">Publish Now</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="flex: 1;">
+                            <label for="publishDate">Publish Date</label>
+                            <input type="date" id="publishDate" class="form-control" value="2023-10-20">
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-1 mt-2">
+                        <button class="btn btn-primary" onclick="saveStory()">
+                            💾 Save Story
+                        </button>
+                        <button class="btn btn-secondary" onclick="previewStory()">
+                            👁️ Preview
+                        </button>
+                        <button class="btn btn-secondary" onclick="scrollToSection('dashboard')">
+                            ← Back to Dashboard
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SUBSCRIBERS SECTION -->
+            <section class="section" id="subscribers">
+                <div class="section-header">
+                    <h2 class="section-title">Subscribers</h2>
+                    <div class="flex gap-1">
+                        <button class="btn btn-secondary">
+                            📥 Import CSV
+                        </button>
+                        <button class="btn btn-primary">
+                            ＋ Add Subscriber
+                        </button>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Name</th>
+                                    <th>Joined</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>john@example.com</td>
+                                    <td>John Doe</td>
+                                    <td>Sep 15, 2023</td>
+                                    <td><span class="badge badge-published">Active</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-secondary">Edit</button>
+                                        <button class="btn btn-sm btn-secondary">Email</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>jane@example.com</td>
+                                    <td>Jane Smith</td>
+                                    <td>Sep 10, 2023</td>
+                                    <td><span class="badge badge-published">Active</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-secondary">Edit</button>
+                                        <button class="btn btn-sm btn-secondary">Email</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- PROFILE SECTION -->
+            <section class="section" id="profile">
+                <div class="section-header">
+                    <h2 class="section-title">Your Profile</h2>
+                </div>
+                <div class="section-body">
+                    <div class="profile-header">
+                        <div class="profile-avatar-large" id="profileAvatar">
+                            <span id="profileInitials">AD</span>
+                            <div class="profile-avatar-change" onclick="changeAvatar()">
+                                ✎
+                            </div>
+                        </div>
+                        <div>
+                            <h3 id="profileName">Admin User</h3>
+                            <p class="text-muted" id="profileEmail">admin@ngo.org</p>
+                            <p class="text-sm">Administrator • Last login: Today, 10:30 AM</p>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-header">
+                            <h3 class="section-title">Personal Information</h3>
+                        </div>
+                        <div class="section-body">
+                            <form id="profileForm">
+                                <div class="flex gap-2 mb-2">
+                                    <div class="form-group" style="flex: 1;">
+                                        <label for="profileFirstName">First Name</label>
+                                        <input type="text" id="profileFirstName" class="form-control" value="Admin">
+                                    </div>
+                                    
+                                    <div class="form-group" style="flex: 1;">
+                                        <label for="profileLastName">Last Name</label>
+                                        <input type="text" id="profileLastName" class="form-control" value="User">
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="profileEmailInput">Email Address</label>
+                                    <input type="email" id="profileEmailInput" class="form-control" value="admin@ngo.org">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="profilePhone">Phone Number</label>
+                                    <input type="tel" id="profilePhone" class="form-control" value="+1 (555) 123-4567">
+                                </div>
+                                
+                                <button type="button" class="btn btn-primary" onclick="updateProfile()">
+                                    💾 Update Profile
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="section mt-2">
+                        <div class="section-header">
+                            <h3 class="section-title">Change Password</h3>
+                        </div>
+                        <div class="section-body">
+                            <form id="passwordForm">
+                                <div class="form-group">
+                                    <label for="currentPassword">Current Password</label>
+                                    <input type="password" id="currentPassword" class="form-control" placeholder="••••••••">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="newProfilePassword">New Password</label>
+                                    <input type="password" id="newProfilePassword" class="form-control" placeholder="••••••••">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="confirmProfilePassword">Confirm New Password</label>
+                                    <input type="password" id="confirmProfilePassword" class="form-control" placeholder="••••••••">
+                                </div>
+                                
+                                <button type="button" class="btn btn-primary" onclick="changePassword()">
+                                    🔒 Change Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SETTINGS SECTION -->
+            <section class="section" id="settings">
+                <div class="section-header">
+                    <h2 class="section-title">System Settings</h2>
+                </div>
+                <div class="section-body">
+                    <form id="settingsForm">
+                        <div class="section mb-2">
+                            <div class="section-header">
+                                <h3 class="section-title">General Settings</h3>
+                            </div>
+                            <div class="section-body">
+                                <div class="form-group">
+                                    <label for="siteName">Site Name</label>
+                                    <input type="text" id="siteName" class="form-control" value="NGO Stories">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="siteDescription">Site Description</label>
+                                    <textarea id="siteDescription" class="form-control" rows="3">
+Sharing stories of hope and impact from our NGO work around the world.
+                                    </textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" onclick="saveSettings()">
+                            💾 Save All Settings
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </main>
+        
+        <!-- SCROLL TO TOP BUTTON -->
+        <div class="scroll-top" id="scrollTop" onclick="scrollToTop()">
+            ↑
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="avatarModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Change Profile Picture</h3>
+            <div class="form-group mt-2">
+                <label>Upload new image</label>
+                <input type="file" class="form-control" accept="image/*" onchange="uploadAvatar(event)">
+            </div>
+            <div class="flex gap-1 mt-2">
+                <button class="btn btn-secondary" onclick="closeModal('avatarModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveAvatar()">Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ======================
+        // INITIALIZATION
+        // ======================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if mobile
+            if (window.innerWidth <= 768) {
+                document.querySelector('.mobile-message').classList.remove('hidden');
+                return;
+            }
+            
+            // Initialize CKEditor
+            initCKEditor();
+            
+            // Set current date/time
+            updateDateTime();
+            setInterval(updateDateTime, 60000);
+            
+            // Setup scroll to top button
+            setupScrollTop();
+            
+            // Set default logged in state
+            handleLogin();
+        });
+
+        // ======================
+        // NAVIGATION & SCROLLING
+        // ======================
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                // Remove highlight from all sections
+                document.querySelectorAll('.section').forEach(s => {
+                    s.classList.remove('highlighted');
+                });
+                
+                // Add highlight to target section
+                section.classList.add('highlighted');
+                
+                // Scroll to section
+                section.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                // Update active nav item
+                updateActiveNav(sectionId);
+                
+                // If scrolling to editor, initialize CKEditor
+                if (sectionId === 'editor') {
+                    initCKEditor();
+                }
+            }
+        }
+
+        function updateActiveNav(sectionId) {
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Map section IDs to nav indices
+            const navMap = {
+                'login': 0,
+                'dashboard': 1,
+                'stories': 2,
+                'editor': 3,
+                'subscribers': 4,
+                'profile': 5,
+                'settings': 6
+            };
+            
+            if (navMap[sectionId] !== undefined) {
+                document.querySelectorAll('.nav-item')[navMap[sectionId]].classList.add('active');
+            }
+        }
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function setupScrollTop() {
+            const scrollTopBtn = document.getElementById('scrollTop');
+            
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    scrollTopBtn.classList.add('visible');
+                } else {
+                    scrollTopBtn.classList.remove('visible');
+                }
+            });
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+
+        // ======================
+        // AUTHENTICATION TABS
+        // ======================
+        function showAuthTab(tabName) {
+            // Update tabs
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide content
+            document.getElementById('loginTab').classList.add('hidden');
+            document.getElementById('forgotTab').classList.add('hidden');
+            document.getElementById('registerTab').classList.add('hidden');
+            
+            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+            
+            // Reset recovery steps if showing forgot password
+            if (tabName === 'forgot') {
+                resetRecoverySteps();
+            }
+        }
+
+        // ======================
+        // LOGIN FUNCTIONALITY
+        // ======================
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            // Simple validation
+            if (email && password) {
+                // Update user info
+                const nameParts = email.split('@')[0].split('.');
+                const firstName = nameParts[0] || 'Admin';
+                const lastName = nameParts[1] || 'User';
+                
+                // Update profile info
+                document.getElementById('profileName').textContent = `${firstName} ${lastName}`;
+                document.getElementById('profileEmail').textContent = email;
+                document.getElementById('profileEmailInput').value = email;
+                document.getElementById('profileFirstName').value = firstName;
+                document.getElementById('profileLastName').value = lastName;
+                
+                // Update avatar initials
+                const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+                document.getElementById('userInitials').textContent = initials;
+                document.getElementById('profileInitials').textContent = initials;
+                
+                showNotification('Successfully logged in!');
+                scrollToSection('dashboard');
+            } else {
+                showNotification('Please enter email and password', 'error');
+            }
+        }
+
+        // ======================
+        // PASSWORD RECOVERY
+        // ======================
+        let recoveryStep = 1;
+        let countdownTimer = null;
+        let countdownSeconds = 60;
+
+        function resetRecoverySteps() {
+            recoveryStep = 1;
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.querySelector('.step[data-step="1"]').classList.add('active');
+            
+            document.getElementById('step1').classList.remove('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+            }
+        }
+
+        function goToStep(step) {
+            recoveryStep = step;
+            
+            // Update step indicators
+            document.querySelectorAll('.step').forEach(s => {
+                s.classList.remove('active');
+            });
+            document.querySelector(`.step[data-step="${step}"]`).classList.add('active');
+            
+            // Show/hide forms
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById(`step${step}`).classList.remove('hidden');
+            
+            // Start countdown for step 2
+            if (step === 2) {
+                startCountdown();
+            }
+        }
+
+        function backToStep1() {
+            goToStep(1);
+        }
+
+        function backToStep2() {
+            goToStep(2);
+        }
+
+        function startCountdown() {
+            countdownSeconds = 60;
+            const countdownElement = document.getElementById('countdown');
+            
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+            }
+            
+            countdownTimer = setInterval(() => {
+                countdownSeconds--;
+                countdownElement.textContent = `(${countdownSeconds}s)`;
+                
+                if (countdownSeconds <= 0) {
+                    clearInterval(countdownTimer);
+                    countdownElement.textContent = '(Expired)';
+                }
+            }, 1000);
+        }
+
+        function resendCode() {
+            if (countdownSeconds > 0) return;
+            
+            showNotification('New verification code sent to your email');
+            startCountdown();
+        }
+
+        function resetPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showNotification('Passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                showNotification('Password must be at least 8 characters', 'error');
+                return;
+            }
+            
+            // Success
+            showNotification('Password reset successfully!');
+            setTimeout(() => {
+                showAuthTab('login');
+            }, 2000);
+        }
+
+        // ======================
+        // EDITOR
+        // ======================
+        let editorInstance = null;
+
+        function initCKEditor() {
+            if (typeof CKEDITOR !== 'undefined' && !editorInstance) {
+                editorInstance = CKEDITOR.replace('ckeditor', {
+                    toolbar: [
+                        { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike'] },
+                        { name: 'paragraph', items: ['NumberedList', 'BulletedList'] },
+                        { name: 'links', items: ['Link', 'Unlink'] },
+                        { name: 'insert', items: ['Image', 'Table'] },
+                        { name: 'styles', items: ['Format'] },
+                        { name: 'tools', items: ['Maximize'] }
+                    ],
+                    height: 300
+                });
+            }
+        }
+
+        function saveStory() {
+            const title = document.getElementById('storyTitle').value;
+            const status = document.getElementById('storyStatus').value;
+            const content = editorInstance ? editorInstance.getData() : '';
+            
+            if (!title.trim()) {
+                showNotification('Please enter a story title', 'error');
+                return;
+            }
+            
+            if (!content.trim()) {
+                showNotification('Please add some content to your story', 'error');
+                return;
+            }
+            
+            // Simulate save
+            showNotification(`"${title}" saved as ${status}`);
+        }
+
+        function previewStory() {
+            const title = document.getElementById('storyTitle').value;
+            const excerpt = document.getElementById('storyExcerpt').value;
+            
+            alert(`Preview: ${title}\n\n${excerpt}\n\n(Full preview would open in new tab)`);
+        }
+
+        // ======================
+        // PROFILE MANAGEMENT
+        // ======================
+        function updateProfile() {
+            const firstName = document.getElementById('profileFirstName').value;
+            const lastName = document.getElementById('profileLastName').value;
+            const email = document.getElementById('profileEmailInput').value;
+            
+            // Update profile display
+            document.getElementById('profileName').textContent = `${firstName} ${lastName}`;
+            document.getElementById('profileEmail').textContent = email;
+            
+            // Update avatar initials
+            const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+            document.getElementById('userInitials').textContent = initials;
+            document.getElementById('profileInitials').textContent = initials;
+            
+            showNotification('Profile updated successfully');
+        }
+
+        function changePassword() {
+            const current = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newProfilePassword').value;
+            const confirm = document.getElementById('confirmProfilePassword').value;
+            
+            if (!current) {
+                showNotification('Please enter current password', 'error');
+                return;
+            }
+            
+            if (newPass !== confirm) {
+                showNotification('New passwords do not match', 'error');
+                return;
+            }
+            
+            if (newPass.length < 8) {
+                showNotification('Password must be at least 8 characters', 'error');
+                return;
+            }
+            
+            showNotification('Password changed successfully');
+            
+            // Clear form
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newProfilePassword').value = '';
+            document.getElementById('confirmProfilePassword').value = '';
+        }
+
+        function changeAvatar() {
+            showModal('avatarModal');
+        }
+
+        function uploadAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const avatarElement = document.getElementById('profileAvatar');
+                    avatarElement.style.backgroundImage = `url(${e.target.result})`;
+                    avatarElement.style.backgroundSize = 'cover';
+                    avatarElement.querySelector('#profileInitials').style.display = 'none';
+                    
+                    // Also update small avatar
+                    const smallAvatar = document.querySelector('.user-avatar');
+                    smallAvatar.style.backgroundImage = `url(${e.target.result})`;
+                    smallAvatar.style.backgroundSize = 'cover';
+                    smallAvatar.querySelector('#userInitials').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveAvatar() {
+            showNotification('Profile picture updated successfully');
+            closeModal('avatarModal');
+        }
+
+        // ======================
+        // SETTINGS
+        // ======================
+        function saveSettings() {
+            showNotification('Settings saved successfully');
+        }
+
+        // ======================
+        // UTILITIES
+        // ======================
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            
+            document.getElementById('currentTime').textContent = 
+                now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('dashboardDate').textContent = 
+                now.toLocaleDateString(undefined, options);
+        }
+
+        function showNotification(message, type = 'success') {
+            // Remove existing notification
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            // Create new notification
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span>${type === 'success' ? '✓' : '⚠'}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function moveToNext(input) {
+            if (input.value.length === 1) {
+                const next = input.nextElementSibling;
+                if (next && next.tagName === 'INPUT') {
+                    next.focus();
+                }
+            }
+        }
+
+        // Close modals when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.add('hidden');
+            }
+        });
+
+        // Close modals with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.add('hidden');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -9,8 +9,9 @@ urlpatterns = [
     
     path('contact_page', views.contact_page, name='contact_page'),
 
+    path('story_page/<int:pk>', views.story_page, name='story_page'),
     path('stories_page', views.stories_page, name='stories_page'),
-    path('story/<int:pk>', views.story, name='story'),
+    # path('story/<int:pk>', views.story, name='story'),
 
     path('stories', views.stories, name='stories'),
     path('get_latest_stories', views.get_latest_stories, name='get_latest_stories'),
