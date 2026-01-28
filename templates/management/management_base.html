@@ -6,6 +6,7 @@
     {% load static %}
     <title>{% block title %}Admin NGO-ND{% endblock %}</title>
     <script src="https://cdn.ckeditor.com/4.20.1/standard/ckeditor.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         /* RESET & BASE */
         * {
@@ -551,6 +552,8 @@
     <button class="back-to-top" id="backToTop">
         <i class="fas fa-chevron-up"></i>
     </button>
+
+
     <script>
         // ======================
         // INITIALIZATION
@@ -565,15 +568,12 @@
             // Initialize CKEditor
             initCKEditor();
             
-            // Set current date/time
-            updateDateTime();
-            setInterval(updateDateTime, 60000);
+            
             
             // Setup scroll to top button
-            setupScrollTop();
             
-            // Set default logged in state
-            handleLogin();
+            
+            
         });
 
         // ======================
@@ -635,17 +635,7 @@
             });
         }
 
-        function setupScrollTop() {
-            const scrollTopBtn = document.getElementById('scrollTop');
-            
-            window.addEventListener('scroll', function() {
-                if (window.scrollY > 300) {
-                    scrollTopBtn.classList.add('visible');
-                } else {
-                    scrollTopBtn.classList.remove('visible');
-                }
-            });
-        }
+        
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
@@ -674,38 +664,7 @@
             }
         }
 
-        // ======================
-        // LOGIN FUNCTIONALITY
-        // ======================
-        function handleLogin() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            // Simple validation
-            if (email && password) {
-                // Update user info
-                const nameParts = email.split('@')[0].split('.');
-                const firstName = nameParts[0] || 'Admin';
-                const lastName = nameParts[1] || 'User';
-                
-                // Update profile info
-                document.getElementById('profileName').textContent = `${firstName} ${lastName}`;
-                document.getElementById('profileEmail').textContent = email;
-                document.getElementById('profileEmailInput').value = email;
-                document.getElementById('profileFirstName').value = firstName;
-                document.getElementById('profileLastName').value = lastName;
-                
-                // Update avatar initials
-                const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-                document.getElementById('userInitials').textContent = initials;
-                document.getElementById('profileInitials').textContent = initials;
-                
-                showNotification('Successfully logged in!');
-                scrollToSection('dashboard');
-            } else {
-                showNotification('Please enter email and password', 'error');
-            }
-        }
+        
 
         // ======================
         // PASSWORD RECOVERY
@@ -846,12 +805,8 @@
             showNotification(`"${title}" saved as ${status}`);
         }
 
-        function previewStory() {
-            const title = document.getElementById('storyTitle').value;
-            const excerpt = document.getElementById('storyExcerpt').value;
-            
-            alert(`Preview: ${title}\n\n${excerpt}\n\n(Full preview would open in new tab)`);
-        }
+        
+        
 
         // ======================
         // PROFILE MANAGEMENT
@@ -940,20 +895,7 @@
         // ======================
         // UTILITIES
         // ======================
-        function updateDateTime() {
-            const now = new Date();
-            const options = { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            };
-            
-            document.getElementById('currentTime').textContent = 
-                now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            document.getElementById('dashboardDate').textContent = 
-                now.toLocaleDateString(undefined, options);
-        }
+        
 
         function showNotification(message, type = 'success') {
             // Remove existing notification

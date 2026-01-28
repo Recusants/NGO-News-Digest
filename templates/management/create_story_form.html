@@ -1,0 +1,23 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}{% if story %}Edit Story{% else %}Create Story{% endif %}{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    
+    <main class="main-content" id="mainContent">
+        <h2>{{ title }}</h2>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {{ form.media }}  {# Required for CKEditor #}
+            {{ form.as_p }}
+
+            <button type="submit" class="btn btn-primary">
+                Save
+            </button>
+        </form>
+    </main>
+{% endblock %}

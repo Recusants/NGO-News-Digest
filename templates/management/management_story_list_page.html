@@ -1,0 +1,161 @@
+{% extends 'management/management_base.html' %}
+
+{% block title %}{% if story %}Edit Story{% else %}Create Story{% endif %}{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    <main class="main-content" id="mainContent">
+    	<section class="section" id="stories">
+            <div class="section-header">
+                <h2 class="section-title">Story Management</h2>
+                <button class="btn btn-primary" onclick="window.location.href='{% url 'create_story_page' %}'">
+                    ＋ New Story
+                </button>
+            </div>
+            <div class="section-body">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tory ID</th>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stories-table-body">
+                            
+                        </tbody>
+                    </table>
+                </div>
+                <button id="management-read-more-stories-btn">More</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        // State variables
+        let currentPage = 1;
+        let pageSize = 20;
+        let storyCategory = "";
+        let sortBy = 'created_at';
+        let sortOrder = 'desc';
+
+        $(document).ready(function() {
+            clearStories()
+            getStories()
+        })
+
+        function clearStories(){
+            const storiesTable = $('#stories-table-body');
+            storiesTable.empty();
+        }
+
+
+        function getStories(){
+            let loadingAlert = Swal.fire({
+                title: 'Loading...',
+                text: 'Please wait while we fetch stories',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            $.ajax({
+                url: '{% url "management_stories" %}',
+                method: 'GET',
+                dataType: 'json',
+                data: {
+                    page: currentPage,
+                    page_size: pageSize,
+                    category: storyCategory,
+                    sort_by: sortBy,
+                    sort_order: sortOrder
+                },
+                success: function(responseData) {
+                    loadingAlert.close();
+                    renderStories(responseData.stories)
+                },
+                error: function(jqXHR) {
+                    Swal.fire({
+                        title: 'Error',
+                        text: jqXHR.responseJSON?.error || 'Server error. Try again',
+                        icon: 'error'
+                    });
+                },
+            })
+        }
+
+        function renderStories(stories){
+            const storiesTable = $('#stories-table-body');
+
+
+            
+            if (stories.length < pageSize ) {
+                $('#management-read-more-stories-btn').hide();
+            }
+
+
+            if (stories.length === 0 && currentPage == 1 ) {
+                storiesTable.html(`
+                    <tr>
+				        <td colspan="5">
+				            No stories found. Create your first story.
+				        </td>
+				    </tr>
+                `);
+                return;
+            }
+            stories.forEach(story => {
+                storiesTable.append(`
+                    <tr>
+                    	<td>${ story.id_sys }</td>
+                        <td>${ story.title }</td>
+                        <td>${ story.author }</td>
+                        <td><span class="badge badge-published">${ story.status }</span></td>
+                        <td>${ story.date_and_time }</td>
+                        <td>
+                			<button 
+							    class="btn btn-sm btn-secondary"
+							    onclick="editStory(${story.id})">
+							    Edit
+							</button>
+                            <button 
+							    class="btn btn-sm btn-secondary"
+							    onclick="previewStory(${story.id})">
+							    Preview
+							</button>
+                        </td>
+                    </tr>
+                `)
+            })
+        }
+
+
+        /*EVENT LISTNERS -------------------------------------------------------------------------------------------------------------->>*/
+        $('#management-read-more-stories-btn').on('click', function() {
+            currentPage = currentPage + 1
+            getStories()
+        })
+
+        function previewStory(storyId) {
+		    const urlPattern = "{% url 'story_page' 0 %}".replace('0', storyId);
+		    window.location.href = urlPattern;
+		}
+
+		function editStory(storyId) {
+		    const urlPattern = "{% url 'edit_story_page' 0 %}".replace('0', storyId);
+		    window.location.href = urlPattern;
+		}
+
+        /*EVENT LISTNERS --------------------------------------------------------------------------------------------------------------<<*/
+
+        
+
+    </script>
+{% endblock %}

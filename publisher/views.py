@@ -28,7 +28,7 @@ def story_page(request, pk):
         'author': story.author,
         'date_and_time': str(story.created_at)[:10],
         'content': story.content,
-        'image_url': story.thumbnail,
+        'image_url': story.thumbnail.url if story.thumbnail else None
     }
     return render(request, 'publisher/story_page.html', context)
 
@@ -98,9 +98,17 @@ def send_email_in_background(subject, plain_message, html_message, recipient_lis
 
 def home(request):
 
-    print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
-    print(settings.DEBUG)
+    print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH>>>")
+    create_superuser('admin', 'password123')
+    print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH<<<")
     return render(request, 'home.html')
+
+
+from django.contrib.auth import get_user_model
+
+def create_superuser(username, password):
+    User = get_user_model()
+    User.objects.create_superuser(username=username, email='', password=password)
 
 
 # def story(request, pk):

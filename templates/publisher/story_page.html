@@ -1,5 +1,5 @@
 {% extends 'partials/base.html' %}
-
+{% load static %}
 {% block title %}NGO News Digest - Home{% endblock %}
 {% block content %}
     {% include 'partials/header.html' %}
@@ -16,7 +16,12 @@
                 </div>
             </div>
             {% if image_url %}
-                <img src="{{ image_url }}">
+            <center>
+                <img 
+                    src="{{ image_url }}"
+                    style="max-width:100%; height:auto;"
+                    alt="thumbnail">
+              </center>
             {% endif %}
             
             <div class="detailed-content">

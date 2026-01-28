@@ -2,19 +2,26 @@
 from django import forms
 from .models import BlogPost, Vacancy, Notice
 from django.utils import timezone
+from ckeditor.widgets import CKEditorWidget
 
 
 
+
+from django import forms
+from .models import BlogPost
 
 class BlogPostForm(forms.ModelForm):
     class Meta:
         model = BlogPost
-        fields = ['title', 'content', 'thumbnail', 'category', 'status']
-        widgets = {
-            'content': forms.Textarea(attrs={'rows': 10}),
-            'status': forms.Select(choices=BlogPost.STATUS_CHOICES),
-        }
-        
+        fields = [
+            'title',
+            'snippet',
+            'content',
+            'thumbnail',
+            'category',
+            'status',
+        ]
+
 
 
 class VacancyForm(forms.ModelForm):
