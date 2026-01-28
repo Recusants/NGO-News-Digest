@@ -1,0 +1,462 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}Access Management Page{% endblock %}
+
+{% block content %}
+    <main class="kmain-content" id="mainContent">
+        <br>
+        
+        <section class="section auth-section" id="login">
+            <div class="section-header">
+                <h2 class="section-title">Account Management</h2>
+            </div>
+            <div class="section-body">
+                <div class="auth-tabs">
+                    <button class="auth-tab active" onclick="showAuthTab('login')">Login</button>
+                    <button class="auth-tab" onclick="showAuthTab('forgot')">Forgot Password</button>
+                    <button class="auth-tab" onclick="showAuthTab('register')">Register</button>
+                </div>
+                
+                <!-- LOGIN TAB -->
+                <div id="loginTab" class="auth-content">
+                    <form id="loginForm" class="auth-form">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="loginUsername">Username</label>
+                            <input type="text" id="loginUsername" name="username" class="form-control" placeholder="Enter your username">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <div class="password-input-container">
+                                <input type="password" id="loginPassword" name="password" class="form-control" placeholder="••••••••">
+                                <span class="password-toggle" onclick="togglePasswordVisibility('loginPassword')">
+                                    <i class="eye-icon">👁️</i>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary w-100" onclick="handleLogin()">
+                            Sign In
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- FORGOT PASSWORD TAB -->
+                <div id="forgotTab" class="auth-content hidden">
+                    <p class="text-muted mb-2">Enter your email address and we'll send you a password reset link.</p>
+                    <form id="forgotPasswordForm" class="auth-form">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="recoveryEmail">Email Address</label>
+                            <input type="email" id="recoveryEmail" name="email" class="form-control" placeholder="your@email.com">
+                        </div>
+                        
+                        <div class="flex gap-1 mt-2">
+                            <button type="button" class="btn btn-secondary" onclick="showAuthTab('login')">Back to Login</button>
+                            <button type="button" class="btn btn-primary" onclick="sendPasswordResetEmail()">Send Reset Link</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- REGISTER TAB -->
+                <div id="registerTab" class="auth-content hidden">
+                    <p class="text-muted mb-2">Contact your system administrator to create a new account.</p>
+                    <form class="auth-form">
+                        <div class="form-group">
+                            <label>Contact Administrator</label>
+                            <div class="p-2 bg-blue-50 rounded-lg">
+                                <p class="text-sm mb-1">Email: admin@ngo.org</p>
+                                <p class="text-sm mb-1">Phone: +1 (555) 123-4567</p>
+                                <p class="text-sm">Office Hours: Mon-Fri, 9AM-5PM</p>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-secondary w-100" onclick="showAuthTab('login')">
+                            Back to Login
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Include SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        .password-input-container {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            padding: 5px;
+            font-size: 18px;
+            user-select: none;
+            z-index: 10;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .auth-content.hidden {
+            display: none;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .auth-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .auth-tab.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+            font-weight: 600;
+        }
+        
+        .auth-tab:hover:not(.active) {
+            background-color: #f5f5f5;
+        }
+        
+        .flex {
+            display: flex;
+        }
+        
+        .gap-1 {
+            gap: 8px;
+        }
+        
+        .mt-2 {
+            margin-top: 16px;
+        }
+        
+        .w-100 {
+            width: 100%;
+        }
+        
+        .btn {
+            padding: 10px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .text-muted {
+            color: #6c757d;
+        }
+        
+        .text-sm {
+            font-size: 12px;
+        }
+        
+        .mb-2 {
+            margin-bottom: 8px;
+        }
+        
+        .p-2 {
+            padding: 8px;
+        }
+        
+        .bg-blue-50 {
+            background-color: #e3f2fd;
+        }
+        
+        .rounded-lg {
+            border-radius: 8px;
+        }
+    </style>
+    
+    <script>
+        // Tab switching functionality
+        function showAuthTab(tabName) {
+            // Hide all tabs
+            document.getElementById('loginTab').classList.add('hidden');
+            document.getElementById('forgotTab').classList.add('hidden');
+            document.getElementById('registerTab').classList.add('hidden');
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+            
+            // Add active class to clicked tab button
+            event.target.classList.add('active');
+            
+            // Clear forgot password form when switching away
+            if (tabName !== 'forgot') {
+                document.getElementById('recoveryEmail').value = '';
+            }
+        }
+        
+        // Password visibility toggle
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            const toggleIcon = input.parentNode.querySelector('.eye-icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggleIcon.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                toggleIcon.textContent = '👁️';
+            }
+        }
+        
+        // ========== LOGIN FUNCTIONALITY ==========
+        function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            // Basic validation
+            if (!username || !password) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Missing Information',
+                    text: 'Please enter both username and password',
+                    confirmButtonColor: '#007bff',
+                });
+                return;
+            }
+            
+            // Show loading indicator
+            Swal.fire({
+                title: 'Logging in...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('csrfmiddlewaretoken', csrfToken);
+            
+            // AJAX request
+            fetch('{% url "login" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                Swal.close();
+                
+                if (data.status === 'success') {
+                    // Show success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Login Successful!',
+                        text: data.message,
+                        confirmButtonColor: '#007bff',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Redirect to home page
+                        window.location.href = "{% url 'home' %}";
+                    });
+                } else {
+                    // Show error message
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Login Failed',
+                        text: data.message,
+                        confirmButtonColor: '#007bff',
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred during login. Please try again.',
+                    confirmButtonColor: '#007bff',
+                });
+                console.error('Error:', error);
+            });
+        }
+        
+        // ========== PASSWORD RESET FUNCTIONALITY ==========
+        function sendPasswordResetEmail() {
+            const email = document.getElementById('recoveryEmail').value.trim();
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            if (!email) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Email Required',
+                    text: 'Please enter your email address',
+                    confirmButtonColor: '#007bff',
+                });
+                return;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Invalid Email',
+                    text: 'Please enter a valid email address',
+                    confirmButtonColor: '#007bff',
+                });
+                return;
+            }
+            
+            // Show loading
+            Swal.fire({
+                title: 'Sending Reset Link...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('csrfmiddlewaretoken', csrfToken);
+            
+            // AJAX request to send reset email
+            fetch('{% url "ajax_send_reset_email" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                Swal.close();
+                
+                if (data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Email Sent!',
+                        html: `Password reset link has been sent to <strong>${email}</strong><br><br>
+                               Please check your email and follow the instructions to reset your password.`,
+                        confirmButtonColor: '#007bff',
+                    }).then(() => {
+                        // Clear email field and go back to login
+                        document.getElementById('recoveryEmail').value = '';
+                        showAuthTab('login');
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Failed to Send',
+                        text: data.message,
+                        confirmButtonColor: '#007bff',
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while sending the reset link. Please try again.',
+                    confirmButtonColor: '#007bff',
+                });
+                console.error('Error:', error);
+            });
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add enter key support for login
+            document.getElementById('loginForm').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleLogin();
+                }
+            });
+            
+            // Add enter key support for forgot password
+            document.getElementById('forgotPasswordForm').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendPasswordResetEmail();
+                }
+            });
+            
+            // Focus on username field when login tab is shown
+            document.getElementById('loginUsername').focus();
+        });
+    </script>
+{% endblock %}

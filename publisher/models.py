@@ -72,6 +72,8 @@ class Category(models.Model):
         return self.name
 
 
+from django.db import models
+from django.utils import timezone
 
 class Vacancy(models.Model):
     """Simplified vacancies model"""
@@ -99,17 +101,8 @@ class Vacancy(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    class Meta:
-        ordering = ['-is_featured', '-created_at']
-    
     def __str__(self):
         return f"{self.title} - {self.organization}"
-    
-    def days_remaining(self):
-        """Calculate days until deadline"""
-        remaining = (self.application_deadline - timezone.now().date()).days
-        return max(0, remaining)
-
 
 class Notice(models.Model):
     """Simplified notices model"""
@@ -137,8 +130,5 @@ class Notice(models.Model):
     # Auto fields
     created_at = models.DateTimeField(auto_now_add=True)
     
-    class Meta:
-        ordering = ['-is_important', '-created_at']
-    
     def __str__(self):
-        return self.title
+        return f"{self.title} - {self.organization}"

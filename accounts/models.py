@@ -19,7 +19,7 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=30)
     address = models.TextField(max_length=255)
     roles = models.CharField(max_length=1000)
-    intrests = models.CharField(max_length=1000)
+    interests = models.CharField(max_length=1000)
     twitter = models.CharField(max_length=50, blank=True, null=True)
     facebook = models.CharField(max_length=50, blank=True, null=True)
     created_by = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)

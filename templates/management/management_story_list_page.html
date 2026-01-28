@@ -9,7 +9,7 @@
     	<section class="section" id="stories">
             <div class="section-header">
                 <h2 class="section-title">Story Management</h2>
-                <button class="btn btn-primary" onclick="window.location.href='{% url 'create_story_page' %}'">
+                <button class="btn btn-primary" onclick="window.location.href='{% url 'blog_create' %}'">
                     ＋ New Story
                 </button>
             </div>
@@ -149,7 +149,7 @@
 		}
 
 		function editStory(storyId) {
-		    const urlPattern = "{% url 'edit_story_page' 0 %}".replace('0', storyId);
+		    const urlPattern = "{% url 'blog_edit' 0 %}".replace('0', storyId);
 		    window.location.href = urlPattern;
 		}
 

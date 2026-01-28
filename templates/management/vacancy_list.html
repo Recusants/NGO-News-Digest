@@ -1,0 +1,207 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    
+    <main class="main-content" id="mainContent">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">{{ title }}</h2>
+                <div class="card-tools">
+                    <a href="{% url 'vacancy_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                <div class="messages mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Organization</th>
+                                <th>Location</th>
+                                <th>Job Type</th>
+                                <th>Deadline</th>
+                                <th>Status</th>
+                                <th>Featured</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vacancy in vacancies %}
+                            <tr>
+                                <td>{{ vacancy.title }}</td>
+                                <td>{{ vacancy.organization }}</td>
+                                <td>{{ vacancy.location }}</td>
+                                <td>{{ vacancy.get_job_type_display }}</td>
+                                <td>{{ vacancy.application_deadline|date:"Y-m-d" }}</td>
+                                <td>
+                                    <span class="badge badge-{% if vacancy.is_active %}success{% else %}danger{% endif %}">
+                                        {% if vacancy.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if vacancy.is_featured %}
+                                    <i class="fas fa-star text-warning"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'vacancy_edit' vacancy.pk %}" class="btn btn-info">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-{% if vacancy.is_active %}warning{% else %}success{% endif %}" 
+                                                onclick="toggleVacancyActive({{ vacancy.pk }})">
+                                            <i class="fas fa-{% if vacancy.is_active %}times{% else %}check{% endif %}"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-danger" 
+                                                onclick="deleteVacancy({{ vacancy.pk }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center">No vacancies found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Include SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        function deleteVacancy(pk) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This vacancy will be deleted permanently!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/management/vacancies/${pk}/delete/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire(
+                                'Deleted!',
+                                data.message,
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message || 'Something went wrong.',
+                                'error'
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Error!',
+                            'Network error occurred.',
+                            'error'
+                        );
+                    });
+                }
+            });
+        }
+        
+        function toggleVacancyActive(pk) {
+            fetch(`/management/vacancies/${pk}/toggle-active/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire(
+                        'Success!',
+                        data.message,
+                        'success'
+                    ).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire(
+                        'Error!',
+                        data.message || 'Something went wrong.',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                Swal.fire(
+                    'Error!',
+                    'Network error occurred.',
+                    'error'
+                );
+            });
+        }
+        
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+    
+    <style>
+        .btn-group-sm > .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .badge {
+            padding: 0.25em 0.6em;
+            font-size: 0.875em;
+        }
+    </style>
+{% endblock %}

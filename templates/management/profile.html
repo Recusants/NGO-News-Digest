@@ -1,0 +1,258 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    
+    <main class="main-content" id="mainContent">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">{{ title }}</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if messages %}
+                        <div class="messages mb-3">
+                            {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert">
+                                    <span>&times;</span>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <!-- Left Column - Profile Info -->
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Profile Information</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="POST" id="profileForm">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="form_type" value="profile">
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ form.first_name.id_for_label }}">First Name *</label>
+                                                        {{ form.first_name }}
+                                                        {% if form.first_name.errors %}
+                                                        <div class="text-danger small">{{ form.first_name.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ form.last_name.id_for_label }}">Last Name *</label>
+                                                        {{ form.last_name }}
+                                                        {% if form.last_name.errors %}
+                                                        <div class="text-danger small">{{ form.last_name.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ form.email.id_for_label }}">Email *</label>
+                                                        {{ form.email }}
+                                                        {% if form.email.errors %}
+                                                        <div class="text-danger small">{{ form.email.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+                                                        {{ form.phone_number }}
+                                                        {% if form.phone_number.errors %}
+                                                        <div class="text-danger small">{{ form.phone_number.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label for="{{ form.address.id_for_label }}">Address</label>
+                                                {{ form.address }}
+                                                {% if form.address.errors %}
+                                                <div class="text-danger small">{{ form.address.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ form.interests.id_for_label }}">Interests</label>
+                                                        {{ form.interests }}
+                                                        {% if form.interests.errors %}
+                                                        <div class="text-danger small">{{ form.interests.errors }}</div>
+                                                        {% endif %}
+                                                        <small class="form-text text-muted">Separate interests with commas</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ form.twitter.id_for_label }}">Twitter Username</label>
+                                                        <div class="input-group">
+                                                            <div class="input-group-prepend">
+                                                                <span class="input-group-text">@</span>
+                                                            </div>
+                                                            {{ form.twitter }}
+                                                        </div>
+                                                        {% if form.twitter.errors %}
+                                                        <div class="text-danger small">{{ form.twitter.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="{{ form.facebook.id_for_label }}">Facebook Username</label>
+                                                        {{ form.facebook }}
+                                                        {% if form.facebook.errors %}
+                                                        <div class="text-danger small">{{ form.facebook.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label for="{{ form.current_password.id_for_label }}">Current Password *</label>
+                                                {{ form.current_password }}
+                                                {% if form.current_password.errors %}
+                                                <div class="text-danger small">{{ form.current_password.errors }}</div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    Enter your current password to save profile changes
+                                                </small>
+                                            </div>
+                                            
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save"></i> Update Profile
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Column - Account Info & Password -->
+                            <div class="col-md-4">
+                                <!-- Account Info Card -->
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Account Information</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="text-center mb-3">
+                                            <div class="avatar-circle mb-3" style="width: 80px; height: 80px; margin: 0 auto;">
+                                                <span class="initials" style="font-size: 32px;">
+                                                    {{ user.get_full_name|slice:":2"|upper }}
+                                                </span>
+                                            </div>
+                                            <h5>{{ user.get_full_name }}</h5>
+                                            <p class="text-muted">{{ user.email }}</p>
+                                        </div>
+                                        
+                                        <hr>
+                                        
+                                        <div class="account-info">
+                                            <p><strong>Username:</strong> {{ user.username }}</p>
+                                            <p><strong>Joined:</strong> {{ user.date_joined|date:"M d, Y" }}</p>
+                                            <p><strong>Last Login:</strong> {{ user.last_login|date:"M d, Y H:i"|default:"Never" }}</p>
+                                            <p><strong>Role:</strong> {{ user.roles|default:"Not specified" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Change Password Card -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="card-title">Change Password</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="POST" action="{% url 'change_password' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="form_type" value="password">
+                                            
+                                            <div class="form-group">
+                                                <label for="{{ password_form.current_password.id_for_label }}">Current Password</label>
+                                                {{ password_form.current_password }}
+                                                {% if password_form.current_password.errors %}
+                                                <div class="text-danger small">{{ password_form.current_password.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label for="{{ password_form.new_password.id_for_label }}">New Password</label>
+                                                {{ password_form.new_password }}
+                                                {% if password_form.new_password.errors %}
+                                                <div class="text-danger small">{{ password_form.new_password.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label for="{{ password_form.confirm_password.id_for_label }}">Confirm Password</label>
+                                                {{ password_form.confirm_password }}
+                                                {% if password_form.confirm_password.errors %}
+                                                <div class="text-danger small">{{ password_form.confirm_password.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <button type="submit" class="btn btn-warning btn-block">
+                                                <i class="fas fa-key"></i> Change Password
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <style>
+        .avatar-circle {
+            background-color: #007bff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .initials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        .account-info p {
+            margin-bottom: 0.5rem;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .card {
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e3e6f0;
+        }
+    </style>
+{% endblock %}

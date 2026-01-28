@@ -1,0 +1,181 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    
+    <main class="main-content" id="mainContent">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">{{ title }}</h2>
+                {% if last_updated %}
+                <small class="text-muted">Last updated: {{ last_updated|date:"M d, Y H:i" }}</small>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                <div class="messages mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <!-- About Section -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h4 class="card-title mb-0">About Information</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="{{ form.about_us.id_for_label }}">About Us</label>
+                                {{ form.about_us }}
+                                {% if form.about_us.errors %}
+                                <div class="text-danger small">{{ form.about_us.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.mission.id_for_label }}">Mission</label>
+                                        {{ form.mission }}
+                                        {% if form.mission.errors %}
+                                        <div class="text-danger small">{{ form.mission.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.vision.id_for_label }}">Vision</label>
+                                        {{ form.vision }}
+                                        {% if form.vision.errors %}
+                                        <div class="text-danger small">{{ form.vision.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h4 class="card-title mb-0">Contact Information</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.contact_email.id_for_label }}">Contact Email</label>
+                                        {{ form.contact_email }}
+                                        {% if form.contact_email.errors %}
+                                        <div class="text-danger small">{{ form.contact_email.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="{{ form.contact_phone.id_for_label }}">Contact Phone</label>
+                                        {{ form.contact_phone }}
+                                        {% if form.contact_phone.errors %}
+                                        <div class="text-danger small">{{ form.contact_phone.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.address.id_for_label }}">Address</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                <div class="text-danger small">{{ form.address.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Social Media -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h4 class="card-title mb-0">Social Media Links</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="{{ form.facebook_url.id_for_label }}">
+                                            <i class="fab fa-facebook text-primary"></i> Facebook
+                                        </label>
+                                        {{ form.facebook_url }}
+                                        {% if form.facebook_url.errors %}
+                                        <div class="text-danger small">{{ form.facebook_url.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="{{ form.twitter_url.id_for_label }}">
+                                            <i class="fab fa-twitter text-info"></i> Twitter
+                                        </label>
+                                        {{ form.twitter_url }}
+                                        {% if form.twitter_url.errors %}
+                                        <div class="text-danger small">{{ form.twitter_url.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="{{ form.linkedin_url.id_for_label }}">
+                                            <i class="fab fa-linkedin text-primary"></i> LinkedIn
+                                        </label>
+                                        {{ form.linkedin_url }}
+                                        {% if form.linkedin_url.errors %}
+                                        <div class="text-danger small">{{ form.linkedin_url.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                        <button type="reset" class="btn btn-secondary">
+                            <i class="fas fa-undo"></i> Reset Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <style>
+        .card .card-header.bg-light {
+            background-color: #f8f9fa !important;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        textarea.form-control {
+            min-height: 120px;
+        }
+        .fab {
+            margin-right: 8px;
+            font-size: 1.1em;
+        }
+    </style>
+{% endblock %}

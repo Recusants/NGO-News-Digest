@@ -1,0 +1,244 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    
+    <main class="main-content" id="mainContent">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">{{ title }}</h2>
+                <div class="card-tools">
+                    <a href="{% url 'team_member_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Team Member
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                <div class="messages mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Total Team Members</h6>
+                                <h3 class="card-text">{{ total_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Active</h6>
+                                <h3 class="card-text">{{ active_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-secondary text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Inactive</h6>
+                                <h3 class="card-text">{{ total_count|add:"0"|add:"-"|add:active_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Team Members Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Position</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Social Links</th>
+                                <th>Order</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in team_members %}
+                            <tr>
+                                <td>
+                                    <strong>{{ member.user.get_full_name }}</strong>
+                                    {% if member.bio %}
+                                    <br><small class="text-muted">{{ member.bio|truncatechars:50 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ member.position }}</td>
+                                <td>{{ member.user.email|default:"-" }}</td>
+                                <td>{{ member.user.phone_number|default:"-" }}</td>
+                                <td>
+                                    {% if member.twitter_url %}
+                                    <a href="{{ member.twitter_url }}" target="_blank" class="btn btn-sm btn-outline-info mb-1">
+                                        <i class="fab fa-twitter"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if member.linkedin_url %}
+                                    <a href="{{ member.linkedin_url }}" target="_blank" class="btn btn-sm btn-outline-primary mb-1">
+                                        <i class="fab fa-linkedin"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if member.user.twitter %}
+                                    <a href="https://twitter.com/{{ member.user.twitter }}" target="_blank" class="btn btn-sm btn-outline-info mb-1">
+                                        <i class="fab fa-twitter"></i> Personal
+                                    </a>
+                                    {% endif %}
+                                </td>
+                                <td>{{ member.display_order }}</td>
+                                <td>
+                                    <span class="badge badge-{% if member.is_active %}success{% else %}danger{% endif %}">
+                                        {% if member.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'team_member_edit' member.pk %}" class="btn btn-info">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-{% if member.is_active %}warning{% else %}success{% endif %}" 
+                                                onclick="toggleTeamMemberActive({{ member.pk }})">
+                                            <i class="fas fa-{% if member.is_active %}times{% else %}check{% endif %}"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-danger" 
+                                                onclick="deleteTeamMember({{ member.pk }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center">No team members found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Include SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // Delete team member
+        function deleteTeamMember(pk) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This team member will be deleted permanently!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/management/team-members/${pk}/delete/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire(
+                                'Deleted!',
+                                data.message,
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message || 'Something went wrong.',
+                                'error'
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Error!',
+                            'Network error occurred.',
+                            'error'
+                        );
+                    });
+                }
+            });
+        }
+        
+        // Toggle team member active status
+        function toggleTeamMemberActive(pk) {
+            fetch(`/management/team-members/${pk}/toggle-active/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire(
+                        'Success!',
+                        data.message,
+                        'success'
+                    ).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire(
+                        'Error!',
+                        data.message || 'Something went wrong.',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                Swal.fire(
+                    'Error!',
+                    'Network error occurred.',
+                    'error'
+                );
+            });
+        }
+        
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+{% endblock %}

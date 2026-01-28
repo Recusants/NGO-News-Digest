@@ -1,0 +1,513 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    
+    <main class="main-content" id="mainContent">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">{{ title }}</h2>
+                <div class="card-tools">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                            <i class="fas fa-cog"></i> Actions
+                        </button>
+                        <div class="dropdown-menu">
+                            <button class="dropdown-item" onclick="bulkDeleteSubscribers()">
+                                <i class="fas fa-trash text-danger"></i> Delete Selected
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                <div class="messages mb-3">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Total Subscribers</h6>
+                                <h3 class="card-text">{{ total_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Active</h6>
+                                <h3 class="card-text">{{ active_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Verified</h6>
+                                <h3 class="card-text">{{ verified_count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+    <div class="card bg-warning text-white">
+        <div class="card-body">
+            <h6 class="card-title">Unverified</h6>
+            <h3 class="card-text">{{ unverified_count }}</h3>
+        </div>
+    </div>
+</div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="GET" class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="statusFilter">Status</label>
+                                    <select name="status" id="statusFilter" class="form-control" onchange="this.form.submit()">
+                                        <option value="all" {% if current_filters.status == 'all' %}selected{% endif %}>All Status</option>
+                                        <option value="active" {% if current_filters.status == 'active' %}selected{% endif %}>Active Only</option>
+                                        <option value="inactive" {% if current_filters.status == 'inactive' %}selected{% endif %}>Inactive Only</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="verificationFilter">Verification</label>
+                                    <select name="verification" id="verificationFilter" class="form-control" onchange="this.form.submit()">
+                                        <option value="all" {% if current_filters.verification == 'all' %}selected{% endif %}>All</option>
+                                        <option value="verified" {% if current_filters.verification == 'verified' %}selected{% endif %}>Verified Only</option>
+                                        <option value="unverified" {% if current_filters.verification == 'unverified' %}selected{% endif %}>Unverified Only</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-filter"></i> Filter
+                                        </button>
+                                        <a href="{% url 'subscriber_list' %}" class="btn btn-secondary">
+                                            <i class="fas fa-times"></i> Clear
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Subscribers Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)">
+                                </th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Subscribed At</th>
+                                <th>Verified</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subscriber in subscribers %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="subscriber_ids" value="{{ subscriber.pk }}" class="subscriber-checkbox">
+                                </td>
+                                <td>{{ subscriber.name }}</td>
+                                <td>{{ subscriber.email }}</td>
+                                <td>{{ subscriber.subscribed_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    {% if subscriber.is_verified %}
+                                    <span class="badge badge-success">
+                                        <i class="fas fa-check"></i> Verified
+                                        {% if subscriber.verified_at %}
+                                        <br><small>{{ subscriber.verified_at|date:"Y-m-d" }}</small>
+                                        {% endif %}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge badge-warning">
+                                        <i class="fas fa-times"></i> Unverified
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-{% if subscriber.is_active %}success{% else %}danger{% endif %}">
+                                        {% if subscriber.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if not subscriber.is_verified %}
+                                        <button type="button" class="btn btn-info" 
+                                                onclick="verifySubscriber({{ subscriber.pk }})" 
+                                                title="Mark as Verified">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+                                        {% endif %}
+                                        
+                                        {% if subscriber.is_active %}
+                                        <button type="button" class="btn btn-warning" 
+                                                onclick="unsubscribeSubscriber({{ subscriber.pk }})" 
+                                                title="Unsubscribe">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                        {% else %}
+                                        <button type="button" class="btn btn-success" 
+                                                onclick="toggleSubscriberActive({{ subscriber.pk }})" 
+                                                title="Activate">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                        
+                                        <button type="button" class="btn btn-danger" 
+                                                onclick="deleteSubscriber({{ subscriber.pk }})" 
+                                                title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">No subscribers found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination (optional) -->
+                {% if subscribers.has_other_pages %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if subscribers.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ subscribers.previous_page_number }}{% if current_filters.status != 'all' %}&status={{ current_filters.status }}{% endif %}{% if current_filters.verification != 'all' %}&verification={{ current_filters.verification }}{% endif %}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in subscribers.paginator.page_range %}
+                        <li class="page-item {% if subscribers.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}{% if current_filters.status != 'all' %}&status={{ current_filters.status }}{% endif %}{% if current_filters.verification != 'all' %}&verification={{ current_filters.verification }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if subscribers.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ subscribers.next_page_number }}{% if current_filters.status != 'all' %}&status={{ current_filters.status }}{% endif %}{% if current_filters.verification != 'all' %}&verification={{ current_filters.verification }}{% endif %}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+    
+    <!-- Include SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // Toggle select all checkboxes
+        function toggleSelectAll(source) {
+            const checkboxes = document.querySelectorAll('.subscriber-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = source.checked;
+            });
+        }
+        
+        // Bulk delete subscribers
+        function bulkDeleteSubscribers() {
+            const selectedCheckboxes = document.querySelectorAll('.subscriber-checkbox:checked');
+            const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+            
+            if (selectedIds.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Selection',
+                    text: 'Please select at least one subscriber to delete.',
+                    confirmButtonColor: '#007bff',
+                });
+                return;
+            }
+            
+            Swal.fire({
+                title: 'Are you sure?',
+                html: `You are about to delete <strong>${selectedIds.length}</strong> subscriber(s).<br>This action cannot be undone!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete them!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{% url "bulk_delete_subscribers" %}';
+                    
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrfmiddlewaretoken';
+                    csrfInput.value = '{{ csrf_token }}';
+                    form.appendChild(csrfInput);
+                    
+                    selectedIds.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'subscriber_ids[]';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+        
+        // Delete single subscriber
+        function deleteSubscriber(pk) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "This subscriber will be deleted permanently!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/management/subscribers/${pk}/delete/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire(
+                                'Deleted!',
+                                data.message,
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message || 'Something went wrong.',
+                                'error'
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Error!',
+                            'Network error occurred.',
+                            'error'
+                        );
+                    });
+                }
+            });
+        }
+        
+        // Toggle subscriber active status
+        function toggleSubscriberActive(pk) {
+            fetch(`/management/subscribers/${pk}/toggle-active/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire(
+                        'Success!',
+                        data.message,
+                        'success'
+                    ).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire(
+                        'Error!',
+                        data.message || 'Something went wrong.',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                Swal.fire(
+                    'Error!',
+                    'Network error occurred.',
+                    'error'
+                );
+            });
+        }
+        
+        // Verify subscriber
+        function verifySubscriber(pk) {
+            fetch(`/management/subscribers/${pk}/verify/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire(
+                        'Verified!',
+                        data.message,
+                        'success'
+                    ).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire(
+                        'Error!',
+                        data.message || 'Something went wrong.',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                Swal.fire(
+                    'Error!',
+                    'Network error occurred.',
+                    'error'
+                );
+            });
+        }
+        
+        // Unsubscribe subscriber
+        function unsubscribeSubscriber(pk) {
+            Swal.fire({
+                title: 'Unsubscribe?',
+                text: "This subscriber will be marked as inactive.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f39c12',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, unsubscribe!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/management/subscribers/${pk}/unsubscribe/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire(
+                                'Unsubscribed!',
+                                data.message,
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message || 'Something went wrong.',
+                                'error'
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Error!',
+                            'Network error occurred.',
+                            'error'
+                        );
+                    });
+                }
+            });
+        }
+        
+        // Function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+    
+    <style>
+        .btn-group-sm > .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .badge {
+            padding: 0.25em 0.6em;
+            font-size: 0.875em;
+        }
+        .badge small {
+            font-size: 0.75em;
+            opacity: 0.9;
+        }
+        .table th {
+            font-weight: 600;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .card-title {
+            margin-bottom: 0;
+        }
+        .card-tools {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+        }
+        .subscriber-checkbox {
+            width: 18px;
+            height: 18px;
+        }
+    </style>
+{% endblock %}

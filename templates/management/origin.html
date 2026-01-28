@@ -596,150 +596,7 @@
         <!-- MAIN CONTENT - ALL SECTIONS VISIBLE -->
         <main class="main-content" id="mainContent">
             <!-- LOGIN SECTION -->
-            <section class="section auth-section" id="login">
-                <div class="section-header">
-                    <h2 class="section-title">Account Management</h2>
-                </div>
-                <div class="section-body">
-                    <div class="auth-tabs">
-                        <button class="auth-tab active" onclick="showAuthTab('login')">Login</button>
-                        <button class="auth-tab" onclick="showAuthTab('forgot')">Forgot Password</button>
-                        <button class="auth-tab" onclick="showAuthTab('register')">Register</button>
-                    </div>
-                    
-                    <!-- LOGIN TAB -->
-                    <div id="loginTab" class="auth-content">
-                        <form id="loginForm" class="auth-form">
-                            <div class="form-group">
-                                <label for="loginEmail">Email Address</label>
-                                <input type="email" id="loginEmail" class="form-control" placeholder="admin@ngo.org" value="admin@ngo.org">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="loginPassword">Password</label>
-                                <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" value="password123">
-                            </div>
-                            
-                            <div class="form-group flex align-center space-between">
-                                <label class="flex align-center">
-                                    <input type="checkbox" id="rememberMe" checked>
-                                    <span class="text-sm ml-1">Remember me</span>
-                                </label>
-                            </div>
-                            
-                            <button type="button" class="btn btn-primary w-100" onclick="handleLogin()">
-                                Sign In
-                            </button>
-                        </form>
-                    </div>
-                    
-                    <!-- FORGOT PASSWORD TAB -->
-                    <div id="forgotTab" class="auth-content hidden">
-                        <div class="recovery-steps">
-                            <div class="step active" data-step="1">
-                                <div class="step-number">1</div>
-                                <span class="text-sm">Enter Email</span>
-                            </div>
-                            <div class="step" data-step="2">
-                                <div class="step-number">2</div>
-                                <span class="text-sm">Verify Code</span>
-                            </div>
-                            <div class="step" data-step="3">
-                                <div class="step-number">3</div>
-                                <span class="text-sm">New Password</span>
-                            </div>
-                        </div>
-                        
-                        <!-- STEP 1: Email -->
-                        <div id="step1">
-                            <p class="text-muted mb-2">Enter your email address and we'll send you a verification code.</p>
-                            <form id="forgotPasswordForm" class="auth-form">
-                                <div class="form-group">
-                                    <label for="recoveryEmail">Email Address</label>
-                                    <input type="email" id="recoveryEmail" class="form-control" placeholder="your@email.com">
-                                </div>
-                                
-                                <div class="flex gap-1 mt-2">
-                                    <button type="button" class="btn btn-secondary" onclick="showAuthTab('login')">Back to Login</button>
-                                    <button type="button" class="btn btn-primary" onclick="goToStep(2)">Send Code</button>
-                                </div>
-                            </form>
-                        </div>
-                        
-                        <!-- STEP 2: Verification Code -->
-                        <div id="step2" class="hidden">
-                            <p class="text-muted mb-2">Enter the 6-digit code sent to your email.</p>
-                            <form id="verifyCodeForm" class="auth-form">
-                                <div class="form-group">
-                                    <label for="verificationCode">Verification Code</label>
-                                    <div class="flex gap-1">
-                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
-                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
-                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
-                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
-                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
-                                        <input type="text" class="form-control text-center" maxlength="1" oninput="moveToNext(this)">
-                                    </div>
-                                </div>
-                                
-                                <div class="text-sm text-muted mb-2">
-                                    Didn't receive code? 
-                                    <a href="#" onclick="resendCode()">Resend</a>
-                                    <span id="countdown">(60s)</span>
-                                </div>
-                                
-                                <div class="flex gap-1 mt-2">
-                                    <button type="button" class="btn btn-secondary" onclick="backToStep1()">Back</button>
-                                    <button type="button" class="btn btn-primary" onclick="goToStep(3)">Verify Code</button>
-                                </div>
-                            </form>
-                        </div>
-                        
-                        <!-- STEP 3: New Password -->
-                        <div id="step3" class="hidden">
-                            <p class="text-muted mb-2">Create a new secure password.</p>
-                            <form id="newPasswordForm" class="auth-form">
-                                <div class="form-group">
-                                    <label for="newPassword">New Password</label>
-                                    <input type="password" id="newPassword" class="form-control" placeholder="••••••••">
-                                    <div class="text-sm text-muted mt-1">
-                                        Password must be at least 8 characters with uppercase, lowercase, and numbers.
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="confirmPassword">Confirm Password</label>
-                                    <input type="password" id="confirmPassword" class="form-control" placeholder="••••••••">
-                                </div>
-                                
-                                <div class="flex gap-1 mt-2">
-                                    <button type="button" class="btn btn-secondary" onclick="backToStep2()">Back</button>
-                                    <button type="button" class="btn btn-primary" onclick="resetPassword()">Reset Password</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    
-                    <!-- REGISTER TAB -->
-                    <div id="registerTab" class="auth-content hidden">
-                        <p class="text-muted mb-2">Contact your system administrator to create a new account.</p>
-                        <form class="auth-form">
-                            <div class="form-group">
-                                <label>Contact Administrator</label>
-                                <div class="p-2 bg-blue-50 rounded-lg">
-                                    <p class="text-sm mb-1">Email: admin@ngo.org</p>
-                                    <p class="text-sm mb-1">Phone: +1 (555) 123-4567</p>
-                                    <p class="text-sm">Office Hours: Mon-Fri, 9AM-5PM</p>
-                                </div>
-                            </div>
-                            
-                            <button type="button" class="btn btn-secondary w-100" onclick="showAuthTab('login')">
-                                Back to Login
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </section>
+            
             
             <!-- DASHBOARD SECTION -->
             <section class="section" id="dashboard">
@@ -825,10 +682,141 @@
             </section>
             
             <!-- STORIES SECTION -->
-            
+            <section class="section" id="stories">
+                <div class="section-header">
+                    <h2 class="section-title">Story Management</h2>
+                    <button class="btn btn-primary" onclick="scrollToSection('editor')">
+                        ＋ New Story
+                    </button>
+                </div>
+                <div class="section-body">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Helping Communities Rebuild After Floods</td>
+                                    <td>John Doe</td>
+                                    <td><span class="badge badge-published">Published</span></td>
+                                    <td>Oct 15, 2023</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-secondary">Edit</button>
+                                        <button class="btn btn-sm btn-secondary">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Education for All Initiative</td>
+                                    <td>Jane Smith</td>
+                                    <td><span class="badge badge-published">Published</span></td>
+                                    <td>Oct 12, 2023</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-secondary">Edit</button>
+                                        <button class="btn btn-sm btn-secondary">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Health Camp in Rural Areas</td>
+                                    <td>Robert Johnson</td>
+                                    <td><span class="badge badge-pending">Pending Review</span></td>
+                                    <td>Oct 10, 2023</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary">Review</button>
+                                        <button class="btn btn-sm btn-secondary">Edit</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
             
             <!-- EDITOR SECTION -->
-            
+            <section class="section" id="editor">
+                <div class="section-header">
+                    <h2 class="section-title">Create New Story</h2>
+                    <button class="btn btn-secondary" onclick="scrollToSection('stories')">
+                        ← Back to Stories
+                    </button>
+                </div>
+                <div class="section-body">
+                    <div class="form-group">
+                        <label for="storyTitle">Story Title *</label>
+                        <input type="text" id="storyTitle" class="form-control" 
+                               placeholder="Enter a compelling title..." 
+                               value="Helping Communities Rebuild After Floods">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="storyExcerpt">Excerpt (Short Summary)</label>
+                        <textarea id="storyExcerpt" class="form-control" rows="3">
+Our team worked tirelessly to help communities affected by recent floods rebuild their homes and lives. With your support, we provided essential supplies and rebuilding materials.
+                        </textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="storyCategory">Category</label>
+                        <select id="storyCategory" class="form-control">
+                            <option value="relief">Disaster Relief</option>
+                            <option value="education" selected>Education</option>
+                            <option value="health">Health</option>
+                            <option value="environment">Environment</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Story Content *</label>
+                        <div class="editor-wrapper">
+                            <textarea id="ckeditor" name="ckeditor">
+                                <p>The recent floods devastated communities across the region, leaving thousands without homes or basic necessities. Our NGO immediately mobilized resources to provide relief.</p>
+                                <p><strong>Key actions we took:</strong></p>
+                                <ul>
+                                    <li>Distributed food packages to 500 families</li>
+                                    <li>Provided temporary shelter materials</li>
+                                    <li>Set up clean water stations</li>
+                                    <li>Offered medical assistance to affected communities</li>
+                                </ul>
+                                <p>Thanks to generous donors like you, we're helping families rebuild their lives and restore hope in these challenging times.</p>
+                            </textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2 mt-2">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="storyStatus">Status</label>
+                            <select id="storyStatus" class="form-control">
+                                <option value="draft">Save as Draft</option>
+                                <option value="pending" selected>Submit for Review</option>
+                                <option value="publish">Publish Now</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" style="flex: 1;">
+                            <label for="publishDate">Publish Date</label>
+                            <input type="date" id="publishDate" class="form-control" value="2023-10-20">
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-1 mt-2">
+                        <button class="btn btn-primary" onclick="saveStory()">
+                            💾 Save Story
+                        </button>
+                        <button class="btn btn-secondary" onclick="previewStory()">
+                            👁️ Preview
+                        </button>
+                        <button class="btn btn-secondary" onclick="scrollToSection('dashboard')">
+                            ← Back to Dashboard
+                        </button>
+                    </div>
+                </div>
+            </section>
             
             <!-- SUBSCRIBERS SECTION -->
             <section class="section" id="subscribers">

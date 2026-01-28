@@ -136,3 +136,8 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_HSTS_SECONDS = 0
+
+
+LOGIN_URL = '/login_page/'  # URL to redirect to when login is required
+LOGIN_REDIRECT_URL = 'management'  # Where to redirect after successful login
+LOGOUT_REDIRECT_URL = 'login_page'  # Where to redirect after logout

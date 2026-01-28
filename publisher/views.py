@@ -99,7 +99,12 @@ def send_email_in_background(subject, plain_message, html_message, recipient_lis
 def home(request):
 
     print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH>>>")
-    create_superuser('admin', 'password123')
+    try:
+        create_superuser('admin', 'password123')
+        print("User created")
+    except:
+        print("User not created")
+        
     print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH<<<")
     return render(request, 'home.html')
 

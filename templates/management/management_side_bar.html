@@ -1,30 +1,42 @@
 <nav class="sidebar" id="sidebar">
-            <div class="nav-item active" onclick="scrollToSection('login')">
-                <span>🔐</span>
-                <span>Login</span>
-            </div>
-            <div class="nav-item" onclick="scrollToSection('dashboard')">
-                <span>📊</span>
-                <span>Dashboard</span>
-            </div>
-            <div class="nav-item" onclick="scrollToSection('stories')">
-                <span>📝</span>
-                <span>Stories</span>
-            </div>
-            <div class="nav-item" onclick="scrollToSection('editor')">
-                <span>✏️</span>
-                <span>New Story</span>
-            </div>
-            <div class="nav-item" onclick="scrollToSection('subscribers')">
-                <span>👥</span>
-                <span>Subscribers</span>
-            </div>
-            <div class="nav-item" onclick="scrollToSection('profile')">
-                <span>👤</span>
-                <span>Profile</span>
-            </div>
-            <div class="nav-item" onclick="scrollToSection('settings')">
-                <span>⚙️</span>
-                <span>Settings</span>
-            </div>
-        </nav>
+    <div class="nav-item" onclick="window.location.href='{% url 'management_page' %}'">
+        <span>📊</span>
+        <span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='{% url 'management_story_list_page' %}'">
+        <span>📝</span>
+        <span>Stories</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='{% url 'blog_create' %}'">
+        <span>✏️</span>
+        <span>New Story</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='{% url 'vacancy_list' %}'">
+        <span>👨‍💼</span>
+        <span>Vacancies</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='{% url 'notice_list' %}'">
+        <span>⚠️</span>
+        <span>Notices</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='{% url 'subscriber_list' %}'">
+        <span>👥</span>
+        <span>Subscribers</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='{% url 'team_member_list' %}'">
+        <span>🧑‍💻</span>
+        <span>Team Mambers</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='{% url 'profile' %}'">
+        <span>👤</span>
+        <span>Profile</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='{% url 'site_settings' %}'">
+        <span>⚙️</span>
+        <span>Settings</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='{% url 'home' %}'" style="background: #8e0000; color: white;">
+        <span>🧾</span>
+        <span>Reader's View</span>
+    </div>
+</nav>
