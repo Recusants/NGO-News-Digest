@@ -1,0 +1,215 @@
+{% extends 'management/management_base.html' %}
+{% comment %} templates/management/category_list.html {% endcomment %}
+{% load static %}
+
+{% block title %}Manage Categories{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    
+    <main class="main-content" id="mainContent">
+        <div class="container-fluid">
+            <!-- Header with Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <i class="fas fa-folder"></i> Categories
+                        </h2>
+                        <div>
+                            <a href="{% url 'category_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create New Category
+                            </a>
+                        </div>
+                    </div>
+                    <nav aria-label="breadcrumb" class="mt-3">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Categories</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Categories Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">All Categories</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if categories %}
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="categoriesTable">
+                                    <thead>
+                                        <tr>
+                                            <th width="80">ID</th>
+                                            <th>Name</th>
+                                            <th>Story Count</th>
+                                            <th>Usage</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for category in categories %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-secondary">CAT-{{ category.id|stringformat:"03d" }}</span>
+                                            </td>
+                                            <td>
+                                                <strong>{{ category.name }}</strong>
+                                            </td>
+                                            <td>
+                                                {% with category.story_set.count as story_count %}
+                                                {% if story_count > 0 %}
+                                                <span class="badge bg-primary">
+                                                    <i class="fas fa-newspaper"></i> {{ story_count }}
+                                                </span>
+                                                {% else %}
+                                                <span class="badge bg-light text-dark">
+                                                    <i class="fas fa-newspaper"></i> 0
+                                                </span>
+                                                {% endif %}
+                                                {% endwith %}
+                                            </td>
+                                            <td>
+                                                {% with category.story_set.count as story_count %}
+                                                {% if story_count > 0 %}
+                                                <span class="text-success">
+                                                    <i class="fas fa-check-circle"></i> In Use
+                                                </span>
+                                                {% else %}
+                                                <span class="text-muted">
+                                                    <i class="fas fa-times-circle"></i> Not Used
+                                                </span>
+                                                {% endif %}
+                                                {% endwith %}
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="btn-group" role="group">
+                                                    {% comment %} View stories link - optional {% endcomment %}
+                                                    {% comment %}
+                                                    <a href="#" class="btn btn-sm btn-outline-info" 
+                                                       title="View Stories" data-bs-toggle="tooltip">
+                                                        <i class="fas fa-list"></i>
+                                                    </a>
+                                                    {% endcomment %}
+                                                    
+                                                    <a href="{% url 'category_edit' category.pk %}" 
+                                                       class="btn btn-sm btn-outline-secondary" 
+                                                       title="Edit" data-bs-toggle="tooltip">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-outline-danger {% if category.story_set.count > 0 %}disabled{% endif %}" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#deleteCategoryModal{{ category.id }}"
+                                                            title="Delete"
+                                                            {% if category.story_set.count > 0 %}disabled{% endif %}>
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                                
+                                                <!-- Delete Modal -->
+                                                <div class="modal fade" id="deleteCategoryModal{{ category.id }}" tabindex="-1">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Confirm Delete</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                Are you sure you want to delete "<strong>{{ category.name }}</strong>"?
+                                                                
+                                                                {% if category.story_set.count > 0 %}
+                                                                <div class="alert alert-danger mt-3">
+                                                                    <i class="fas fa-exclamation-triangle"></i> 
+                                                                    <strong>Warning:</strong> This category has {{ category.story_set.count }} story/stories associated with it.
+                                                                    Deleting it will remove this category from those stories.
+                                                                </div>
+                                                                {% else %}
+                                                                <div class="alert alert-warning mt-3">
+                                                                    <i class="fas fa-exclamation-triangle"></i> 
+                                                                    This action cannot be undone.
+                                                                </div>
+                                                                {% endif %}
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                <form method="POST" action="{% url 'category_delete' category.pk %}" class="d-inline">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-danger" 
+                                                                            {% if category.story_set.count > 0 %}disabled{% endif %}>
+                                                                        Delete Category
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-folder fa-4x text-muted mb-3"></i>
+                                <h4>No Categories Found</h4>
+                                <p class="text-muted">Get started by creating your first category.</p>
+                                <a href="{% url 'category_create' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Create Your First Category
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+    
+    // If you want to add search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add search input if needed
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'form-control form-control-sm mb-3';
+        searchInput.placeholder = 'Search categories...';
+        searchInput.style.maxWidth = '300px';
+        
+        searchInput.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#categoriesTable tbody tr');
+            
+            rows.forEach(row => {
+                const name = row.cells[1].textContent.toLowerCase();
+                if (name.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Insert search input after the table header
+        const cardHeader = document.querySelector('.card-header');
+        if (cardHeader) {
+            cardHeader.appendChild(searchInput);
+        }
+    });
+</script>
+{% endblock %}

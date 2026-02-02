@@ -1,41 +1,65 @@
-<footer class="footer">
-    <div class="footer-container">
-        <div class="footer-content">
+<footer>
+    <div class="container">
+        <div class="footer-grid">
             <div class="footer-column">
                 <h3>NGO News Digest</h3>
-                <p>Celebrating and amplifying civil society impact in Zimbabwe through impactful storytelling and comprehensive coverage of NGO work.</p>
+                <p>Zimbabwe's premier platform for civil society news, opportunities, and connections.</p>
+                <div class="social-icons">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                </div>
             </div>
             
             <div class="footer-column">
                 <h3>Quick Links</h3>
                 <ul class="footer-links">
-                    <li><a href="#home" onclick="scrollToSection('home')">Home</a></li>
-                    <li><a href="#stories" onclick="scrollToSection('stories')">Stories</a></li>
-                    <li><a href="#vacancies" onclick="scrollToSection('vacancies')">Vacancies</a></li>
-                    <li><a href="#notices" onclick="scrollToSection('notices')">Notices</a></li>
-                    <li><a href="#unsubscribePage" onclick="scrollToSection('unsubscribePage')">Unsubscribe</a></li>
+                    <li><a href="{% url 'home' %}" data-page="home">Home</a></li>
+                    <li><a href="{% url 'stories_page' %}" data-page="stories">Stories</a></li>
+                    <li><a href="{% url 'vacancies_page' %}" data-page="vacancies">Vacancies</a></li>
+                    <li><a href="{% url 'notices_page' %}" data-page="notices">Notices</a></li>
                 </ul>
             </div>
             
             <div class="footer-column">
-                <h3>All Sections</h3>
+                <h3>Resources</h3>
                 <ul class="footer-links">
-                    <li><a href="#emailConfirmationPage" onclick="scrollToSection('emailConfirmationPage')">Email Confirmation</a></li>
-                    <li><a href="#detailedStoryPage" onclick="scrollToSection('detailedStoryPage')">Story Details</a></li>
-                    <li><a href="#detailedVacancyPage" onclick="scrollToSection('detailedVacancyPage')">Vacancy Details</a></li>
-                    <li><a href="#detailedNoticePage" onclick="scrollToSection('detailedNoticePage')">Notice Details</a></li>
-                    <li><a href="#detailedEditorPage" onclick="scrollToSection('detailedEditorPage')">Editor Details</a></li>
+                    <li><a href="{% url 'about_page' %}" data-page="about">About Us</a></li>
+                    <li><a href="{% url 'contact_page' %}" data-page="contact">Contact</a></li>
+                    <li><a href="{% url 'team_page' %}" data-page="team">Our Team</a></li>
+                    <li><a href="{% url 'privacy_terms_page' %}">Privacy Policy & Terms</a></li>
                 </ul>
             </div>
             
             <div class="footer-column">
-                <h3>Sectors We Cover</h3>
-                <p>Health • WASH • Agriculture • Food Security • Education • Livelihoods • Economic Empowerment • Protection • Community Resilience</p>
+                <h3>Subscribe</h3>
+                <p>Get weekly updates on NGO news and opportunities in Zimbabwe.</p>
+                <div class="subscribe-form" style="margin-top: 1rem;">
+                    <div class="form-row">
+                        <input type="text" placeholder="Your Name">
+                        <input type="email" placeholder="Your Email">
+                    </div>
+                    <div class="form-group" style="text-align: left; margin-top: 1rem;">
+                        <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                            <input type="checkbox" id="agreeTerms" name="agree_terms" required style="width: auto; margin-top: 0.25rem;">
+                            <label for="agreeTerms" style="font-size: 0.9rem; line-height: 1.4;">
+                                I agree to the 
+                                <a href="{% url 'privacy_terms_page' %}" target="_blank" style="color: var(--primary); font-weight: 600;">
+                                    Privacy Policy & Terms of Service
+                                </a>
+                                *
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn">Subscribe Now</button>
+                </div>
             </div>
         </div>
         
         <div class="copyright">
-            <p>&copy; 2023 NGO News Digest. All rights reserved. | Celebrating Civil Society Impact in Zimbabwe</p>
+            <p>&copy; 2023 NGO News Digest. All rights reserved. Serving Zimbabwe's Civil Society.</p>
         </div>
     </div>
 </footer>

@@ -1,0 +1,44 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}NGO News Digest - Team{% endblock %}
+
+{% block content %}
+    {% include 'partials/header.html' %}
+    <main id="pageContent">
+        <section id="editors" class="page-section">
+            <div class="container section py-2">
+                <center>
+                    <h1>Our Team</h1>
+                    <p class="mb-2">Meet the dedicated professionals behind NGO News Digest.</p>
+                </center>
+                
+                <div class="team-grid mb-2">
+                    {% for team_member in team_members %}
+                    <div class="team-member card">
+                        <a href="/team_member_page/{{ team_member.id }}">
+                            <img src="{{ team_member.get_head_shot_url }}" alt="Sarah Chideme" class="team-member-img">
+                            <h3 class="team-member-name" style="color: black;">{{ team_member.prefix }} {{ team_member.user.first_name|title }} {{ team_member.user.last_name|title }}</h3>
+                            <div class="team-member-position">{{ team_member.position }}</div>
+                            <p style="color: gray;">{{ team_member.bio|truncatechars:50|safe }}</p>
+                        </a>
+                        <div class="social-icons justify-center mt-2">
+                            <a href="{{ team_member.twitter_url }}" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="{{ team_member.linkedin_url }}" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="card">
+                    <center>
+                        <h2>Join Our Team</h2>
+                        <p>We're always looking for passionate individuals to join our mission. Check our <a href="{% url 'vacancies_page' %}" data-page="vacancies">vacancies page</a> for current openings.</p>
+                    </center>
+                </div>
+            </div>
+        </section>
+    </main>
+</style>
+    {% include 'partials/footer.html' %}
+{% endblock %}

@@ -1,117 +1,118 @@
-{% extends 'base.html' %}
+{% extends 'partials/base.html' %}
+{% load static %}
 
-{% block title %}About Us{% endblock %}
+{% block title %}NGO News Digest - About{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="hero mb-5">
-    <div class="container text-center">
-        <h1 class="display-5 fw-bold mb-3">About Our Newsletter</h1>
-        <p class="lead mb-4">Delivering value through curated content in our distinctive red & white theme</p>
-    </div>
-</div>
+    {% include 'partials/header.html' %}
+    <main id="pageContent">
+        <section id="about" class="page-section">
+            <div class="container section py-2">
+                <h1>About {{ site_info.organization_name }}</h1>
+                <p class="mb-2" style="font-size: 1.1rem;">{{ site_info.tagline|safe }}</p>
+                
+                <div class="card mb-2">
+                    <h2>Our Mission</h2>
+                    <p>{{ site_info.mission|safe }}</p>
+                </div>
+                
+                <div class="card mb-2">
+                    <h2>Our Vision</h2>
+                    <p>{{ site_info.vision|safe }}</p>
+                </div>
+                
+                <h2 class="mt-2">Our Core Values</h2>
+                <div class="content-grid mb-2">
+                    {% for key, value in site_info.values.items %}
+                        <div class="card text-center">
+                            <i class="fas fa-handshake fa-2x mb-2" style="color: var(--primary);"></i>
+                            <h3>{{ key }}</h3>
+                            <p>{{ value }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <h2>Sectors We Cover</h2>
+                <div class="mb-2">
+                    {% for sector in site_info.sectors_list %}
+                        <span class="badge badge-red">{{ sector }}</span>
+                    {% empty %}
+                        <li>No sectors defined</li>
+                    {% endfor %}
+                </div>
+                
+                <h2 class="section-title">Our Esteemed Partners</h2>
+                <div class="partners-grid">
+                    {% for partner in site_info.partners_list %}
+                    <div class="partner-card">
+                        <div class="partner-logo">
+                            <div class="logo-placeholder">
+                                <span class="logo-initials">{{ partner|first|upper }}</span>
+                            </div>
+                        </div>
+                        <div class="partner-name">{{ partner }}</div>
+                    </div>
+                    {% empty %}
+                    <div class="no-partners">Partnership information coming soon</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    </main>
+    <style>
+.partners-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
 
-<div class="row">
-    <div class="col-lg-10 mx-auto">
-        <!-- Mission Card -->
-        <div class="card mb-5">
-            <div class="card-body p-4 p-md-5">
-                <div class="row align-items-center">
-                    <div class="col-md-4 text-center mb-4 mb-md-0">
-                        <div class="bg-red-light rounded-circle d-inline-flex align-items-center justify-content-center" 
-                             style="width: 200px; height: 200px;">
-                            <i class="fas fa-bullseye fa-5x text-red"></i>
-                        </div>
-                    </div>
-                    <div class="col-md-8">
-                        <h2 class="section-title">Our Mission</h2>
-                        <p class="lead mb-4">We're dedicated to providing valuable, timely, and relevant content to our subscribers through our distinctive red & white newsletter.</p>
-                        <p>In a world of information overload, we curate the most important updates, insights, and offers that matter to you.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Values -->
-        <div class="card mb-5">
-            <div class="card-body p-4 p-md-5">
-                <h2 class="section-title text-center mb-5">Our Core Values</h2>
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <div class="text-center p-4 h-100">
-                            <div class="bg-red-light rounded-circle p-4 d-inline-block mb-4">
-                                <i class="fas fa-shield-alt fa-3x text-red"></i>
-                            </div>
-                            <h4 class="h5 fw-bold mb-3">Privacy First</h4>
-                            <p class="text-muted">We never share your data. Your privacy is our priority, reflected in our clean white design with red accents for trust.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center p-4 h-100">
-                            <div class="bg-red-light rounded-circle p-4 d-inline-block mb-4">
-                                <i class="fas fa-gem fa-3x text-red"></i>
-                            </div>
-                            <h4 class="h5 fw-bold mb-3">Quality Content</h4>
-                            <p class="text-muted">Every newsletter is carefully crafted. No spam, just valuable content that stands out in red for importance.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center p-4 h-100">
-                            <div class="bg-red-light rounded-circle p-4 d-inline-block mb-4">
-                                <i class="fas fa-users fa-3x text-red"></i>
-                            </div>
-                            <h4 class="h5 fw-bold mb-3">Community Focus</h4>
-                            <p class="text-muted">We build relationships with our subscribers. The red in our theme symbolizes our passion for community.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Team -->
-        <div class="card">
-            <div class="card-body p-4 p-md-5">
-                <h2 class="section-title text-center mb-5">Meet Our Team</h2>
-                <div class="row g-4">
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <div class="bg-red-light rounded-circle mx-auto mb-3" 
-                                 style="width: 150px; height: 150px; background: url('https://ui-avatars.com/api/?name=Alex+Johnson&background=dc3545&color=fff&size=150') center/cover;"></div>
-                            <h4 class="h5 fw-bold mb-1">Alex Johnson</h4>
-                            <p class="text-muted mb-2">Content Curator</p>
-                            <p class="small">Ensures every newsletter delivers maximum value.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <div class="bg-red-light rounded-circle mx-auto mb-3" 
-                                 style="width: 150px; height: 150px; background: url('https://ui-avatars.com/api/?name=Sarah+Williams&background=dc3545&color=fff&size=150') center/cover;"></div>
-                            <h4 class="h5 fw-bold mb-1">Sarah Williams</h4>
-                            <p class="text-muted mb-2">Design Specialist</p>
-                            <p class="small">Crafts our distinctive red & white visual identity.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="text-center">
-                            <div class="bg-red-light rounded-circle mx-auto mb-3" 
-                                 style="width: 150px; height: 150px; background: url('https://ui-avatars.com/api/?name=Mike+Chen&background=dc3545&color=fff&size=150') center/cover;"></div>
-                            <h4 class="h5 fw-bold mb-1">Mike Chen</h4>
-                            <p class="text-muted mb-2">Tech Lead</p>
-                            <p class="small">Ensures seamless delivery and user experience.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- CTA -->
-        <div class="text-center mt-5">
-            <h3 class="mb-4">Ready to Join Our Community?</h3>
-            <p class="lead mb-4">Experience our distinctive red & white newsletter today.</p>
-            <a href="{% url 'subscribe_page' %}" class="btn btn-red btn-lg px-5">
-                <i class="fas fa-paper-plane me-2"></i>Subscribe Now
-            </a>
-        </div>
-    </div>
-</div>
+.partner-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px 20px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+}
+
+.partner-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    border-color: var(--primary);
+}
+
+.logo-placeholder {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary), #6c63ff);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.logo-initials {
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.partner-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-top: 10px;
+}
+</style>
+    {% include 'partials/footer.html' %}
 {% endblock %}

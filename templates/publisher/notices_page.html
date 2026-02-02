@@ -1,43 +1,151 @@
 {% extends 'partials/base.html' %}
+{% load static %}
 
-{% block title %}NGO News Digest - Home{% endblock %}
+{% block title %}NGO News Digest - Notices{% endblock %}
+
 {% block content %}
     {% include 'partials/header.html' %}
-    <!-- 9. Notices Section -->
-    <section id="notices" class="section notices-section">
-        <div class="container">
-            <h2 class="section-title">Important Notices & Updates</h2>
-            
-            <div class="stories-filters">
-                <button class="filter-btn active" data-filter="all">All Notices</button>
-                <button class="filter-btn" data-filter="funding">Funding Opportunities</button>
-                <button class="filter-btn" data-filter="events">Events & Workshops</button>
-                <button class="filter-btn" data-filter="policy">Policy Updates</button>
-                <button class="filter-btn" data-filter="reports">Reports & Publications</button>
-            </div>
-            
-            <div class="notices-grid">
-                <div class="notice-card" data-category="funding">
-                    <span class="notice-date">Deadline: 15 June 2023</span>
-                    <h3 class="notice-title">EU Call for Proposals: Climate Resilience in Rural Communities</h3>
-                    <p class="notice-content">The European Union has announced a €5 million funding window for NGOs working on climate adaptation and resilience building in Zimbabwe's rural communities.</p>
-                    <div class="story-footer">
-                        <span>Category: Funding Opportunity</span>
-                        <div class="share-buttons">
-                            <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
-                            <button class="share-btn" data-platform="email"><i class="fas fa-envelope"></i></button>
+    <main id="pageContent">
+        <section id="notices" class="page-section">
+            <div class="container section py-2">
+                <h1>Notices & Announcements</h1>
+                <p class="mb-2">Stay updated with funding opportunities, events, and policy changes.</p>
+                
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <span class="filter-label">Filter by:</span>
+                        {% for category in categories %}
+                            <button class="filter-btn" data-filter="{{ category.name }}">{{ category.name }}</button>
+                        {% endfor %}
+                        
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input" id="noticeSearch" placeholder="Search notices...">
                         </div>
                     </div>
                 </div>
+                
+                <div class="content-grid" id="noticesList">
+                    <!-- Notices loaded via JS -->
+                </div>
+
+                <center id="more-notices-btn-container">
+                    <div class="text-center mt-2">
+                        <button id="more-notices-btn" class="btn btn-small" data-page="notices">More Notices</button>
+                    </div>
+                </center>
+                
+                <div class="pagination" id="noticesPagination">
+                    <!-- Pagination loaded via JS -->
+                </div>
             </div>
-            
-            <div class="action-buttons">
-                <button class="read-more-btn" onclick="scrollToSection('detailedNoticePage')">
-                    <i class="fas fa-file-alt"></i> View Full Notice Details
-                </button>
-            </div>
-        </div>
-    </section>
+        </section>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var page = 1
+            var page_size = 9
+            var category = "All"
+
+            clearNoticesGrid()
+            loadNotices(page, page_size, category)
+
+
+            /*-----------------------------------------------------------------------------------------------------------
+            EVENTS >>>>>
+            -------------------------------------------------------------------------------------------------------------*/
+
+            $('#more-notices-btn').on('click', function() {
+                page++
+                loadNotices(page, page_size, category)
+            });
+
+            /*-----------------------------------------------------------------------------------------------------------
+            EVENTS <<<<<
+            -------------------------------------------------------------------------------------------------------------*/
+        
+
+            function loadNotices(page, page_size, category){
+                $.ajax({
+                    url: "{% url 'notices' %}",
+                    data: {
+                        page: page,
+                        page_size: page_size,
+                        category: category,
+                     },
+                    success: function(responseData) {
+                        const noticesGrid = $('#noticesList');
+                        var notices = responseData.notices
+
+
+                        if (notices.length < page_size){
+                            $('#more-notices-btn-container').hide()
+                        }
+                        
+                        if (notices.length == 0 && page < 1) {
+                            noticesGrid.html(`
+                                <div class="empty-state">
+                                    <i class="fas fa-bullhorn empty-state-icon"></i>
+                                    <h3>No notices found</h3>
+                                    <p>Try adjusting your filters or search term</p>
+                                </div>`)
+                            return;
+                        }
+                        
+                        notices.forEach(notice => {
+                            noticesGrid.append(`
+                                <div class="card notice-card" data-notice-id="${notice.id}">
+                                    <div class="notice-card-header">
+                                        <div class="notice-category badge badge-orange">
+                                            ${notice.category || 'Uncategorized'}
+                                        </div>
+                                        <div class="notice-date">
+                                            ${notice.publish_date}
+                                            
+                                        </div>
+                                    </div>
+                                    
+                                    <h3 class="notice-title">
+                                        <a href="/notice_page/${notice.id}">
+                                            ${notice.headline || 'Untitled Notice'}
+                                        </a>
+                                    </h3>
+                                    
+                                    <p class="notice-description">
+                                        ${(notice.description || 'No description available').replace(/<[^>]*>/g, '').slice(0, 150)}${(notice.description || '').replace(/<[^>]*>/g, '').length > 150 ? '...' : ''}
+                                    </p>
+                                    
+                                    <div class="notice-attachment">
+                                        <i class="fas fa-paperclip"></i>
+                                        <span>More details available</span>
+                                    </div>
+                                </div>`
+                            )
+                        })
+                        
+                    },
+                    error: function(){
+                        Swal.fire({
+                            title: "Error",
+                            text: "An error ocured!",
+                            icon: "error"
+                        });
+                    }
+                })
+
+            }
+
+
+            function clearNoticesGrid(){
+                const noticesGrid = $('#noticesList');
+                noticesGrid.empty();
+            }
+        })
+
+
+
+
+    </script>
     {% include 'partials/footer.html' %}
 {% endblock %}
-

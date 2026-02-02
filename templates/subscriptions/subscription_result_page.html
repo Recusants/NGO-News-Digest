@@ -1,23 +1,72 @@
 {% extends 'partials/base.html' %}
 {% load static %}
 
-{% block title %}NGO News Digest - Home{% endblock %}
+{% block title %}NGO News Digest - Email Confirmation{% endblock %}
+
 {% block content %}
-    {% csrf_token %}
-    <div id="emailConfirmationPage" class="status-page">
-        <div class="status-container">
-            <div class="status-icon">
-                <i class="fas fa-envelope-open-text"></i>
-            </div>
-            <h2 class="status-title">Confirm Your Email</h2>
-            <p class="status-message">We've sent a confirmation link to your email address. Please check your inbox and click the link to complete your subscription to NGO News Digest.</p>
-            <p class="status-message">If you don't see the email, please check your spam folder.</p>
-            <div class="action-buttons">
-                <a href="{% url 'home' %}" class="read-more-btn">
-                    <i class="fas fa-home"></i> Return to Home
-                </a>
+<div class="container section">
+    <div class="card" style="max-width: 600px; margin: 3rem auto; text-align: center;">
+        <!-- Icon -->
+        <div class="mb-3">
+            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                <i class="fas fa-envelope-open-text" style="font-size: 3rem; color: white;"></i>
             </div>
         </div>
+        
+        <!-- Title -->
+        <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: var(--text-dark);">
+            Confirm Your Email
+        </h2>
+        
+        <!-- Message -->
+        <div class="mb-3">
+            <p style="color: var(--text-light); line-height: 1.6; margin-bottom: 1rem; font-size: 1.05rem;">
+                We've sent a confirmation link to your email address. Please check your inbox and click the link to complete your subscription.
+            </p>
+            
+            <div class="notice-box" style="background-color: var(--bg-gray); padding: 1rem; border-radius: var(--border-radius); margin: 1.5rem 0;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                    <i class="fas fa-info-circle" style="color: var(--primary); font-size: 1.2rem;"></i>
+                    <span style="color: var(--text-light); font-weight: 500;">
+                        Don't forget to check your spam folder!
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Button -->
+        <div class="mt-3">
+            <a href="{% url 'home' %}" class="btn" style="width: 100%;">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Homepage
+            </a>
+        </div>
+        
+        <!-- Secondary Actions -->
+        <div class="mt-3" style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+            <a href="{% url 'stories_page' %}" data-page="stories" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-newspaper mr-1"></i> Read Stories
+            </a>
+            <a href="{% url 'contact_page' %}" data-page="contact" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-question-circle mr-1"></i> Need Help?
+            </a>
+        </div>
     </div>
-{% endblock %}
+</div>
 
+<style>
+    @media (max-width: 768px) {
+        .container.section {
+            padding: 1.5rem 0;
+        }
+        
+        .card {
+            margin: 1rem auto !important;
+            padding: 1.5rem !important;
+        }
+        
+        h2 {
+            font-size: 1.5rem !important;
+        }
+    }
+</style>
+{% endblock %}

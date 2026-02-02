@@ -1,54 +1,401 @@
 {% extends 'partials/base.html' %}
 {% load static %}
-{% block title %}NGO News Digest - Home{% endblock %}
+{% block title %}NGO News Digest - {{ story.headline }}{% endblock %}
 {% block content %}
     {% include 'partials/header.html' %}
-    <!-- 6. Detailed Story Page -->
-    <div id="detailedStoryPage" class="detailed-page">
-        <div class="detailed-container">
-            <div class="detailed-header">
-                <span class="detailed-category">{{ category }}</span>
-                <h1 class="detailed-title">{{ title }}</h1>
-                <div class="detailed-meta">
-                    <span>By {{ author }}</span>
-                    <span>{{ date_and_time}}</span>
-                    <!-- <span>5 min read</span> -->
-                </div>
-            </div>
-            {% if image_url %}
-            <center>
-                <img 
-                    src="{{ image_url }}"
-                    style="max-width:100%; height:auto;"
-                    alt="thumbnail">
-              </center>
-            {% endif %}
-            
-            <div class="detailed-content">
-                {{ content|safe }}
-            </div>
-            
-            <div class="detailed-footer">
-                <div class="share-buttons" style="justify-content: center; margin-top: 20px;">
-                    <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
-                    <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
-                    <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
-                    <button class="share-btn" data-platform="linkedin"><i class="fab fa-linkedin-in"></i></button>
-                </div>
-                <div class="action-buttons">
-                    <div class="action-buttons">
-                        <a href="{% url 'stories_page' %}" class="read-more-btn">
-                            <i class="fas fa-home"></i> More stories
+    <main id="pageContent">
+        <section id="story-details" class="page-section">
+            <div class="container section py-2">
+                <a href="{% url 'stories_page' %}" class="btn btn-small mb-2" data-page="stories"><i class="fas fa-arrow-left"></i> Back to Stories</a>
+                
+                <div class="details-header">
+                    <!-- THUMBNAIL IMAGE ADDED HERE -->
+                    {% if story.get_thumbnail_url %}
+                    <div class="story-thumbnail" style="margin-bottom: 1.5rem;">
+                        <img src="{{ story.get_thumbnail_url }}" 
+                             alt="{{ story.headline }}" 
+                             class="story-detail-img"
+                             style="width: 100%; height: auto; max-height: 500px; object-fit: cover; border-radius: var(--border-radius);">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="badge badge-red" id="storyCategory">{{ story.category }}</div>
+                    <h1 class="details-title" id="storyTitle">{{ story.headline }}</h1>
+                    
+                    <div class="details-meta">
+                        <div class="story-card-author">
+                            <i class="fas fa-user"></i>
+                            <span id="storyAuthor">{{ story.author.first_name }} {{ story.author.last_name }}</span>
+                        </div>
+                        <div><i class="far fa-calendar"></i> <span id="storyDate">{{ story.published_at|date:'F d, Y' }}</span></div>
+                        <div><i class="far fa-clock"></i> <span id="storyReadTime">{{ story.read_time }}</span> min read</div>
+                    </div>
+                    
+                    <!-- Share buttons - Remove the border-top from this container -->
+                    <div class="story-card-share" style="border-top: none; padding-top: 0; margin-top: 1.5rem;">
+                        <span style="font-weight: 500; color: var(--text-dark); margin-right: 0.5rem;">Share:</span>
+                        <!-- Facebook Share -->
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}&quote={{ story.headline|urlencode }}" 
+                           class="share-btn" 
+                           data-share="facebook" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           title="Share on Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        
+                        <!-- Twitter Share -->
+                        <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri|urlencode }}&text={{ story.headline|urlencode }}&via=NGONewsDigest&hashtags=NGO,News" 
+                           class="share-btn" 
+                           data-share="twitter" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           title="Share on Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        
+                        <!-- LinkedIn Share -->
+                        <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.build_absolute_uri|urlencode }}&title={{ story.headline|urlencode }}&summary={{ story.snippet|truncatechars:200|urlencode }}&source=NGO+News+Digest" 
+                           class="share-btn" 
+                           data-share="linkedin" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           title="Share on LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        
+                        <!-- WhatsApp Share -->
+                        <a href="https://wa.me/?text={{ story.headline|urlencode }}%20{{ request.build_absolute_uri|urlencode }}" 
+                           class="share-btn" 
+                           data-share="whatsapp" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           title="Share on WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        
+                        <!-- Email Share -->
+                        <a href="mailto:?subject=Check out this story: {{ story.headline|urlencode }}&body=Hi,%0D%0A%0D%0AI thought you might be interested in this story:%0D%0A%0D%0A{{ story.headline|urlencode }}%0D%0A%0D%0A{{ story.snippet|truncatechars:150|urlencode }}%0D%0A%0D%0ARead more: {{ request.build_absolute_uri|urlencode }}" 
+                           class="share-btn" 
+                           data-share="email"
+                           title="Share via Email">
+                            <i class="far fa-envelope"></i>
+                        </a>
+                        
+                        <!-- Copy Link -->
+                        <a href="#" 
+                           class="share-btn" 
+                           data-share="copy" 
+                           onclick="copyStoryLink('{{ request.build_absolute_uri }}'); return false;"
+                           title="Copy link to clipboard">
+                            <i class="fas fa-link"></i>
                         </a>
                     </div>
                 </div>
+                
+                <!-- Add a single separator line after details-header -->
+                <div style="border-top: 1px solid var(--border-color); margin: 1.5rem 0;"></div>
+                
+                <div class="two-column">
+                    <div class="details-content" id="storyContent">
+                        {{ story.content|safe }}
+                    </div>
+                    
+                    <div class="details-sidebar">
+                        <div class="sidebar-section">
+                            <h3>About the Author</h3>
+                            <div class="story-card-author">
+                                <i class="fas fa-user-circle fa-2x"></i>
+                                <div>
+                                    <div id="authorName">{{ story.author.first_name }} {{ story.author.last_name }}</div>
+                                    <div id="authorTitle" style="font-size: 0.9rem; color: var(--text-light);">{{ story.author.position }}</div>
+                                </div>
+                            </div>
+                            <p id="authorBio" class="mt-1" style="font-size: 0.9rem;">{{ story.author.bio|truncatechars:150|safe }}</p>
+                        </div>
+                        
+                        <div class="sidebar-section">
+                            <h3>Related Stories</h3>
+                            <div id="relatedStories">
+                                {% for related_story in related_stories %}
+                                    <div class="mb-2">
+                                        <a href="{% url 'story_page' related_story.id %}" class="story-card-title" style="font-size: 1rem;">{{ related_story.headline }}</a>
+                                        <div style="font-size: 0.8rem; color: var(--text-light);">{{ related_story.published_at|date:'M d, Y' }}</div>
+                                    </div>
+                                {% empty %}
+                                    <p style="color: var(--text-light); font-size: 0.9rem;">No related stories found.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Share this story section -->
+                        <div class="sidebar-section">
+                            <h3>Share this story</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">Help spread awareness by sharing this important story.</p>
+                            <div class="story-card-share" style="border: none; padding: 0; margin-top: 0;">
+                                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri|urlencode }}" 
+                                   class="share-btn" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   title="Share on Facebook">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri|urlencode }}&text={{ story.headline|urlencode }}" 
+                                   class="share-btn" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   title="Share on Twitter">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.build_absolute_uri|urlencode }}" 
+                                   class="share-btn" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   title="Share on LinkedIn">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                                <a href="mailto:?subject={{ story.headline|urlencode }}" 
+                                   class="share-btn"
+                                   title="Share via Email">
+                                    <i class="far fa-envelope"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script>
-    </script>
+        </section>
+    </main>
     {% include 'partials/footer.html' %}
+    
+    <script>
+    // Copy link function with toast notification
+    function copyStoryLink(url) {
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('Link copied to clipboard!', 'success');
+        }).catch(err => {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            showToast('Link copied to clipboard!', 'success');
+        });
+        return false;
+    }
+    
+    // Toast notification function
+    function showToast(message, type = 'info') {
+        // Remove existing toasts
+        const existingToasts = document.querySelectorAll('.share-toast');
+        existingToasts.forEach(toast => toast.remove());
+        
+        // Create toast
+        const toast = document.createElement('div');
+        toast.className = `share-toast share-toast-${type}`;
+        toast.innerHTML = `
+            <div class="toast-content">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        // Add styles if not already added
+        if (!document.querySelector('#share-toast-styles')) {
+            const style = document.createElement('style');
+            style.id = 'share-toast-styles';
+            style.textContent = `
+                .share-toast {
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: var(--bg-light);
+                    color: var(--text-dark);
+                    padding: 1rem 1.5rem;
+                    border-radius: var(--border-radius);
+                    box-shadow: var(--card-shadow-hover);
+                    z-index: 10000;
+                    animation: slideIn 0.3s ease;
+                    border-left: 4px solid var(--primary);
+                    max-width: 300px;
+                }
+                
+                .share-toast-success {
+                    border-left-color: #4caf50;
+                }
+                
+                .toast-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                }
+                
+                .toast-content i {
+                    font-size: 1.2rem;
+                }
+                
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                
+                @keyframes slideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .share-toast {
+                        left: 20px;
+                        right: 20px;
+                        max-width: none;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(toast);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+    
+    // Optional: Track share events with Google Analytics or similar
+    document.addEventListener('DOMContentLoaded', function() {
+        const shareButtons = document.querySelectorAll('.share-btn[target="_blank"]');
+        
+        shareButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                const platform = this.getAttribute('data-share');
+                // You can add analytics tracking here
+                console.log(`Shared on ${platform}: {{ story.headline }}`);
+            });
+        });
+    });
+    </script>
+    
+    <style>
+    /* Override the border-top for story-card-share in details page */
+    .details-header .story-card-share {
+        border-top: none !important;
+        padding-top: 0 !important;
+    }
+    
+    /* Story detail image styling */
+    .story-detail-img {
+        width: 100%;
+        height: auto;
+        max-height: 500px;
+        object-fit: cover;
+        border-radius: var(--border-radius);
+        box-shadow: var(--card-shadow);
+    }
+    
+    /* Mobile adjustments for thumbnail */
+    @media (max-width: 768px) {
+        .story-detail-img {
+            max-height: 300px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .story-detail-img {
+            max-height: 250px;
+        }
+    }
+    
+    /* Share button colors */
+    .share-btn[data-share="facebook"] {
+        background-color: #1877f2;
+        color: white;
+    }
+    
+    .share-btn[data-share="twitter"] {
+        background-color: #1da1f2;
+        color: white;
+    }
+    
+    .share-btn[data-share="linkedin"] {
+        background-color: #0077b5;
+        color: white;
+    }
+    
+    .share-btn[data-share="whatsapp"] {
+        background-color: #25d366;
+        color: white;
+    }
+    
+    .share-btn[data-share="email"] {
+        background-color: var(--primary);
+        color: white;
+    }
+    
+    .share-btn[data-share="copy"] {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    /* Hover effects */
+    .share-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        opacity: 0.9;
+    }
+    
+    /* Share button size adjustments */
+    .share-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .details-header .story-card-share {
+            flex-wrap: wrap;
+        }
+        
+        .details-header .story-card-share span {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .share-btn {
+            width: 32px;
+            height: 32px;
+            font-size: 0.9rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .share-btn {
+            width: 30px;
+            height: 30px;
+            font-size: 0.8rem;
+        }
+    }
+    </style>
 {% endblock %}
-

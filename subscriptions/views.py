@@ -125,9 +125,6 @@ def unsubscribe_link(request, email):
 
 
 def subscribe(request):
-    """
-    Handle newsletter subscription with verification link
-    """
     if request.method != 'POST':
         return JsonResponse({'custome_status': "Error", 'message': 'Method not allowed'}, status=405)
     

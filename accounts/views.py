@@ -74,15 +74,6 @@ def about_page(request):
     })
 
 
-def contact_page(request):
-    """Contact page"""
-    site_info = get_object_or_404(SiteInfo, id=1)
-    
-    return render(request, 'about/contact.html', {
-        'site_info': site_info,
-    })
-
-
 @staff_member_required
 def edit_about(request):
     """Edit about page (staff only)"""

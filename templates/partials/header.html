@@ -1,38 +1,35 @@
-<nav class="sticky-nav">
-    <div class="nav-container">
-        <a href="{% url 'home' %}" class="logo">
-            <div class="logo-icon">
-                <i class="fas fa-newspaper"></i>
-            </div>
-            <div class="logo-text">
-                <div class="logo-main">NGO News Digest</div>
-                <div class="logo-tagline">Civil Society Impact in Zimbabwe</div>
-            </div>
+{% load static %}
+<header>
+    <div class="container header-container">
+        <a href="{% url 'home' %}" class="logo-image">
+            <img
+                src="{% static 'default-story.jpg' %}"
+                alt="NGO News Digest Logo" 
+                style="height: 40px; 
+                    width: auto;
+                    max-width: 150px;
+            ">
         </a>
         
-        <ul class="nav-links" id="navLinks">
-            <li><a href="{% url 'home' %}">Home</a></li>
-            <li><a href="{% url 'stories_page' %}">Stories</a></li>
-            <li><a href="{% url 'vacancies_page' %}">Vacancies</a></li>
-            <li><a href="{% url 'notices_page' %}">Notices</a></li>
-            <li><a href="{% url 'about_page' %}">About</a></li>
-            <li><a href="{% url 'editors_page' %}">Editors</a></li>
-            <li><a href="{% url 'subscribe_page' %}">Subscribe</a></li>
-            <li><a href="{% url 'contact_page' %}">Contact</a></li>
-            {% if user.is_authenticated %}
-                <li><a href="{% url 'management_page' %}" title="Administration">🛅</a></li>
-            {% endif %}
-
-        </ul>
+        <nav class="nav-menu" id="navMenu">
+            <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a>
+            <a href="{% url 'stories_page' %}" class="nav-link {% if request.resolver_match.url_name == 'stories_page' %}active{% endif %}">Stories</a>
+            <a href="{% url 'vacancies_page' %}" class="nav-link {% if request.resolver_match.url_name == 'vacancies_page' %}active{% endif %}">Vacancies</a>
+            <a href="{% url 'notices_page' %}" class="nav-link {% if request.resolver_match.url_name == 'notices_page' %}active{% endif %}">Notices</a>
+            <a href="{% url 'about_page' %}" class="nav-link {% if request.resolver_match.url_name == 'about_page' %}active{% endif %}">About</a>
+            <a href="{% url 'contact_page' %}" class="nav-link {% if request.resolver_match.url_name == 'contact_page' %}active{% endif %}">Contact</a>
+            <a href="{% url 'team_page' %}" class="nav-link {% if request.resolver_match.url_name == 'team_page' %}active{% endif %}">Team</a>
+            <!-- Add this line -->
+            <a href="{% url 'privacy_terms_page' %}" class="nav-link {% if request.resolver_match.url_name == 'privacy_terms_page' %}active{% endif %}">Privacy & Terms</a>
+        </nav>
         
-        <div class="nav-actions">
-            <button class="theme-toggle" id="themeToggle">
+        <div class="header-actions">
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
                 <i class="fas fa-moon"></i>
             </button>
-            <button class="hamburger" id="hamburger">
+            <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu" aria-expanded="false">
                 <i class="fas fa-bars"></i>
             </button>
-            
         </div>
     </div>
-</nav>
+</header>

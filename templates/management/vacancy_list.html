@@ -1,207 +1,427 @@
 {% extends 'management/management_base.html' %}
+{% comment %} templates/management/vacancy_list.html {% endcomment %}
 {% load static %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}Manage Vacancies{% endblock %}
 
 {% block content %}
     {% include 'management/management_header.html' %}
     {% include 'management/management_side_bar.html' %}
     
     <main class="main-content" id="mainContent">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">{{ title }}</h2>
-                <div class="card-tools">
-                    <a href="{% url 'vacancy_create' %}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add New
-                    </a>
+        <div class="container-fluid">
+            <!-- Header with Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">
+                            <i class="fas fa-briefcase"></i> Vacancies
+                        </h2>
+                        <div>
+                            <a href="{% url 'vacancy_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create New Vacancy
+                            </a>
+                            <div class="btn-group ms-2">
+                                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="fas fa-filter"></i> Filter
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="?status=all">All Vacancies</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="?status=active">Active</a></li>
+                                    <li><a class="dropdown-item" href="?status=expired">Expired</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="?status=featured">Featured</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <nav aria-label="breadcrumb" class="mt-3">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Vacancies</li>
+                        </ol>
+                    </nav>
                 </div>
             </div>
-            <div class="card-body">
-                {% if messages %}
-                <div class="messages mb-3">
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="close" data-dismiss="alert">
-                            <span>&times;</span>
-                        </button>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase mb-0">Total</h6>
+                                    <h2 class="mb-0">{{ total_count }}</h2>
+                                </div>
+                                <i class="fas fa-briefcase fa-2x opacity-50"></i>
+                            </div>
+                        </div>
                     </div>
-                    {% endfor %}
                 </div>
-                {% endif %}
-                
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Organization</th>
-                                <th>Location</th>
-                                <th>Job Type</th>
-                                <th>Deadline</th>
-                                <th>Status</th>
-                                <th>Featured</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for vacancy in vacancies %}
-                            <tr>
-                                <td>{{ vacancy.title }}</td>
-                                <td>{{ vacancy.organization }}</td>
-                                <td>{{ vacancy.location }}</td>
-                                <td>{{ vacancy.get_job_type_display }}</td>
-                                <td>{{ vacancy.application_deadline|date:"Y-m-d" }}</td>
-                                <td>
-                                    <span class="badge badge-{% if vacancy.is_active %}success{% else %}danger{% endif %}">
-                                        {% if vacancy.is_active %}Active{% else %}Inactive{% endif %}
-                                    </span>
-                                </td>
-                                <td>
-                                    {% if vacancy.is_featured %}
-                                    <i class="fas fa-star text-warning"></i>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{% url 'vacancy_edit' vacancy.pk %}" class="btn btn-info">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-{% if vacancy.is_active %}warning{% else %}success{% endif %}" 
-                                                onclick="toggleVacancyActive({{ vacancy.pk }})">
-                                            <i class="fas fa-{% if vacancy.is_active %}times{% else %}check{% endif %}"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-danger" 
-                                                onclick="deleteVacancy({{ vacancy.pk }})">
-                                            <i class="fas fa-trash"></i>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase mb-0">Active</h6>
+                                    <h2 class="mb-0">{{ active_count }}</h2>
+                                </div>
+                                <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase mb-0">Expired</h6>
+                                    <h2 class="mb-0">{{ expired_count }}</h2>
+                                </div>
+                                <i class="fas fa-clock fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase mb-0">Featured</h6>
+                                    <h2 class="mb-0">{{ featured_count }}</h2>
+                                </div>
+                                <i class="fas fa-star fa-2x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vacancies Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">All Vacancies</h5>
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control form-control-sm" 
+                                               placeholder="Search vacancies..." id="searchInput">
+                                        <button class="btn btn-outline-secondary btn-sm" type="button">
+                                            <i class="fas fa-search"></i>
                                         </button>
                                     </div>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="8" class="text-center">No vacancies found.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if vacancies %}
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="vacanciesTable">
+                                    <thead>
+                                        <tr>
+                                            <th width="50">
+                                                <input type="checkbox" id="selectAll" class="form-check-input">
+                                            </th>
+                                            <th>Title</th>
+                                            <th>Organization</th>
+                                            <th>Location</th>
+                                            <th>Job Type</th>
+                                            <th>Deadline</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for vacancy in vacancies %}
+                                        <tr class="{% if vacancy.is_expired %}table-secondary{% endif %}">
+                                            <td>
+                                                <input type="checkbox" name="selected_vacancies" 
+                                                       value="{{ vacancy.id }}" class="form-check-input vacancy-checkbox">
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ vacancy.title|truncatechars:40 }}</strong>
+                                                    {% if vacancy.is_featured %}
+                                                    <span class="badge bg-warning ms-1">
+                                                        <i class="fas fa-star"></i> Featured
+                                                    </span>
+                                                    {% endif %}
+                                                    <div class="text-muted small mt-1">
+                                                        {{ vacancy.description|striptags|truncatechars:60 }}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <strong>{{ vacancy.organization|truncatechars:30 }}</strong>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">
+                                                    <i class="fas fa-map-marker-alt"></i> {{ vacancy.location }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if vacancy.job_type == 'FULL_TIME' %}
+                                                <span class="badge bg-primary">Full Time</span>
+                                                {% elif vacancy.job_type == 'PART_TIME' %}
+                                                <span class="badge bg-info">Part Time</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">Contract</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span>{{ vacancy.application_deadline|date:"M d, Y" }}</span>
+                                                    <small class="{% if vacancy.days_until_deadline < 0 %}text-danger{% elif vacancy.days_until_deadline < 3 %}text-warning{% else %}text-success{% endif %}">
+                                                        {% if vacancy.days_until_deadline < 0 %}
+                                                        Expired
+                                                        {% else %}
+                                                        {{ vacancy.days_until_deadline }} day(s) left
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if vacancy.is_active %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check-circle"></i> Active
+                                                </span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="fas fa-times-circle"></i> Inactive
+                                                </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ vacancy.created_at|date:"M d, Y" }}
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'vacancy_detail' vacancy.pk %}" 
+                                                       class="btn btn-sm btn-outline-primary" 
+                                                       title="View" data-bs-toggle="tooltip">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'vacancy_edit' vacancy.pk %}" 
+                                                       class="btn btn-sm btn-outline-secondary" 
+                                                       title="Edit" data-bs-toggle="tooltip">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    {% if vacancy.is_active %}
+                                                    <a href="{% url 'vacancy_deactivate' vacancy.pk %}" 
+                                                       class="btn btn-sm btn-outline-warning" 
+                                                       title="Deactivate" data-bs-toggle="tooltip">
+                                                        <i class="fas fa-eye-slash"></i>
+                                                    </a>
+                                                    {% else %}
+                                                    <a href="{% url 'vacancy_activate' vacancy.pk %}" 
+                                                       class="btn btn-sm btn-outline-success" 
+                                                       title="Activate" data-bs-toggle="tooltip">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-outline-danger" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#deleteVacancyModal{{ vacancy.id }}"
+                                                            title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                                
+                                                <!-- Delete Modal -->
+                                                <div class="modal fade" id="deleteVacancyModal{{ vacancy.id }}" tabindex="-1">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Confirm Delete</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                Are you sure you want to delete "<strong>{{ vacancy.title }}</strong>"?
+                                                                <div class="alert alert-warning mt-3">
+                                                                    <i class="fas fa-exclamation-triangle"></i> 
+                                                                    This action cannot be undone.
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                <form method="POST" action="{% url 'vacancy_delete' vacancy.pk %}" class="d-inline">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-danger">Delete Vacancy</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Bulk Actions -->
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
+                                                data-bs-toggle="dropdown" id="bulkActionsBtn" disabled>
+                                            Bulk Actions
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="#" id="bulkActivate">
+                                                    <i class="fas fa-eye text-success me-2"></i> Activate Selected
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="#" id="bulkDeactivate">
+                                                    <i class="fas fa-eye-slash text-warning me-2"></i> Deactivate Selected
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="#" id="bulkFeature">
+                                                    <i class="fas fa-star text-warning me-2"></i> Feature Selected
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="#" id="bulkUnfeature">
+                                                    <i class="fas fa-star text-secondary me-2"></i> Remove Feature
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#" id="bulkDelete">
+                                                    <i class="fas fa-trash me-2"></i> Delete Selected
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <span class="ms-2 text-muted" id="selectedCount">0 vacancies selected</span>
+                                </div>
+                                
+                                <!-- Pagination -->
+                                {% if is_paginated %}
+                                <div class="col-md-6">
+                                    <nav aria-label="Page navigation" class="float-end">
+                                        <ul class="pagination pagination-sm mb-0">
+                                            {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="Previous">
+                                                    <span aria-hidden="true">&laquo;</span>
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                            
+                                            {% for num in page_obj.paginator.page_range %}
+                                                {% if page_obj.number == num %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ num }}</span>
+                                                </li>
+                                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">{{ num }}</a>
+                                                </li>
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" aria-label="Next">
+                                                    <span aria-hidden="true">&raquo;</span>
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                        </ul>
+                                    </nav>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-briefcase fa-4x text-muted mb-3"></i>
+                                <h4>No Vacancies Found</h4>
+                                <p class="text-muted">Get started by creating your first vacancy.</p>
+                                <a href="{% url 'vacancy_create' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Create Your First Vacancy
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
-    
-    <!-- Include SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <script>
-        function deleteVacancy(pk) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "This vacancy will be deleted permanently!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    fetch(`/management/vacancies/${pk}/delete/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            Swal.fire(
-                                'Deleted!',
-                                data.message,
-                                'success'
-                            ).then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire(
-                                'Error!',
-                                data.message || 'Something went wrong.',
-                                'error'
-                            );
-                        }
-                    })
-                    .catch(error => {
-                        Swal.fire(
-                            'Error!',
-                            'Network error occurred.',
-                            'error'
-                        );
-                    });
-                }
-            });
-        }
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Bulk selection for vacancies
+    document.getElementById('selectAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.vacancy-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+        updateSelectedCount();
+    });
+
+    function updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('.vacancy-checkbox:checked');
+        const count = checkboxes.length;
+        document.getElementById('selectedCount').textContent = count + ' vacancy(ies) selected';
+        document.getElementById('bulkActionsBtn').disabled = count === 0;
+    }
+
+    document.querySelectorAll('.vacancy-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#vacanciesTable tbody tr');
         
-        function toggleVacancyActive(pk) {
-            fetch(`/management/vacancies/${pk}/toggle-active/`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    Swal.fire(
-                        'Success!',
-                        data.message,
-                        'success'
-                    ).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire(
-                        'Error!',
-                        data.message || 'Something went wrong.',
-                        'error'
-                    );
-                }
-            })
-            .catch(error => {
-                Swal.fire(
-                    'Error!',
-                    'Network error occurred.',
-                    'error'
-                );
-            });
-        }
-        
-        // Function to get CSRF token from cookies
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
+        rows.forEach(row => {
+            const title = row.cells[1].textContent.toLowerCase();
+            const organization = row.cells[2].textContent.toLowerCase();
+            const location = row.cells[3].textContent.toLowerCase();
+            
+            if (title.includes(searchTerm) || organization.includes(searchTerm) || location.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
             }
-            return cookieValue;
-        }
-    </script>
-    
-    <style>
-        .btn-group-sm > .btn {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-        }
-        .badge {
-            padding: 0.25em 0.6em;
-            font-size: 0.875em;
-        }
-    </style>
+        });
+    });
+
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+</script>
+
+<style>
+    .table-secondary {
+        opacity: 0.7;
+    }
+    .table-secondary:hover {
+        opacity: 1;
+    }
+    .badge {
+        font-size: 0.75em;
+    }
+    #vacanciesTable tbody tr td {
+        vertical-align: middle;
+    }
+</style>
 {% endblock %}

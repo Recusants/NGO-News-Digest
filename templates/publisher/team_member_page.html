@@ -1,0 +1,120 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}NGO News Digest - Team Member{% endblock %}
+
+{% block content %}
+    {% include 'partials/header.html' %}
+    <main id="pageContent">
+        <!-- Team Member Profile Section -->
+        <section id="team-profile" class="page-section">
+            <div class="container section py-2">
+                <a href="{% url 'team_page' %}" class="btn btn-small mb-2" data-page="editors"><i class="fas fa-arrow-left"></i> Back to Team</a>
+                
+                <div class="details-header">
+                    <div class="badge badge-red" id="profileDepartment">{{ team_member.department }} Department</div>
+                    <div class="two-column" style="grid-template-columns: 1fr 3fr; align-items: center; gap: 2rem;">
+                        <div>
+                            <img id="profileImage" src="{{ team_member.get_head_shot_url }}" alt="Team Member" class="team-member-img" style="width: 180px; height: 180px;">
+                        </div>
+                        <div>
+                            <h1 class="details-title" id="profileName">{{ team_member.prefix }} {{ team_member.user.first_name }} {{ team_member.user.last_name }}</h1>
+                            <div class="details-meta" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0;">
+                                <div id="profilePosition">{{ team_member.position }}</div>
+                                <!-- <div><i class="fas fa-building"></i> <span id="profileOrganization">NGO News Digest</span></div> -->
+                                <div><i class="fas fa-map-marker-alt"></i> <span id="profileLocation">{{ team_member.location }}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="two-column">
+                    <div class="details-content">
+                        <div id="profileContent">
+                            <h2>About {{ team_member.user.first_name }}</h2>
+                            <p>{{ team_member.bio|safe }}</p>
+                        </div>
+                        
+                        <!-- Recent Articles/Work -->
+                        <!-- <div class="mt-3" id="profileWork">
+                            <h3>Recent Contributions</h3>
+                            <div id="profileArticles">
+                                ---- Dynamic articles will be loaded here -----
+                            </div>
+                        </div> -->
+                    </div>
+                    
+                    <div class="details-sidebar">
+                        <!-- Contact & Social -->
+                        <div class="sidebar-section">
+                            <h3>Contact</h3>
+                            <div class="card" style="padding: 1rem;">
+                                <div class="mb-2">
+                                    <i class="fas fa-envelope mr-2" style="color: var(--primary);"></i>
+                                    <span id="profileEmail">{{ team_member.user.email }}</span>
+                                </div>
+                                <div class="mb-2">
+                                    <i class="fas fa-phone mr-2" style="color: var(--primary);"></i>
+                                    <span id="profilePhone">{{ team_member.user.phone_number }}</span>
+                                </div>
+                                <!-- <div>
+                                    <i class="fas fa-clock mr-2" style="color: var(--primary);"></i>
+                                    <span id="profileAvailability">Mon-Thu: 8AM-5PM</span>
+                                </div> -->
+                            </div>
+                            
+                            <h4 class="mt-2">Social Links</h4>
+                            <!-- Social Links Section -->
+                            <div class="social-icons" id="profileSocial">
+                                <!-- Twitter -->
+                                <a href="{{ team_member.twitter_url }}" aria-label="Follow on Twitter" class="social-icon">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                
+                                <!-- Facebook -->
+                                <a href="{{ team_member.facebook_url }}" aria-label="Follow on Facebook" class="social-icon">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                
+                                <!-- LinkedIn -->
+                                <a href="{{ team_member.linkedin_url }}" aria-label="Connect on LinkedIn" class="social-icon">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                                
+                                <!-- Email -->
+                                <a href="mailto:{{ team_member.user.email }}" aria-label="Send email" class="social-icon">
+                                    <i class="fas fa-envelope"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Skills & Expertise -->
+                        <!-- <div class="sidebar-section">
+                            <h3>Areas of Expertise</h3>
+                            <div id="profileSkills">
+                                -- Dynamic skills will be loaded here --
+                            </div>
+                        </div> -->
+                        
+                        <!-- Education & Qualifications -->
+                        <!-- <div class="sidebar-section">
+                            <h3>Education</h3>
+                            <div id="profileEducation">
+                                -- Dynamic education will be loaded here --
+                            </div>
+                        </div> -->
+                        
+                        <!-- Languages -->
+                        <!-- <div class="sidebar-section">
+                            <h3>Languages</h3>
+                            <div id="profileLanguages">
+                                -- Dynamic languages will be loaded here --
+                            </div>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    {% include 'partials/footer.html' %}
+{% endblock %}

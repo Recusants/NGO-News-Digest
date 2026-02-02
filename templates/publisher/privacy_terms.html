@@ -1,0 +1,82 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}NGO News Digest - Terms of Service{% endblock %}
+
+{% block content %}
+    {% include 'partials/header.html' %}
+    <main id="pageContent">
+        <section class="hero">
+            <div class="container">
+                <h1>Privacy Policy & Terms of Service</h1>
+                <p>Download our complete Privacy Policy and Terms of Service document</p>
+            </div>
+        </section>
+        
+        <section class="section">
+            <div class="container">
+                <div class="card text-center">
+                    <div class="py-3">
+                        <i class="fas fa-file-pdf" style="font-size: 4rem; color: #c62828; margin-bottom: 1.5rem;"></i>
+                        <h2>Privacy Policy & Terms of Service</h2>
+                        <p class="mb-2" style="max-width: 600px; margin: 0 auto;">
+                            Our Privacy Policy outlines how we collect, use, and protect your personal information. 
+                            The Terms of Service govern your use of our platform and services.
+                        </p>
+                        
+                        <div class="mb-3">
+                            <h3>Document Includes:</h3>
+                            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin: 1.5rem 0;">
+                                <div class="badge badge-red"><i class="fas fa-user-shield mr-2"></i>Data Collection</div>
+                                <div class="badge badge-blue"><i class="fas fa-cookie mr-2"></i>Cookies Policy</div>
+                                <div class="badge badge-green"><i class="fas fa-shield-alt mr-2"></i>Security</div>
+                                <div class="badge badge-orange"><i class="fas fa-gavel mr-2"></i>Terms of Use</div>
+                                <div class="badge badge-gray"><i class="fas fa-envelope mr-2"></i>Email Policy</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <a href="{% url 'download_privacy_terms' %}" class="btn" style="max-width: 300px; margin: 0 auto;">
+                                <i class="fas fa-download mr-2"></i>Download PDF Document
+                            </a>
+                            <p class="text-center" style="color: var(--text-light); font-size: 0.9rem; margin-top: 0.5rem;">
+                                PDF file (approx. 150KB)
+                            </p>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <h3>Quick Summary</h3>
+                            <div class="text-center" style="max-width: 800px; margin: 0 auto;">
+                                <div class="card" style="background-color: var(--bg-gray); margin: 1rem 0;">
+                                    <h4><i class="fas fa-info-circle mr-2" style="color: var(--primary);"></i>Key Points</h4>
+                                    <ul style="text-align: left; display: inline-block;">
+                                        <li>We never sell your personal data to third parties</li>
+                                        <li>You can unsubscribe from emails at any time</li>
+                                        <li>We use cookies to improve user experience</li>
+                                        <li>All data is stored securely with encryption</li>
+                                        <li>You retain ownership of your content</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <p>
+                                We hope you are ready to <a href="{% url 'home' %}">subscribe</a>.
+                            </p>
+                            <br>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">
+                                <i class="fas fa-clock mr-2"></i>Last updated: {{ current_date|date:"F d, Y" }}
+                            </p>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">
+                                For questions, contact us at 
+                                <a href="mailto:privacy@ngonewsdigest.org">privacy@ngonewsdigest.org</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    {% include 'partials/footer.html' %}
+{% endblock %}

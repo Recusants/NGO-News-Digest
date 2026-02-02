@@ -3,181 +3,233 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .models import BlogPost, Vacancy, Notice
-from .forms import BlogPostForm, VacancyForm, NoticeForm
-import json
 from django.core.mail import send_mail, EmailMultiAlternatives
 from django.conf import settings
 from django.utils.html import strip_tags
 from django.template.loader import render_to_string
-import threading
 from django.utils import timezone
-from datetime import timedelta
-
-from accounts.models import Subscriber
-
 from django.contrib import messages
+import threading
+import json
+
+from datetime import datetime
+
+from .models import Story, Vacancy, Notice, Category
+from .forms import StoryForm, VacancyForm, NoticeForm
+from accounts.models import Subscriber, SiteInfo, TeamMember
+
+from django.shortcuts import render, redirect
+from django.http import FileResponse
+from django.conf import settings
+import os
 
 
-# html
-def story_page(request, pk):
-    story = BlogPost.objects.get(id=pk)
+
+
+# ==================== HTML PAGE VIEWS ====================
+
+
+def team_member_page(request, pk):
+    team_member = TeamMember.objects.get(id=pk)
     context = {
-        'category': story.category,
-        'title': story.title,
-        'author': story.author,
-        'date_and_time': str(story.created_at)[:10],
-        'content': story.content,
-        'image_url': story.thumbnail.url if story.thumbnail else None
+        'team_member': team_member,
+    }
+    return render(request, 'publisher/team_member_page.html', context)
+
+
+def story_page(request, pk):
+    """Render individual story page"""
+    story = get_object_or_404(Story, id=pk)
+    related_stories = Story.objects.filter(category=story.category)[:6]
+    context = {
+        'story': story, 
+        'related_stories': related_stories,
     }
     return render(request, 'publisher/story_page.html', context)
 
+
+
 def about_page(request):
-    return render(request, 'publisher/about_page.html')
+    site_info = SiteInfo.objects.all().first()
+    context = {
+        'site_info': site_info,
+    }
+    
+    return render(request, 'about.html', context)
+
+
+def team_page(request):
+    team_members = TeamMember.objects.filter(is_active=True).select_related('user').order_by('display_order', 'user__first_name')
+
+    context = {
+        'team_members': team_members,
+    }
+    return render(request, 'publisher/team_page.html', context)
+
 
 
 def contact_page(request):
-    return render(request, 'publisher/contact_page.html')
+    """Render contact page with site information"""
+    site_info = SiteInfo.objects.all().first()
+    context = {
+        'site_info': site_info,
+    }
+    return render(request, 'publisher/contact_page.html', context)
 
-
-def editors_page(request):
-    return render(request, 'publisher/editors_page.html')
 
 
 def vacancies_page(request):
-    return render(request, 'publisher/vacancies_page.html')
+    categories = Category.objects.all()
+    context = {
+        'categories': categories,
+    }
+    return render(request, 'publisher/vacancies_page.html', context)
 
 
 def stories_page(request):
-    return render(request, 'publisher/stories_page.html')
+    categories = Category.objects.all()
+    context = {
+        'categories': categories,
+    }
+    return render(request, 'publisher/stories_page.html', context)
 
 
 def notices_page(request):
-    return render(request, 'publisher/notices_page.html')
+    categories = Category.objects.all()
+    context = {
+        'categories': categories,
+    }
+    return render(request, 'publisher/notices_page.html', context)
+
+
+def home(request):
+    featured_stories = Story.objects.all().order_by('-created_at')[:3]
+    featured_vacancies = Vacancy.objects.all().order_by('-created_at')[:3]
+    featured_notices = Notice.objects.all().order_by('-created_at')[:3]
+    
+    stories_published = Story.objects.filter(status="Published").count()
+    jobs_listed = Vacancy.objects.filter(is_active=True).count()
+    NGOs_engaged = "🔏"
+    subscribers = Subscriber.objects.filter(is_active=True).count()
+    context = {
+        'featured_stories': featured_stories,
+        'featured_vacancies': featured_vacancies,
+        'featured_notices': featured_notices,
+
+        'stories_published': stories_published,
+        'jobs_listed': jobs_listed,
+        'NGOs_engaged': NGOs_engaged,
+        'subscribers': subscribers,
+    }
+    return render(request, 'home.html', context)
 
 
 
 
+def privacy_terms_page(request):
+    """Privacy & Terms download page"""
+    context = {
+        'current_date': datetime.now(),
+    }
+    return render(request, 'publisher/privacy_terms.html', context)
 
-# Email sending in background thread
+def download_privacy_terms(request):
+    """Download the PDF file"""
+    file_path = os.path.join(settings.STATIC_ROOT, 'documents', 'privacy_terms.pdf')
+    
+    # If using STATICFILES_DIRS instead of STATIC_ROOT
+    if not os.path.exists(file_path):
+        file_path = os.path.join(settings.BASE_DIR, 'static', 'documents', 'privacy_terms.pdf')
+    
+    if os.path.exists(file_path):
+        response = FileResponse(open(file_path, 'rb'))
+        response['Content-Type'] = 'application/pdf'
+        response['Content-Disposition'] = 'attachment; filename="NGO_News_Digest_Privacy_Terms.pdf"'
+        return response
+    else:
+        # Fallback: redirect to a placeholder or show error
+        return redirect('privacy_terms_page')
+
+# ==================== EMAIL UTILITIES ====================
+
 class EmailThread(threading.Thread):
+    """Background thread for sending emails"""
     def __init__(self, subject, plain_message, html_message, recipient_list):
+        super().__init__(daemon=True)
         self.subject = subject
         self.plain_message = plain_message
         self.html_message = html_message
         self.recipient_list = recipient_list
-        threading.Thread.__init__(self)
-        self.daemon = True  # Make thread daemon so it doesn't block exit
 
     def run(self):
-        try:
-            # Send to each recipient individually to avoid issues
-            for recipient in self.recipient_list:
-                try:
-                    email = EmailMultiAlternatives(
-                        subject=self.subject,
-                        body=self.plain_message,
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        to=[recipient],  # Send to individual recipient
-                    )
-                    if self.html_message:
-                        email.attach_alternative(self.html_message, "text/html")
-                    email.send()
-                    print(f"✓ Email sent to: {recipient}")
-                except Exception as e:
-                    print(f"✗ Failed to send to {recipient}: {e}")
-        except Exception as e:
-            print(f"✗ Thread error: {e}")
+        """Send emails in background thread"""
+        for recipient in self.recipient_list:
+            try:
+                email = EmailMultiAlternatives(
+                    subject=self.subject,
+                    body=self.plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[recipient],
+                )
+                if self.html_message:
+                    email.attach_alternative(self.html_message, "text/html")
+                email.send()
+            except Exception as e:
+                print(f"Failed to send email to {recipient}: {e}")
 
 
 def send_email_in_background(subject, plain_message, html_message, recipient_list):
-    """Send email in background thread"""
-    if recipient_list:  # Only start if there are recipients
+    """Start email sending in background thread"""
+    if recipient_list:
         EmailThread(subject, plain_message, html_message, recipient_list).start()
 
 
-def home(request):
-
-    print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH>>>")
-    try:
-        create_superuser('admin', 'password123')
-        print("User created")
-    except:
-        print("User not created")
-        
-    print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH<<<")
-    return render(request, 'home.html')
-
-
-from django.contrib.auth import get_user_model
-
-def create_superuser(username, password):
-    User = get_user_model()
-    User.objects.create_superuser(username=username, email='', password=password)
-
-
-# def story(request, pk):
-#     story = BlogPost.objects.get(id=pk)
-#     related_stories = BlogPost.objects.filter(status='PUBLISHED').exclude(id=pk)[:3]
-#     context = {
-#         'story': story,
-#         'related_stories': related_stories,
-#     }
-#     return render(request, 'content/story.html', context)
-
-
+# ==================== BLOG POST VIEWS ====================
 
 def stories(request):
+    """API endpoint for paginated stories"""
     page = int(request.GET.get('page', 1))
     page_size = int(request.GET.get('page_size', 6))
-    category = request.GET.get('category', '')
     sort_by = request.GET.get('sort_by', 'created_at')
     sort_order = request.GET.get('sort_order', 'asc')
     
-
-    # Start with all stories
-    stories = BlogPost.objects.all()
+    stories_qs = Story.objects.all()
     
     # Apply sorting
     if sort_order.lower() == 'desc':
         sort_by = f'-{sort_by}'
-
-    stories = stories.order_by(sort_by)
+    stories_qs = stories_qs.order_by(sort_by)
     
-    # Calculate pagination
-    total_stories = stories.count()
-    total_pages = (total_stories + page_size - 1) // page_size
-    
-    # Apply pagination
+    # Pagination
+    total_stories = stories_qs.count()
     start_index = (page - 1) * page_size
     end_index = start_index + page_size
-    paginated_stories = stories[start_index:end_index]
-
-
+    paginated_stories = stories_qs[start_index:end_index]
+    
     stories_list = [
         {
             'id': story.id,
-            'title': story.title,
-            'snippet': "Story snippet mist be here. Story snippet mist be custome and come here. Story and come here. Story snippet mist be custome and come here",
+            'headline': story.headline,
+            'snippet': story.snippet,
             'content': story.content,
             'author': f"{story.author.first_name} {story.author.last_name}",
-            'author_twitter': f"{story.author.twitter}",
-            'author_facebook': f"{story.author.facebook}",
+            # For blank fields, check if they exist AND have content
+            'author_twitter': story.author.team_profile.twitter_url if hasattr(story.author, 'team_profile') and story.author.team_profile.twitter_url else '',
+            'author_linkedin': story.author.team_profile.linkedin_url if hasattr(story.author, 'team_profile') and story.author.team_profile.linkedin_url else '',
             'date_and_time': str(story.created_at)[:10],
             'image_url': story.get_thumbnail_url(),
-            'category': "Health",
+            'category': story.category.name,
         }
         for story in paginated_stories
     ]
     
-    return JsonResponse({
-        "stories": stories_list,
-    })
+    return JsonResponse({"stories": stories_list})
 
 
 def get_latest_stories(request):
-    latest_stories = BlogPost.objects.filter(status="PUBLISHED").order_by('-created_at')[:6]
-
+    """API endpoint for latest published stories"""
+    latest_stories = Story.objects.filter(status="PUBLISHED").order_by('-created_at')[:6]
+    
     latest_stories_list = [
         {
             'id': story.id,
@@ -191,14 +243,13 @@ def get_latest_stories(request):
         for story in latest_stories
     ]
     
-    return JsonResponse({
-        "stories": latest_stories_list,
-    })
+    return JsonResponse({"stories": latest_stories_list})
 
 
 def get_top_stories(request):
-    top_stories = BlogPost.objects.filter(status="PUBLISHED")[:6]
-
+    """API endpoint for top stories"""
+    top_stories = Story.objects.filter(status="PUBLISHED")[:6]
+    
     top_stories_list = [
         {
             'id': story.id,
@@ -212,14 +263,13 @@ def get_top_stories(request):
         for story in top_stories
     ]
     
-    return JsonResponse({
-        "stories": top_stories_list,
-    })
+    return JsonResponse({"stories": top_stories_list})
 
 
 def get_editors_pick_stories(request):
-    editors_pick_stories = BlogPost.objects.filter(status="PUBLISHED")[:6]
-
+    """API endpoint for editors pick stories"""
+    editors_pick_stories = Story.objects.filter(status="PUBLISHED")[:6]
+    
     editors_pick_stories_list = [
         {
             'id': story.id,
@@ -233,42 +283,24 @@ def get_editors_pick_stories(request):
         for story in editors_pick_stories
     ]
     
-    return JsonResponse({
-        "stories": editors_pick_stories_list,
-    })
+    return JsonResponse({"stories": editors_pick_stories_list})
 
 
 @login_required
 def upload_blog_post(request):
+    """Upload and publish blog post"""
     if request.method == 'POST':
-        form = BlogPostForm(request.POST, request.FILES)
+        form = StoryForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
             post.author = request.user
-            
-            print(f"📝 Form data received:")
-            print(f"  Title: {post.title}")
-            print(f"  Status from form: {post.status}")
-            print(f"  Content length: {len(post.content or '')}")
-            
-            # Make sure status is PUBLISHED
-            if post.status != 'PUBLISHED':
-                print(f"⚠️ Status is '{post.status}', changing to 'PUBLISHED'")
-                post.status = 'PUBLISHED'
-            
-            # Set published date
+            post.status = 'PUBLISHED'
             post.published_at = timezone.now()
-            
             post.save()
             
-            print(f"✅ Blog post saved: {post.title} (ID: {post.id}, Status: {post.status})")
-            print(f"✅ Published at: {post.published_at}")
-            
-            # Send to subscribers
-            print("📧 Starting subscriber notification...")
+            # Notify subscribers
             notify_subscribers(post.id)
             
-            # Return JSON response for AJAX
             return JsonResponse({
                 'success': True,
                 'message': 'Post uploaded and published successfully!',
@@ -276,26 +308,21 @@ def upload_blog_post(request):
                 'title': post.title,
                 'status': post.status
             })
-        else:
-            print(f"❌ Form errors: {form.errors}")
-            return JsonResponse({
-                'success': False,
-                'errors': form.errors
-            })
+        
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        })
     
-    form = BlogPostForm()
+    form = StoryForm()
     return render(request, 'blog/upload.html', {'form': form})
 
 
 def notify_subscribers(post_id):
-    """Notify subscribers about new post in background"""
-    print(f"🚀 Starting notify_subscribers for post {post_id}")
-    
+    """Notify subscribers about new post"""
     try:
-        post = BlogPost.objects.get(id=post_id)
+        post = Story.objects.get(id=post_id)
         site_url = settings.SITE_URL or 'http://localhost:8000'
-        
-        print(f"📰 Found post: {post.title}")
         
         # Get active verified subscribers
         subscribers = Subscriber.objects.filter(
@@ -303,23 +330,16 @@ def notify_subscribers(post_id):
             is_verified=True
         ).values_list('email', flat=True)
         
-        subscriber_count = subscribers.count()
-        print(f"👥 Found {subscriber_count} active subscribers")
-        
-        if subscriber_count == 0:
-            print("⚠️ No active subscribers to notify")
+        if not subscribers.exists():
             return
         
         # Create email content
         subject = f"📰 New Story: {post.title}"
-        
-        # Generate HTML email
         html_message = render_to_string('emails/new_story.html', {
             'post': post,
             'site_url': site_url,
         })
         
-        # Generate plain text version
         plain_message = f"""
         📰 New Story: {post.title}
         
@@ -329,60 +349,310 @@ def notify_subscribers(post_id):
         
         Best regards,
         NGO News Digest Team
-        
-        You're receiving this email because you subscribed to NGO News Digest.
-        Don't want to receive these emails anymore? {site_url}/subscriptions/unsubscribe/
         """
         
-        # Convert to list
-        subscriber_list = list(subscribers)
+        # Send in background
+        send_email_in_background(subject, plain_message, html_message, list(subscribers))
         
-        # For testing: Send to first 2 subscribers immediately
-        test_emails = subscriber_list[:2] if len(subscriber_list) > 2 else subscriber_list
-        print(f"🧪 Sending test emails to: {test_emails}")
-        
-        # Send test emails immediately (not in background)
-        for email in test_emails:
-            try:
-                send_mail(
-                    subject=subject,
-                    message=plain_message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[email],
-                    fail_silently=False,
-                    html_message=html_message,
-                )
-                print(f"✅ Test email sent to: {email}")
-            except Exception as e:
-                print(f"❌ Failed to send test email to {email}: {e}")
-        
-        # Send remaining emails in background
-        if len(subscriber_list) > 2:
-            remaining_emails = subscriber_list[2:]
-            print(f"🔄 Queuing {len(remaining_emails)} remaining emails for background sending")
-            
-            # Send in smaller batches
-            batch_size = 10  # Smaller batch for testing
-            for i in range(0, len(remaining_emails), batch_size):
-                batch = remaining_emails[i:i + batch_size]
-                print(f"📤 Starting background thread for batch {i//batch_size + 1} ({len(batch)} emails)")
-                send_email_in_background(subject, plain_message, html_message, batch)
-        
-        print(f"🎉 Notification process completed for post {post_id}")
-        
-    except BlogPost.DoesNotExist:
-        print(f"❌ Post {post_id} not found")
+    except Story.DoesNotExist:
+        print(f"Post {post_id} not found")
     except Exception as e:
-        print(f"💥 Error in notify_subscribers: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        print(f"Error in notify_subscribers: {e}")
 
 
-def success_view(request):
-    return render(request, 'blog/success.html')
+def success_page(request):
+    """Show success page after post upload"""
+    latest_post = None
+    if request.user.is_authenticated:
+        latest_post = Story.objects.filter(author=request.user).order_by('-created_at').first()
+    
+    return render(request, 'blog/success.html', {
+        'latest_post': latest_post,
+    })
 
 
-# Subscriber management views
+# ==================== VACANCY VIEWS ====================
+
+def vacancies(request):
+    """API endpoint for paginated stories"""
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 6))
+    sort_by = request.GET.get('sort_by', 'created_at')
+    sort_order = request.GET.get('sort_order', 'asc')
+    
+    vacancies_qs = Vacancy.objects.all()
+    
+    # Apply sorting
+    if sort_order.lower() == 'desc':
+        sort_by = f'-{sort_by}'
+    vacancies_qs = vacancies_qs.order_by(sort_by)
+    
+    # Pagination
+    total_vacancies = vacancies_qs.count()
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+    paginated_vacancies = vacancies_qs[start_index:end_index]
+    
+    vacancies_list = [
+        {
+            'id': vacancy.id,
+            'title': vacancy.title,
+            'organization': vacancy.organization,
+            'description': vacancy.description,
+            'location': vacancy.location,
+            'job_type': vacancy.job_type,
+            'application_deadline': vacancy.application_deadline,
+            'expiration_date': vacancy.expiration_date,
+            'created_at': vacancy.created_at,
+            'organization': vacancy.organization,
+        }
+        for vacancy in paginated_vacancies
+    ]
+    
+    return JsonResponse({"vacancies": vacancies_list})
+
+
+def vacancy_page(request, pk):
+    vacancy = Vacancy.objects.get(id=pk)
+    
+    # Extract key words from current title
+    current_words = set(vacancy.title.lower().split())
+    
+    # Filter for vacancies with at least 2 matching words
+    all_vacancies = Vacancy.objects.exclude(id=pk)
+    similar_jobs = []
+    
+    for other_vacancy in all_vacancies:
+        other_words = set(other_vacancy.title.lower().split())
+        
+        # Count common words
+        common_words = current_words.intersection(other_words)
+        
+        # If they share at least 2 meaningful words (excluding short/common words)
+        meaningful_words = {word for word in common_words if len(word) > 3}
+        if len(meaningful_words) >= 2:
+            similar_jobs.append(other_vacancy)
+        
+        # Limit results
+        if len(similar_jobs) >= 3:
+            break
+    
+    context = {
+        'vacancy': vacancy,
+        'similar_jobs': similar_jobs,
+    }
+    
+    return render(request, 'publisher/vacancy_page.html', context)
+
+
+def get_vacancies(request):
+    """API for homepage vacancies"""
+    # Featured vacancies
+    featured = Vacancy.objects.filter(
+        is_active=True,
+        is_featured=True,
+        application_deadline__gte=timezone.now().date()
+    )[:4]
+    
+    # Recent vacancies
+    recent = Vacancy.objects.filter(
+        is_active=True,
+        application_deadline__gte=timezone.now().date()
+    ).order_by('-created_at')[:4]
+    
+    featured_list = [
+        {
+            'id': v.id,
+            'title': v.title,
+            'organization': v.organization,
+            'location': v.location,
+            'job_type': v.get_job_type_display(),
+            'deadline': v.application_deadline.strftime('%b %d'),
+            'days_left': v.days_remaining(),
+        }
+        for v in featured
+    ]
+    
+    recent_list = [
+        {
+            'id': v.id,
+            'title': v.title,
+            'organization': v.organization,
+            'location': v.location,
+            'job_type': v.get_job_type_display(),
+        }
+        for v in recent
+    ]
+    
+    return JsonResponse({
+        'featured': featured_list,
+        'recent': recent_list,
+    })
+
+
+@login_required
+def upload_vacancy(request):
+    """Upload new vacancy"""
+    if request.method == 'POST':
+        form = VacancyForm(request.POST)
+        if form.is_valid():
+            vacancy = form.save()
+            messages.success(request, 'Vacancy posted successfully!')
+            return redirect('vacancy_detail', pk=vacancy.id)
+    
+    form = VacancyForm()
+    return render(request, 'vacancies/upload.html', {'form': form})
+
+
+@login_required
+def ajax_upload_vacancy(request):
+    """AJAX endpoint for vacancy upload"""
+    if request.method == 'POST':
+        form = VacancyForm(request.POST)
+        if form.is_valid():
+            vacancy = form.save()
+            return JsonResponse({
+                'success': True,
+                'message': 'Vacancy posted successfully!',
+                'id': vacancy.id,
+                'title': vacancy.title,
+                'url': f'/vacancies/{vacancy.id}/'
+            })
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        })
+    
+    return JsonResponse({'success': False, 'error': 'Method not allowed'})
+
+
+# ==================== NOTICE VIEWS ====================
+
+def notices(request):
+    """API endpoint for paginated stories"""
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 6))
+    sort_by = request.GET.get('sort_by', 'created_at')
+    sort_order = request.GET.get('sort_order', 'asc')
+    
+    notices_qs = Notice.objects.all()
+    
+    # Apply sorting
+    if sort_order.lower() == 'desc':
+        sort_by = f'-{sort_by}'
+    notices_qs = notices_qs.order_by(sort_by)
+    
+    # Pagination
+    total_notices = notices_qs.count()
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+    paginated_notices = notices_qs[start_index:end_index]
+    
+    notices_list = [
+        {
+            'id': notice.id,
+            'headline': notice.headline,
+            'overview': notice.overview,
+            'description': notice.description,
+            'organization': notice.organization,
+            'category': notice.category,
+            'publish_date': notice.publish_date,
+            'expiration_date': notice.expiration_date,
+        }
+        for notice in paginated_notices
+    ]
+    
+    return JsonResponse({"notices": notices_list})
+
+
+def notice_page(request, pk):
+    notice = Notice.objects.get(id=pk)
+    related_notices = Notice.objects.filter(category=notice.category)[:6]
+    context = {
+        'notice': notice,
+        'related_notices': related_notices,
+    }
+    
+    return render(request, 'publisher/notice_page.html', context)
+
+
+def get_notices(request):
+    """API for homepage notices"""
+    # Important notices
+    important = Notice.objects.filter(
+        is_active=True,
+        is_important=True
+    )[:4]
+    
+    # Recent notices
+    recent = Notice.objects.filter(is_active=True).order_by('-created_at')[:4]
+    
+    important_list = [
+        {
+            'id': n.id,
+            'title': n.title,
+            'description': n.description[:100] + '...' if len(n.description) > 100 else n.description,
+            'organization': n.organization,
+            'category': n.get_category_display(),
+            'has_file': bool(n.attachment),
+        }
+        for n in important
+    ]
+    
+    recent_list = [
+        {
+            'id': n.id,
+            'title': n.title,
+            'description': n.description[:80] + '...' if len(n.description) > 80 else n.description,
+            'organization': n.organization,
+        }
+        for n in recent
+    ]
+    
+    return JsonResponse({
+        'important': important_list,
+        'recent': recent_list,
+    })
+
+
+@login_required
+def upload_notice(request):
+    """Upload new notice"""
+    if request.method == 'POST':
+        form = NoticeForm(request.POST, request.FILES)
+        if form.is_valid():
+            notice = form.save()
+            messages.success(request, 'Notice posted successfully!')
+            return redirect('notice_detail', pk=notice.id)
+    
+    form = NoticeForm()
+    return render(request, 'notices/upload.html', {'form': form})
+
+
+@login_required
+def ajax_upload_notice(request):
+    """AJAX endpoint for notice upload"""
+    if request.method == 'POST':
+        form = NoticeForm(request.POST, request.FILES)
+        if form.is_valid():
+            notice = form.save()
+            return JsonResponse({
+                'success': True,
+                'message': 'Notice posted successfully!',
+                'id': notice.id,
+                'title': notice.title,
+                'url': f'/notices/{notice.id}/'
+            })
+        return JsonResponse({
+            'success': False,
+            'errors': form.errors
+        })
+    
+    return JsonResponse({'success': False, 'error': 'Method not allowed'})
+
+
+# ==================== SUBSCRIBER MANAGEMENT ====================
+
 @login_required
 def subscriber_list(request):
     """View all subscribers with pagination"""
@@ -396,7 +666,7 @@ def subscriber_list(request):
             Q(name__icontains=search_query)
         )
     
-    paginator = Paginator(subscribers, 50)  # Show 50 per page
+    paginator = Paginator(subscribers, 50)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
@@ -406,32 +676,6 @@ def subscriber_list(request):
         'total_subscribers': subscribers.count(),
         'active_subscribers': Subscriber.objects.filter(is_active=True, is_verified=True).count(),
     })
-
-
-@login_required
-def export_subscribers(request):
-    """Export subscribers to CSV"""
-    import csv
-    from django.http import HttpResponse
-    
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="subscribers.csv"'
-    
-    writer = csv.writer(response)
-    writer.writerow(['Email', 'Name', 'Verified', 'Active', 'Subscribed Date', 'Verified Date'])
-    
-    subscribers = Subscriber.objects.filter(is_active=True, is_verified=True)
-    for subscriber in subscribers:
-        writer.writerow([
-            subscriber.email,
-            subscriber.name,
-            'Yes' if subscriber.is_verified else 'No',
-            'Yes' if subscriber.is_active else 'No',
-            subscriber.subscribed_at.strftime('%Y-%m-%d') if subscriber.subscribed_at else '',
-            subscriber.verified_at.strftime('%Y-%m-%d') if subscriber.verified_at else '',
-        ])
-    
-    return response
 
 
 def unsubscribe_link(request, email):
@@ -450,320 +694,3 @@ def unsubscribe_link(request, email):
             'email': email,
             'message': 'Email not found in our subscription list.'
         })
-
-
-# Add a direct email test function
-def test_email_direct(request):
-    """Direct email test function"""
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        if not email:
-            return JsonResponse({'success': False, 'error': 'Email required'})
-        
-        try:
-            subject = "📧 Test Email from NGO News"
-            message = "This is a test email to check if email sending is working."
-            
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                fail_silently=False,
-            )
-            
-            return JsonResponse({'success': True, 'message': f'Test email sent to {email}'})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    
-    return render(request, 'blog/test_email.html')
-
-
-def success_page(request):
-    """Show success page after post upload"""
-    # Get the latest post by the current user if available
-    latest_post = None
-    if request.user.is_authenticated:
-        latest_post = BlogPost.objects.filter(author=request.user).order_by('-created_at').first()
-    
-    return render(request, 'blog/success.html', {
-        'latest_post': latest_post,
-    })
-
-
-
-
-
-
-# ==================== VACANCIES ====================
-
-def vacancy_list(request):
-    """Simple vacancy list"""
-    search = request.GET.get('search', '')
-    job_type = request.GET.get('type', '')
-    
-    vacancies = Vacancy.objects.filter(is_active=True)
-    
-    if search:
-        vacancies = vacancies.filter(
-            Q(title__icontains=search) |
-            Q(organization__icontains=search) |
-            Q(location__icontains=search)
-        )
-    
-    if job_type:
-        vacancies = vacancies.filter(job_type=job_type)
-    
-    return render(request, 'vacancies/list.html', {
-        'vacancies': vacancies,
-        'search': search,
-        'job_type': job_type,
-        'job_types': Vacancy.JOB_TYPES,
-    })
-
-
-def vacancy_detail(request, pk):
-    """Vacancy detail view - Show even if not active"""
-    try:
-        # First try to get the vacancy (including inactive ones for preview)
-        vacancy = Vacancy.objects.get(pk=pk)
-        
-        # Check if user can view inactive vacancies
-        if not vacancy.is_active and not request.user.is_staff:
-            return render(request, 'vacancies/inactive.html', {'vacancy': vacancy})
-        
-        return render(request, 'vacancies/detail.html', {'vacancy': vacancy})
-        
-    except Vacancy.DoesNotExist:
-        # Return 404 with helpful message
-        return render(request, '404.html', {
-            'message': 'Vacancy not found or has been removed.'
-        }, status=404)
-
-
-def get_vacancies(request):
-    """API for homepage - simplified"""
-    # Featured vacancies
-    featured = Vacancy.objects.filter(
-        is_active=True,
-        is_featured=True,
-        application_deadline__gte=timezone.now().date()
-    )[:4]
-    
-    # Recent vacancies
-    recent = Vacancy.objects.filter(
-        is_active=True,
-        application_deadline__gte=timezone.now().date()
-    ).order_by('-created_at')[:4]
-    
-    featured_list = []
-    for v in featured:
-        featured_list.append({
-            'id': v.id,
-            'title': v.title,
-            'organization': v.organization,
-            'location': v.location,
-            'job_type': v.get_job_type_display(),
-            'deadline': v.application_deadline.strftime('%b %d'),
-            'days_left': v.days_remaining(),
-        })
-    
-    recent_list = []
-    for v in recent:
-        recent_list.append({
-            'id': v.id,
-            'title': v.title,
-            'organization': v.organization,
-            'location': v.location,
-            'job_type': v.get_job_type_display(),
-        })
-    
-    return JsonResponse({
-        'featured': featured_list,
-        'recent': recent_list,
-    })
-
-
-# ==================== NOTICES ====================
-
-def notice_list(request):
-    """Simple notice list"""
-    search = request.GET.get('search', '')
-    category = request.GET.get('category', '')
-    
-    notices = Notice.objects.filter(is_active=True)
-    
-    if search:
-        notices = notices.filter(
-            Q(title__icontains=search) |
-            Q(organization__icontains=search) |
-            Q(description__icontains=search)
-        )
-    
-    if category:
-        notices = notices.filter(category=category)
-    
-    return render(request, 'notices/list.html', {
-        'notices': notices,
-        'search': search,
-        'category': category,
-        'categories': Notice.CATEGORIES,
-    })
-
-
-def notice_detail(request, pk):
-    """Notice detail view - Show even if not active"""
-    try:
-        # Get the notice (including inactive ones for preview)
-        notice = Notice.objects.get(pk=pk)
-        
-        # Check if user can view inactive notices
-        if not notice.is_active and not request.user.is_staff:
-            return render(request, 'notices/inactive.html', {'notice': notice})
-        
-        return render(request, 'notices/detail.html', {'notice': notice})
-        
-    except Notice.DoesNotExist:
-        # Return 404 with helpful message
-        return render(request, '404.html', {
-            'message': 'Notice not found or has been removed.'
-        }, status=404)
-
-
-def get_notices(request):
-    """API for homepage - simplified"""
-    # Important notices
-    important = Notice.objects.filter(
-        is_active=True,
-        is_important=True
-    )[:4]
-    
-    # Recent notices
-    recent = Notice.objects.filter(is_active=True).order_by('-created_at')[:4]
-    
-    important_list = []
-    for n in important:
-        important_list.append({
-            'id': n.id,
-            'title': n.title,
-            'description': n.description[:100] + '...' if len(n.description) > 100 else n.description,
-            'organization': n.organization,
-            'category': n.get_category_display(),
-            'has_file': bool(n.attachment),
-        })
-    
-    recent_list = []
-    for n in recent:
-        recent_list.append({
-            'id': n.id,
-            'title': n.title,
-            'description': n.description[:80] + '...' if len(n.description) > 80 else n.description,
-            'organization': n.organization,
-        })
-    
-    return JsonResponse({
-        'important': important_list,
-        'recent': recent_list,
-    })
-
-
-
-
-
-# ==================== VACANCY UPLOAD ====================
-
-@login_required
-def upload_vacancy(request):
-    """Simple vacancy upload form"""
-    if request.method == 'POST':
-        form = VacancyForm(request.POST)
-        if form.is_valid():
-            vacancy = form.save()
-            
-            # Optional: Add success message
-            messages.success(request, 'Vacancy posted successfully!')
-            
-            return redirect('vacancy_detail', pk=vacancy.id)
-        else:
-            # Return form with errors
-            return render(request, 'vacancies/upload.html', {
-                'form': form,
-                'error': 'Please fix the errors below'
-            })
-    
-    # GET request - show empty form
-    form = VacancyForm()
-    return render(request, 'vacancies/upload.html', {'form': form})
-
-
-# ==================== NOTICE UPLOAD ====================
-
-@login_required
-def upload_notice(request):
-    """Simple notice upload form"""
-    if request.method == 'POST':
-        form = NoticeForm(request.POST, request.FILES)
-        if form.is_valid():
-            notice = form.save()
-            
-            messages.success(request, 'Notice posted successfully!')
-            
-            return redirect('notice_detail', pk=notice.id)
-        else:
-            return render(request, 'notices/upload.html', {
-                'form': form,
-                'error': 'Please fix the errors below'
-            })
-    
-    form = NoticeForm()
-    return render(request, 'notices/upload.html', {'form': form})
-
-
-# ==================== AJAX UPLOAD (OPTIONAL) ====================
-
-@login_required
-def ajax_upload_vacancy(request):
-    """AJAX endpoint for vacancy upload"""
-    if request.method == 'POST':
-        form = VacancyForm(request.POST)
-        if form.is_valid():
-            vacancy = form.save()
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Vacancy posted successfully!',
-                'id': vacancy.id,
-                'title': vacancy.title,
-                'url': f'/vacancies/{vacancy.id}/'
-            })
-        else:
-            return JsonResponse({
-                'success': False,
-                'errors': form.errors
-            })
-    
-    return JsonResponse({'success': False, 'error': 'Method not allowed'})
-
-
-@login_required
-def ajax_upload_notice(request):
-    """AJAX endpoint for notice upload"""
-    if request.method == 'POST':
-        form = NoticeForm(request.POST, request.FILES)
-        if form.is_valid():
-            notice = form.save()
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Notice posted successfully!',
-                'id': notice.id,
-                'title': notice.title,
-                'url': f'/notices/{notice.id}/'
-            })
-        else:
-            return JsonResponse({
-                'success': False,
-                'errors': form.errors
-            })
-    
-    return JsonResponse({'success': False, 'error': 'Method not allowed'})

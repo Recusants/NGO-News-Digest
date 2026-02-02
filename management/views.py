@@ -1,896 +1,1020 @@
 # views.py
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
-from publisher.models import BlogPost, Category
-
-# Create your views here.
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-
-from .forms import BlogPostForm
-from publisher.models import BlogPost
-
-
-from django.contrib.auth import authenticate, login as built_inn_login_function
-from django.contrib.auth import logout as log_out
-
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from django.contrib.auth.views import PasswordResetView
-from django.contrib.auth.forms import PasswordResetForm
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from django.contrib import messages
-from django.core.mail import send_mail
-from django.conf import settings
-from django.template.loader import render_to_string
-from django.utils.http import urlsafe_base64_encode
-from django.utils.encoding import force_bytes
-from django.contrib.auth.tokens import default_token_generator
+from django.db import transaction
+from django.http import JsonResponse, Http404
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import PermissionDenied
+import json
 
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.http import JsonResponse
-from django.urls import reverse
-from publisher.models import Vacancy, Notice
-from .forms import VacancyForm, NoticeForm
-
-
-
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.http import JsonResponse
+from django.views.generic import ListView
+from django.db.models import Count
 from django.utils import timezone
-from accounts.models import Subscriber
-from .forms import SubscriberForm
 
-# ========== SUBSCRIBER VIEWS ==========
-
-
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-import csv
-from django.http import HttpResponse
+from publisher.models import Story, Vacancy, Notice, Category, GenericAttachment
+from publisher.forms import (
+    StoryForm, VacancyForm, NoticeForm, CategoryForm,
+    QuickAttachmentForm, BulkAttachmentForm
+)
+from publisher.utils.attachment_utils import attach_multiple_files_to_object
 
 
-
-
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.contrib.auth import update_session_auth_hash
-from django.http import JsonResponse
-from django.db.models import Q
-from accounts.models import User, TeamMember, SiteInfo
-from .forms import UserProfileForm, ChangePasswordForm, TeamMemberForm, SiteInfoForm
-
-# ========== USER PROFILE VIEWS ==========
+# ============================================
+# STORY VIEWS
+# ============================================
 
 @login_required
-def profile_view(request):
-    """View and edit user profile"""
-    user = request.user
-    
+def story_create(request):
+    """Create a new story"""
     if request.method == 'POST':
-        form = UserProfileForm(request.POST, instance=user, request=request)
+        form = StoryForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Profile updated successfully!')
-            return redirect('profile')
-    else:
-        form = UserProfileForm(instance=user, request=request)
-    
-    # Get password change form
-    password_form = ChangePasswordForm(user=user)
-    
-    context = {
-        'title': 'My Profile',
-        'form': form,
-        'password_form': password_form,
-        'user': user,
-    }
-    return render(request, 'management/profile.html', context)
-
-@login_required
-def change_password(request):
-    """Change password view"""
-    if request.method == 'POST':
-        form = ChangePasswordForm(request.POST, user=request.user)
-        if form.is_valid():
-            new_password = form.cleaned_data['new_password']
-            request.user.set_password(new_password)
-            request.user.save()
-            
-            # Keep user logged in after password change
-            update_session_auth_hash(request, request.user)
-            
-            messages.success(request, 'Password changed successfully!')
-            return redirect('profile')
-        else:
-            # If password change fails, show profile page with errors
-            messages.error(request, 'Please correct the errors below.')
-            return render(request, 'management/profile.html', {
-                'title': 'My Profile',
-                'form': UserProfileForm(instance=request.user, request=request),
-                'password_form': form,
-                'user': request.user,
-            })
-    
-    return redirect('profile')
-
-# ========== TEAM MEMBER VIEWS ==========
-
-@login_required
-def team_member_list(request):
-    """List all team members"""
-    team_members = TeamMember.objects.all().order_by('display_order', 'user__first_name')
-    
-    context = {
-        'team_members': team_members,
-        'title': 'Team Members',
-        'total_count': team_members.count(),
-        'active_count': team_members.filter(is_active=True).count(),
-    }
-    return render(request, 'management/team_member_list.html', context)
-
-@login_required
-def team_member_create(request):
-    """Create new team member"""
-    if request.method == 'POST':
-        form = TeamMemberForm(request.POST)
-        if form.is_valid():
-            team_member = form.save()
-            messages.success(request, f'Team member "{team_member.user.get_full_name()}" created successfully!')
-            return redirect('team_member_list')
+            story = form.save()
+            messages.success(request, f'Story "{story.headline}" created successfully!')
+            return redirect('story_detail', pk=story.pk)
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = TeamMemberForm()
+        form = StoryForm(user=request.user)
     
     context = {
         'form': form,
-        'title': 'Add Team Member',
+        'title': 'Create New Story',
+        'submit_text': 'Create Story',
     }
-    return render(request, 'management/team_member_form.html', context)
+    return render(request, 'management/story_form.html', context)
+
 
 @login_required
-def team_member_edit(request, pk):
-    """Edit team member"""
-    team_member = get_object_or_404(TeamMember, pk=pk)
+def story_edit(request, pk):
+    """Edit an existing story"""
+    story = get_object_or_404(Story, pk=pk)
+    
+    # Permission check: only author or superuser can edit
+    if not (request.user.is_superuser or story.author == request.user):
+        messages.error(request, 'You do not have permission to edit this story.')
+        return redirect('story_detail', pk=story.pk)
     
     if request.method == 'POST':
-        form = TeamMemberForm(request.POST, instance=team_member)
+        form = StoryForm(request.POST, request.FILES, instance=story, user=request.user)
         if form.is_valid():
-            team_member = form.save()
-            messages.success(request, f'Team member "{team_member.user.get_full_name()}" updated successfully!')
-            return redirect('team_member_list')
+            story = form.save()
+            messages.success(request, f'Story "{story.headline}" updated successfully!')
+            return redirect('story_detail', pk=story.pk)
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = TeamMemberForm(instance=team_member)
+        form = StoryForm(instance=story, user=request.user)
     
     context = {
         'form': form,
-        'title': 'Edit Team Member',
-        'team_member': team_member,
+        'story': story,
+        'title': f'Edit Story: {story.headline}',
+        'submit_text': 'Update Story',
     }
-    return render(request, 'management/team_member_form.html', context)
+    return render(request, 'management/story_form.html', context)
+
+
+class StoryCreateView(LoginRequiredMixin, CreateView):
+    """Class-based view for creating stories"""
+    model = Story
+    form_class = StoryForm
+    template_name = 'management/story_form.html'
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        response = super().form_valid(form)
+        messages.success(self.request, f'Story "{form.instance.headline}" created successfully!')
+        return response
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create New Story'
+        context['submit_text'] = 'Create Story'
+        return context
+    
+    def get_success_url(self):
+        return reverse_lazy('story_detail', kwargs={'pk': self.object.pk})
+
+
+class StoryUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Class-based view for editing stories"""
+    model = Story
+    form_class = StoryForm
+    template_name = 'management/story_form.html'
+    
+    def test_func(self):
+        """Only author or superuser can edit"""
+        story = self.get_object()
+        return self.request.user.is_superuser or story.author == self.request.user
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'Story "{form.instance.headline}" updated successfully!')
+        return response
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit Story: {self.object.headline}'
+        context['submit_text'] = 'Update Story'
+        return context
+    
+    def get_success_url(self):
+        return reverse_lazy('story_detail', kwargs={'pk': self.object.pk})
+
+
+# ============================================
+# VACANCY VIEWS
+# ============================================
 
 @login_required
-def team_member_delete(request, pk):
-    """Delete team member"""
-    if request.method == 'POST':
-        team_member = get_object_or_404(TeamMember, pk=pk)
-        name = team_member.user.get_full_name()
-        team_member.delete()
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'status': 'success',
-                'message': f'Team member "{name}" deleted successfully!'
-            })
-        
-        messages.success(request, f'Team member "{name}" deleted successfully!')
-        return redirect('team_member_list')
-    
-    return redirect('team_member_list')
-
-@login_required
-def team_member_toggle_active(request, pk):
-    """Toggle team member active status"""
-    if request.method == 'POST':
-        team_member = get_object_or_404(TeamMember, pk=pk)
-        team_member.is_active = not team_member.is_active
-        team_member.save()
-        
-        status = 'activated' if team_member.is_active else 'deactivated'
-        message = f'Team member "{team_member.user.get_full_name()}" {status} successfully!'
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'status': 'success',
-                'message': message,
-                'is_active': team_member.is_active
-            })
-        
-        messages.success(request, message)
-        return redirect('team_member_list')
-    
-    return redirect('team_member_list')
-
-# ========== SITE SETTINGS VIEWS ==========
-
-@login_required
-def site_settings(request):
-    """Edit site settings"""
-    site_info, created = SiteInfo.objects.get_or_create(id=1)
-    
-    if request.method == 'POST':
-        form = SiteInfoForm(request.POST, instance=site_info)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Site settings updated successfully!')
-            return redirect('site_settings')
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = SiteInfoForm(instance=site_info)
-    
-    context = {
-        'form': form,
-        'title': 'Site Settings',
-        'site_info': site_info,
-        'last_updated': site_info.updated_at,
-    }
-    return render(request, 'management/site_settings.html', context)
-
-@login_required
-def export_subscribers_csv(request):
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="subscribers.csv"'
-    
-    writer = csv.writer(response)
-    writer.writerow(['Name', 'Email', 'Status', 'Verified', 'Subscribed At', 'Verified At'])
-    
-    subscribers = Subscriber.objects.all().order_by('-subscribed_at')
-    for subscriber in subscribers:
-        writer.writerow([
-            subscriber.name,
-            subscriber.email,
-            'Active' if subscriber.is_active else 'Inactive',
-            'Yes' if subscriber.is_verified else 'No',
-            subscriber.subscribed_at.strftime('%Y-%m-%d %H:%M'),
-            subscriber.verified_at.strftime('%Y-%m-%d %H:%M') if subscriber.verified_at else ''
-        ])
-    
-    return response
-
-@login_required
-def subscriber_list(request):
-    subscribers_list = Subscriber.objects.all().order_by('-subscribed_at')
-    
-    # Get filter parameters
-    status_filter = request.GET.get('status', 'all')
-    verification_filter = request.GET.get('verification', 'all')
-    
-    if status_filter == 'active':
-        subscribers_list = subscribers_list.filter(is_active=True)
-    elif status_filter == 'inactive':
-        subscribers_list = subscribers_list.filter(is_active=False)
-    
-    if verification_filter == 'verified':
-        subscribers_list = subscribers_list.filter(is_verified=True)
-    elif verification_filter == 'unverified':
-        subscribers_list = subscribers_list.filter(is_verified=False)
-    
-    # Pagination
-    page = request.GET.get('page', 1)
-    paginator = Paginator(subscribers_list, 20)  # 20 items per page
-    
-    try:
-        subscribers = paginator.page(page)
-    except PageNotAnInteger:
-        subscribers = paginator.page(1)
-    except EmptyPage:
-        subscribers = paginator.page(paginator.num_pages)
-    
-    total_count = Subscriber.objects.count()
-    active_count = Subscriber.objects.filter(is_active=True).count()
-    verified_count = Subscriber.objects.filter(is_verified=True).count()
-    unverified_count = total_count - verified_count  # Calculate here
-    
-    context = {
-        'subscribers': subscribers,
-        'title': 'Subscribers',
-        'total_count': total_count,
-        'active_count': active_count,
-        'verified_count': verified_count,
-        'unverified_count': unverified_count,  # Add this
-        'current_filters': {
-            'status': status_filter,
-            'verification': verification_filter
-        }
-    }
-    return render(request, 'management/subscriber_list.html', context)
-
-@login_required
-def subscriber_delete(request, pk):
-    if request.method == 'POST':
-        subscriber = get_object_or_404(Subscriber, pk=pk)
-        email = subscriber.email
-        subscriber.delete()
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'status': 'success',
-                'message': f'Subscriber "{email}" deleted successfully!'
-            })
-        
-        messages.success(request, f'Subscriber "{email}" deleted successfully!')
-        return redirect('subscriber_list')
-    
-    return redirect('subscriber_list')
-
-@login_required
-def subscriber_toggle_active(request, pk):
-    if request.method == 'POST':
-        subscriber = get_object_or_404(Subscriber, pk=pk)
-        subscriber.is_active = not subscriber.is_active
-        subscriber.save()
-        
-        status = 'activated' if subscriber.is_active else 'deactivated'
-        message = f'Subscriber "{subscriber.email}" {status} successfully!'
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'status': 'success',
-                'message': message,
-                'is_active': subscriber.is_active
-            })
-        
-        messages.success(request, message)
-        return redirect('subscriber_list')
-    
-    return redirect('subscriber_list')
-
-@login_required
-def subscriber_verify(request, pk):
-    if request.method == 'POST':
-        subscriber = get_object_or_404(Subscriber, pk=pk)
-        if not subscriber.is_verified:
-            subscriber.is_verified = True
-            subscriber.verified_at = timezone.now()
-            subscriber.save()
-            
-            message = f'Subscriber "{subscriber.email}" marked as verified!'
-            
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'status': 'success',
-                    'message': message,
-                    'is_verified': subscriber.is_verified
-                })
-            
-            messages.success(request, message)
-        return redirect('subscriber_list')
-    
-    return redirect('subscriber_list')
-
-@login_required
-def subscriber_unsubscribe(request, pk):
-    if request.method == 'POST':
-        subscriber = get_object_or_404(Subscriber, pk=pk)
-        if subscriber.is_active:
-            subscriber.is_active = False
-            subscriber.save()
-            
-            message = f'Subscriber "{subscriber.email}" has been unsubscribed!'
-            
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({
-                    'status': 'success',
-                    'message': message,
-                    'is_active': subscriber.is_active
-                })
-            
-            messages.success(request, message)
-        return redirect('subscriber_list')
-    
-    return redirect('subscriber_list')
-
-@login_required
-def bulk_delete_subscribers(request):
-    if request.method == 'POST':
-        subscriber_ids = request.POST.getlist('subscriber_ids[]')
-        
-        if not subscriber_ids:
-            messages.error(request, 'No subscribers selected for deletion.')
-            return redirect('subscriber_list')
-        
-        deleted_count = 0
-        for pk in subscriber_ids:
-            try:
-                subscriber = Subscriber.objects.get(pk=pk)
-                subscriber.delete()
-                deleted_count += 1
-            except Subscriber.DoesNotExist:
-                continue
-        
-        messages.success(request, f'{deleted_count} subscriber(s) deleted successfully!')
-        return redirect('subscriber_list')
-    
-    return redirect('subscriber_list')
-
-
-
-
-
-
-
-# ========== VACANCY VIEWS ==========
-
-@login_required
-def vacancy_list(request):
-    vacancies = Vacancy.objects.all().order_by('-created_at')
-    return render(request, 'management/vacancy_list.html', {
-        'vacancies': vacancies,
-        'title': 'Vacancies'
-    })
-
-@login_required
+@permission_required('core.add_vacancy', raise_exception=True)
 def vacancy_create(request):
+    """Create a new vacancy"""
     if request.method == 'POST':
-        form = VacancyForm(request.POST)
+        form = VacancyForm(request.POST, request.FILES)
         if form.is_valid():
             vacancy = form.save()
             messages.success(request, f'Vacancy "{vacancy.title}" created successfully!')
-            return redirect('vacancy_list')
+            return redirect('vacancy_detail', pk=vacancy.pk)
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
         form = VacancyForm()
     
-    return render(request, 'management/vacancy_form.html', {
+    context = {
         'form': form,
-        'title': 'Create Vacancy'
-    })
+        'title': 'Create New Vacancy',
+        'submit_text': 'Create Vacancy',
+    }
+    return render(request, 'management/vacancy_form.html', context)
+
 
 @login_required
+@permission_required('core.change_vacancy', raise_exception=True)
 def vacancy_edit(request, pk):
+    """Edit an existing vacancy"""
     vacancy = get_object_or_404(Vacancy, pk=pk)
     
     if request.method == 'POST':
-        form = VacancyForm(request.POST, instance=vacancy)
+        form = VacancyForm(request.POST, request.FILES, instance=vacancy)
         if form.is_valid():
             vacancy = form.save()
             messages.success(request, f'Vacancy "{vacancy.title}" updated successfully!')
-            return redirect('vacancy_list')
+            return redirect('vacancy_detail', pk=vacancy.pk)
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
         form = VacancyForm(instance=vacancy)
     
-    return render(request, 'management/vacancy_form.html', {
+    context = {
         'form': form,
-        'title': 'Edit Vacancy',
-        'vacancy': vacancy
-    })
+        'vacancy': vacancy,
+        'title': f'Edit Vacancy: {vacancy.title}',
+        'submit_text': 'Update Vacancy',
+    }
+    return render(request, 'management/vacancy_form.html', context)
 
-@login_required
-def vacancy_delete(request, pk):
-    if request.method == 'POST':
-        vacancy = get_object_or_404(Vacancy, pk=pk)
-        title = vacancy.title
-        vacancy.delete()
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'status': 'success',
-                'message': f'Vacancy "{title}" deleted successfully!'
-            })
-        
-        messages.success(request, f'Vacancy "{title}" deleted successfully!')
-        return redirect('vacancy_list')
+
+class VacancyCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    """Class-based view for creating vacancies"""
+    model = Vacancy
+    form_class = VacancyForm
+    template_name = 'management/vacancy_form.html'
     
-    return redirect('vacancy_list')
-
-@login_required
-def vacancy_toggle_active(request, pk):
-    if request.method == 'POST':
-        vacancy = get_object_or_404(Vacancy, pk=pk)
-        vacancy.is_active = not vacancy.is_active
-        vacancy.save()
-        
-        status = 'activated' if vacancy.is_active else 'deactivated'
-        message = f'Vacancy "{vacancy.title}" {status} successfully!'
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'status': 'success',
-                'message': message,
-                'is_active': vacancy.is_active
-            })
-        
-        messages.success(request, message)
-        return redirect('vacancy_list')
+    def test_func(self):
+        return self.request.user.has_perm('core.add_vacancy')
     
-    return redirect('vacancy_list')
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'Vacancy "{form.instance.title}" created successfully!')
+        return response
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create New Vacancy'
+        context['submit_text'] = 'Create Vacancy'
+        return context
+    
+    def get_success_url(self):
+        return reverse_lazy('vacancy_detail', kwargs={'pk': self.object.pk})
 
-# ========== NOTICE VIEWS ==========
+
+class VacancyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Class-based view for editing vacancies"""
+    model = Vacancy
+    form_class = VacancyForm
+    template_name = 'management/vacancy_form.html'
+    
+    def test_func(self):
+        return self.request.user.has_perm('core.change_vacancy')
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'Vacancy "{form.instance.title}" updated successfully!')
+        return response
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit Vacancy: {self.object.title}'
+        context['submit_text'] = 'Update Vacancy'
+        return context
+    
+    def get_success_url(self):
+        return reverse_lazy('vacancy_detail', kwargs={'pk': self.object.pk})
+
+
+# ============================================
+# NOTICE VIEWS
+# ============================================
 
 @login_required
-def notice_list(request):
-    notices = Notice.objects.all().order_by('-created_at')
-    return render(request, 'management/notice_list.html', {
-        'notices': notices,
-        'title': 'Notices'
-    })
-
-@login_required
+@permission_required('core.add_notice', raise_exception=True)
 def notice_create(request):
+    """Create a new notice"""
     if request.method == 'POST':
         form = NoticeForm(request.POST, request.FILES)
         if form.is_valid():
             notice = form.save()
-            messages.success(request, f'Notice "{notice.title}" created successfully!')
-            return redirect('notice_list')
+            messages.success(request, f'Notice "{notice.headline}" created successfully!')
+            return redirect('notice_detail', pk=notice.pk)
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
         form = NoticeForm()
     
-    return render(request, 'management/notice_form.html', {
+    context = {
         'form': form,
-        'title': 'Create Notice'
-    })
+        'title': 'Create New Notice',
+        'submit_text': 'Create Notice',
+    }
+    return render(request, 'management/notice_form.html', context)
+
 
 @login_required
+@permission_required('core.change_notice', raise_exception=True)
 def notice_edit(request, pk):
+    """Edit an existing notice"""
     notice = get_object_or_404(Notice, pk=pk)
     
     if request.method == 'POST':
         form = NoticeForm(request.POST, request.FILES, instance=notice)
         if form.is_valid():
             notice = form.save()
-            messages.success(request, f'Notice "{notice.title}" updated successfully!')
-            return redirect('notice_list')
+            messages.success(request, f'Notice "{notice.headline}" updated successfully!')
+            return redirect('notice_detail', pk=notice.pk)
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
         form = NoticeForm(instance=notice)
     
-    return render(request, 'management/notice_form.html', {
+    context = {
         'form': form,
-        'title': 'Edit Notice',
-        'notice': notice
-    })
+        'notice': notice,
+        'title': f'Edit Notice: {notice.headline}',
+        'submit_text': 'Update Notice',
+    }
+    return render(request, 'management/notice_form.html', context)
 
-@login_required
-def notice_delete(request, pk):
-    if request.method == 'POST':
-        notice = get_object_or_404(Notice, pk=pk)
-        title = notice.title
-        
-        # Delete attached file if exists
-        if notice.attachment:
-            notice.attachment.delete(save=False)
-        
-        notice.delete()
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'status': 'success',
-                'message': f'Notice "{title}" deleted successfully!'
-            })
-        
-        messages.success(request, f'Notice "{title}" deleted successfully!')
-        return redirect('notice_list')
+
+class NoticeCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    """Class-based view for creating notices"""
+    model = Notice
+    form_class = NoticeForm
+    template_name = 'management/notice_form.html'
     
-    return redirect('notice_list')
-
-@login_required
-def notice_toggle_active(request, pk):
-    if request.method == 'POST':
-        notice = get_object_or_404(Notice, pk=pk)
-        notice.is_active = not notice.is_active
-        notice.save()
-        
-        status = 'activated' if notice.is_active else 'deactivated'
-        message = f'Notice "{notice.title}" {status} successfully!'
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'status': 'success',
-                'message': message,
-                'is_active': notice.is_active
-            })
-        
-        messages.success(request, message)
-        return redirect('notice_list')
-    
-    return redirect('notice_list')
-
-
-
-def login_page(request):
-    return render(request, 'management/login_page.html')
-
-@require_POST
-@csrf_exempt
-def login(request):
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        # AJAX request
-        username = request.POST.get('username', '').strip()
-        password = request.POST.get('password', '').strip()
-        
-        if not username or not password:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Please enter both username and password'
-            })
-        
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            if user.is_active:
-                auth_login(request, user)
-                return JsonResponse({
-                    'status': 'success',
-                    'message': f'Welcome back, {user.username}!'
-                })
-            else:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'This account is inactive'
-                })
-        else:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Invalid username or password'
-            })
-    
-    # Regular POST request (fallback)
-    username = request.POST.get('username', '').strip()
-    password = request.POST.get('password', '').strip()
-    
-    if not username or not password:
-        messages.error(request, 'Please enter both username and password')
-        return redirect('login_page')
-    
-    user = authenticate(request, username=username, password=password)
-    
-    if user is not None:
-        if user.is_active:
-            auth_login(request, user)
-            return redirect("management")
-        else:
-            messages.error(request, 'This account is inactive')
-            return redirect('login_page')
-    else:
-        messages.error(request, 'Invalid username or password')
-        return redirect('login_page')
-
-@login_required
-def logout_view(request):
-    auth_logout(request)
-    return redirect('login_page')
-
-
-class CustomPasswordResetView(PasswordResetView):
-    template_name = 'management/password_reset_form.html'
-    email_template_name = 'management/password_reset_email.html'
-    subject_template_name = 'management/password_reset_subject.txt'
-    success_url = reverse_lazy('password_reset_done')
+    def test_func(self):
+        return self.request.user.has_perm('core.add_notice')
     
     def form_valid(self, form):
-        email = form.cleaned_data['email']
-        users = form.get_users(email)
-        
-        if users:
-            return super().form_valid(form)
+        response = super().form_valid(form)
+        messages.success(self.request, f'Notice "{form.instance.headline}" created successfully!')
+        return response
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create New Notice'
+        context['submit_text'] = 'Create Notice'
+        return context
+    
+    def get_success_url(self):
+        return reverse_lazy('notice_detail', kwargs={'pk': self.object.pk})
+
+
+class NoticeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Class-based view for editing notices"""
+    model = Notice
+    form_class = NoticeForm
+    template_name = 'management/notice_form.html'
+    
+    def test_func(self):
+        return self.request.user.has_perm('core.change_notice')
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'Notice "{form.instance.headline}" updated successfully!')
+        return response
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit Notice: {self.object.headline}'
+        context['submit_text'] = 'Update Notice'
+        return context
+    
+    def get_success_url(self):
+        return reverse_lazy('notice_detail', kwargs={'pk': self.object.pk})
+
+
+# ============================================
+# CATEGORY VIEWS
+# ============================================
+
+@login_required
+@permission_required('core.add_category', raise_exception=True)
+def category_create(request):
+    """Create a new category"""
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            category = form.save()
+            messages.success(request, f'Category "{category.name}" created successfully!')
+            return redirect('category_list')
         else:
-            messages.error(self.request, 'No user found with that email address.')
-            return self.form_invalid(form)
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = CategoryForm()
+    
+    context = {
+        'form': form,
+        'title': 'Create New Category',
+        'submit_text': 'Create Category',
+    }
+    return render(request, 'management/category_form.html', context)
 
-# AJAX password reset endpoint
-@require_POST
-@csrf_exempt
-def ajax_send_reset_email(request):
-    email = request.POST.get('email', '').strip()
+
+@login_required
+@permission_required('core.change_category', raise_exception=True)
+def category_edit(request, pk):
+    """Edit an existing category"""
+    category = get_object_or_404(Category, pk=pk)
     
-    if not email:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Please enter your email address'
-        })
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            category = form.save()
+            messages.success(request, f'Category "{category.name}" updated successfully!')
+            return redirect('category_list')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = CategoryForm(instance=category)
     
-    # Check if user exists with this email
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
+    context = {
+        'form': form,
+        'category': category,
+        'title': f'Edit Category: {category.name}',
+        'submit_text': 'Update Category',
+    }
+    return render(request, 'management/category_form.html', context)
+
+
+class CategoryCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    """Class-based view for creating categories"""
+    model = Category
+    form_class = CategoryForm
+    template_name = 'management/category_form.html'
+    success_url = reverse_lazy('category_list')
     
-    try:
-        user = User.objects.get(email=email)
-    except User.DoesNotExist:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'No user found with that email address'
-        })
+    def test_func(self):
+        return self.request.user.has_perm('core.add_category')
     
-    # Generate reset token
-    token = default_token_generator.make_token(user)
-    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'Category "{form.instance.name}" created successfully!')
+        return response
     
-    # Build reset URL
-    reset_url = request.build_absolute_uri(
-        reverse_lazy('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
-    )
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Create New Category'
+        context['submit_text'] = 'Create Category'
+        return context
+
+
+class CategoryUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Class-based view for editing categories"""
+    model = Category
+    form_class = CategoryForm
+    template_name = 'management/category_form.html'
+    success_url = reverse_lazy('category_list')
     
-    # Send email
-    subject = 'Password Reset Request'
-    message = render_to_string('management/password_reset_email.html', {
-        'user': user,
-        'reset_url': reset_url,
-        'site_name': request.get_host(),
-    })
+    def test_func(self):
+        return self.request.user.has_perm('core.change_category')
     
-    try:
-        send_mail(
-            subject,
-            message,
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            fail_silently=False,
-        )
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'Category "{form.instance.name}" updated successfully!')
+        return response
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Edit Category: {self.object.name}'
+        context['submit_text'] = 'Update Category'
+        return context
+
+
+# ============================================
+# ATTACHMENT VIEWS (AJAX/API)
+# ============================================
+
+@login_required
+def quick_attachment_upload(request):
+    """AJAX endpoint for quick file uploads"""
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        form = QuickAttachmentForm(request.POST, request.FILES)
         
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Password reset email sent successfully'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Failed to send email: {str(e)}'
-        })
-
-
-
-
-@login_required
-def blog_create(request):
-    if request.method == 'POST':
-        form = BlogPostForm(request.POST, request.FILES)
         if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-
-            if post.status == 'PUBLISHED':
-                post.published_at = timezone.now()
-
-            post.save()
-            return redirect('story_page', post.id)
-    else:
-        form = BlogPostForm()
-
-    return render(request, 'management/create_story_form.html', {
-        'form': form,
-        'title': 'Create Blog Post'
-    })
-
+            try:
+                content_type = ContentType.objects.get_for_id(
+                    int(form.cleaned_data['content_type'])
+                )
+                object_id = form.cleaned_data['object_id']
+                
+                # Get the model class and object
+                model_class = content_type.model_class()
+                obj = get_object_or_404(model_class, pk=object_id)
+                
+                # Check permissions
+                if not can_edit_object(request.user, obj):
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Permission denied'
+                    }, status=403)
+                
+                # Process files
+                files = request.FILES.getlist('file')
+                attachments = []
+                
+                for file in files:
+                    attachment = GenericAttachment(
+                        content_object=obj,
+                        file=file
+                    )
+                    attachment.save()
+                    attachments.append({
+                        'id': attachment.id,
+                        'name': attachment.file_name,
+                        'url': attachment.file.url,
+                        'size': attachment.get_file_size_display(),
+                        'type': attachment.file_type,
+                        'is_image': attachment.is_image()
+                    })
+                
+                return JsonResponse({
+                    'success': True,
+                    'attachments': attachments,
+                    'message': f'{len(attachments)} file(s) uploaded successfully'
+                })
+                
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                }, status=500)
+        
+        else:
+            errors = form.errors.as_json()
+            return JsonResponse({
+                'success': False,
+                'errors': json.loads(errors)
+            }, status=400)
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 
 
 @login_required
-def blog_edit(request, pk):
-    post = get_object_or_404(BlogPost, pk=pk, author=request.user)
-
+def bulk_attachment_upload(request):
+    """Bulk upload attachments to an object"""
     if request.method == 'POST':
-        form = BlogPostForm(request.POST, request.FILES, instance=post)
+        form = BulkAttachmentForm(request.POST, request.FILES)
+        
         if form.is_valid():
-            post = form.save(commit=False)
-
-            if post.status == 'PUBLISHED' and post.published_at is None:
-                post.published_at = timezone.now()
-
-            post.save()
-            return redirect('story_page', post.id)
+            try:
+                object_type = form.cleaned_data['object_type']
+                object_id = form.cleaned_data['object_id']
+                files = form.cleaned_data['files']
+                
+                # Get the object based on type
+                if object_type == 'story':
+                    obj = get_object_or_404(Story, pk=object_id)
+                    perm_required = 'core.change_story'
+                elif object_type == 'vacancy':
+                    obj = get_object_or_404(Vacancy, pk=object_id)
+                    perm_required = 'core.change_vacancy'
+                elif object_type == 'notice':
+                    obj = get_object_or_404(Notice, pk=object_id)
+                    perm_required = 'core.change_notice'
+                else:
+                    messages.error(request, 'Invalid object type.')
+                    return redirect('dashboard')
+                
+                # Check permissions
+                if not request.user.has_perm(perm_required):
+                    messages.error(request, 'You do not have permission to edit this object.')
+                    return redirect('dashboard')
+                
+                # Attach files
+                attachments = attach_multiple_files_to_object(obj, files)
+                
+                messages.success(
+                    request, 
+                    f'Successfully uploaded {len(attachments)} file(s) to {obj}'
+                )
+                
+                # Redirect to object detail page
+                if object_type == 'story':
+                    return redirect('story_detail', pk=object_id)
+                elif object_type == 'vacancy':
+                    return redirect('vacancy_detail', pk=object_id)
+                elif object_type == 'notice':
+                    return redirect('notice_detail', pk=object_id)
+                
+            except Exception as e:
+                messages.error(request, f'Error uploading files: {str(e)}')
+        
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    
     else:
-        form = BlogPostForm(instance=post)
-
-    return render(request, 'management/create_story_form.html', {
+        form = BulkAttachmentForm()
+    
+    context = {
         'form': form,
-        'title': 'Edit Blog Post'
-    })
+        'title': 'Bulk Upload Attachments',
+        'submit_text': 'Upload Files',
+    }
+    return render(request, 'management/bulk_upload_form.html', context)
 
 
 @login_required
-def management_story_list_page(request):
-	return render(request, 'management/management_story_list_page.html')
-
+def delete_attachment(request, attachment_id):
+    """Delete a specific attachment"""
+    attachment = get_object_or_404(GenericAttachment, id=attachment_id)
+    
+    # Get the parent object
+    obj = attachment.content_object
+    
+    # Check permissions
+    if not can_edit_object(request.user, obj):
+        messages.error(request, 'You do not have permission to delete this attachment.')
+        return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
+    
+    # Store info for message
+    file_name = attachment.file_name
+    obj_type = obj.__class__.__name__.lower()
+    
+    # Delete the attachment
+    attachment.delete()
+    
+    messages.success(request, f'Attachment "{file_name}" deleted successfully.')
+    
+    # Redirect back to object detail or edit page
+    if obj_type == 'story':
+        return redirect('story_detail', pk=obj.pk)
+    elif obj_type == 'vacancy':
+        return redirect('vacancy_detail', pk=obj.pk)
+    elif obj_type == 'notice':
+        return redirect('notice_detail', pk=obj.pk)
+    
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
 
 @login_required
-def management_stories(request):
-    page = int(request.GET.get('page', 1))
-    page_size = int(request.GET.get('page_size', 6))
-    category = request.GET.get('category', '')
-    sort_by = request.GET.get('sort_by', 'created_at')
-    sort_order = request.GET.get('sort_order', 'asc')
+def reorder_attachments(request):
+    """AJAX endpoint for reordering attachments"""
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            data = json.loads(request.body)
+            attachment_ids = data.get('attachment_ids', [])
+            
+            with transaction.atomic():
+                for index, attachment_id in enumerate(attachment_ids):
+                    attachment = GenericAttachment.objects.get(
+                        id=attachment_id,
+                        content_type__model=data.get('model'),
+                        object_id=data.get('object_id')
+                    )
+                    
+                    # Check permissions
+                    obj = attachment.content_object
+                    if not can_edit_object(request.user, obj):
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'Permission denied'
+                        }, status=403)
+                    
+                    attachment.order = index
+                    attachment.save()
+            
+            return JsonResponse({'success': True})
+            
+        except GenericAttachment.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Attachment not found'
+            }, status=404)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
     
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 
-    # Start with all stories
-    stories = BlogPost.objects.all()
+
+# views.py - Add these delete views
+
+# Story Delete View
+class StoryDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Story
+    template_name = 'management/confirm_delete.html'
+    success_url = reverse_lazy('story_list')
     
-    # Apply sorting
-    if sort_order.lower() == 'desc':
-        sort_by = f'-{sort_by}'
-
-    stories = stories.order_by(sort_by)
+    def test_func(self):
+        story = self.get_object()
+        return self.request.user.is_superuser or story.author == self.request.user
     
-    # Calculate pagination
-    total_stories = stories.count()
-    total_pages = (total_stories + page_size - 1) // page_size
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Story deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+# Vacancy Delete View
+class VacancyDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Vacancy
+    template_name = 'management/confirm_delete.html'
+    success_url = reverse_lazy('vacancy_list')
     
-    # Apply pagination
-    start_index = (page - 1) * page_size
-    end_index = start_index + page_size
-    paginated_stories = stories[start_index:end_index]
-
-
-    stories_list = [
-        {
-            'id': story.id,
-            'id_sys': story.system_id,
-            'title': story.title,
-            'snippet': "Story snippet mist be here. Story snippet mist be custome and come here. Story and come here. Story snippet mist be custome and come here",
-            'content': story.content,
-            'author': f"{story.author.first_name} {story.author.last_name}",
-            'author_twitter': f"{story.author.twitter}",
-            'author_facebook': f"{story.author.facebook}",
-            'date_and_time': str(story.created_at)[:10],
-            'image_url': story.get_thumbnail_url(),
-            'category': story.category.name if story.category else "",
-            'status': story.status,
-        }
-        for story in paginated_stories
-    ]
+    def test_func(self):
+        return self.request.user.has_perm('core.delete_vacancy')
     
-    return JsonResponse({
-        "stories": stories_list,
-    })
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Vacancy deleted successfully!')
+        return super().delete(request, *args, **kwargs)
 
+# Notice Delete View
+class NoticeDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Notice
+    template_name = 'management/confirm_delete.html'
+    success_url = reverse_lazy('notice_list')
+    
+    def test_func(self):
+        return self.request.user.has_perm('core.delete_notice')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Notice deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+# Category Delete View
+class CategoryDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Category
+    template_name = 'management/confirm_delete.html'
+    success_url = reverse_lazy('category_list')
+    
+    def test_func(self):
+        return self.request.user.has_perm('core.delete_category')
+    
+    def delete(self, request, *args, **kwargs):
+        category = self.get_object()
+        
+        # Check if category has stories
+        if category.story_set.count() > 0:
+            messages.error(request, f'Cannot delete category "{category.name}" because it has {category.story_set.count()} story/stories.')
+            return redirect('category_list')
+        
+        messages.success(request, f'Category "{category.name}" deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+# OR Function-based view for category delete
+@login_required
+@permission_required('core.delete_category', raise_exception=True)
+def category_delete(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    
+    if request.method == 'POST':
+        # Check if category has stories
+        story_count = category.story_set.count()
+        if story_count > 0:
+            messages.error(request, f'Cannot delete category "{category.name}" because it has {story_count} story/stories.')
+            return redirect('category_list')
+        
+        category_name = category.name
+        category.delete()
+        messages.success(request, f'Category "{category_name}" deleted successfully!')
+        return redirect('category_list')
+    
+    # GET request - show confirmation
+    context = {
+        'object': category,
+        'object_type': 'category',
+        'object_name': category.name,
+        'back_url': reverse_lazy('category_list'),
+    }
+    return render(request, 'management/confirm_delete.html', context)
+
+# ============================================
+# HELPER FUNCTIONS
+# ============================================
+
+def can_edit_object(user, obj):
+    """Check if user can edit the given object"""
+    if user.is_superuser:
+        return True
+    
+    if isinstance(obj, Story):
+        return obj.author == user
+    elif isinstance(obj, Vacancy):
+        return user.has_perm('core.change_vacancy')
+    elif isinstance(obj, Notice):
+        return user.has_perm('core.change_notice')
+    elif isinstance(obj, Category):
+        return user.has_perm('core.change_category')
+    
+    return False
+
+
+def get_edit_url_for_object(obj):
+    """Get the appropriate edit URL for an object"""
+    obj_type = obj.__class__.__name__.lower()
+    
+    if obj_type == 'story':
+        return reverse_lazy('story_edit', kwargs={'pk': obj.pk})
+    elif obj_type == 'vacancy':
+        return reverse_lazy('vacancy_edit', kwargs={'pk': obj.pk})
+    elif obj_type == 'notice':
+        return reverse_lazy('notice_edit', kwargs={'pk': obj.pk})
+    elif obj_type == 'category':
+        return reverse_lazy('category_edit', kwargs={'pk': obj.pk})
+    
+    return None
+
+
+# ============================================
+# MIXED DASHBOARD/OVERVIEW VIEWS
+# ============================================
+
+@login_required
+def dashboard(request):
+    """User dashboard showing their content"""
+    context = {
+        'user_stories': Story.objects.filter(author=request.user).order_by('-created_at')[:5],
+        'recent_vacancies': Vacancy.objects.filter(is_active=True).order_by('-created_at')[:5],
+        'recent_notices': Notice.objects.filter(is_active=True).order_by('-created_at')[:5],
+        'categories': Category.objects.all()[:10],
+    }
+    return render(request, 'management/dashboard.html', context)
 
 
 @login_required
-def management_page(request):
-	total_stories = 100
-	new_stories = 100
-	stories_published = 100
-	publishing_rate = 100
-	pending = 100
-	subscribers = 100
-	new_subscribers = 100
-	context = {
-		'total_stories': total_stories,
-		'new_stories': new_stories,
-		'stories_published': stories_published,
-		'publishing_rate': publishing_rate,
-		'pending': pending,
-		'subscribers': subscribers,
-		'new_subscribers': new_subscribers,
-	}
-	return render(request, 'management/management_page.html', context)
+def my_content(request):
+    """Show all content created by the user"""
+    context = {
+        'stories': Story.objects.filter(author=request.user).order_by('-created_at'),
+        'vacancies': Vacancy.objects.all().order_by('-created_at') if request.user.has_perm('core.view_vacancy') else [],
+        'notices': Notice.objects.all().order_by('-created_at') if request.user.has_perm('core.view_notice') else [],
+    }
+    return render(request, 'management/my_content.html', context)
+
+
+class StoryListView(LoginRequiredMixin, ListView):
+    model = Story
+    template_name = 'management/story_list.html'
+    context_object_name = 'stories'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Story.objects.all().select_related('author', 'category')
+        
+        # Filter by status
+        status = self.request.GET.get('status')
+        if status == 'DRAFT':
+            queryset = queryset.filter(status='DRAFT')
+        elif status == 'PUBLISHED':
+            queryset = queryset.filter(status='PUBLISHED')
+        
+        # Filter by author (my stories)
+        if self.request.GET.get('mine') == 'true':
+            queryset = queryset.filter(author=self.request.user)
+        
+        return queryset.order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['total_count'] = Story.objects.count()
+        context['published_count'] = Story.objects.filter(status='PUBLISHED').count()
+        context['draft_count'] = Story.objects.filter(status='DRAFT').count()
+        context['attachment_count'] = GenericAttachment.objects.filter(
+            content_type=ContentType.objects.get_for_model(Story)
+        ).count()
+        return context
+
+
+class VacancyListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Vacancy
+    template_name = 'management/vacancy_list.html'
+    context_object_name = 'vacancies'
+    paginate_by = 20
+    
+    def test_func(self):
+        return self.request.user.has_perm('core.view_vacancy')
+    
+    def get_queryset(self):
+        queryset = Vacancy.objects.all()
+        
+        # Filter by status
+        status = self.request.GET.get('status')
+        if status == 'active':
+            queryset = queryset.filter(is_active=True)
+        elif status == 'expired':
+            queryset = queryset.filter(expiration_date__lt=timezone.now().date())
+        elif status == 'featured':
+            queryset = queryset.filter(is_featured=True)
+        
+        return queryset.order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        now = timezone.now().date()
+        context['total_count'] = Vacancy.objects.count()
+        context['active_count'] = Vacancy.objects.filter(is_active=True).count()
+        context['expired_count'] = Vacancy.objects.filter(
+            expiration_date__lt=now
+        ).count()
+        context['featured_count'] = Vacancy.objects.filter(is_featured=True).count()
+        return context
+
+
+class NoticeListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Notice
+    template_name = 'management/notice_list.html'
+    context_object_name = 'notices'
+    paginate_by = 20
+    
+    def test_func(self):
+        return self.request.user.has_perm('core.view_notice')
+    
+    def get_queryset(self):
+        queryset = Notice.objects.all()
+        
+        # Filter by status
+        status = self.request.GET.get('status')
+        if status == 'active':
+            queryset = queryset.filter(is_active=True)
+        elif status == 'expired':
+            queryset = queryset.filter(expiration_date__lt=timezone.now().date())
+        
+        # Filter by category
+        category = self.request.GET.get('category')
+        if category in ['EVENT', 'TENDER', 'ANNOUNCEMENT']:
+            queryset = queryset.filter(category=category)
+        
+        return queryset.order_by('-publish_date', '-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['total_count'] = Notice.objects.count()
+        context['active_count'] = Notice.objects.filter(is_active=True).count()
+        context['important_count'] = Notice.objects.filter(is_important=True).count()
+        context['attachment_count'] = GenericAttachment.objects.filter(
+            content_type=ContentType.objects.get_for_model(Notice)
+        ).count()
+        context['now'] = timezone.now()
+        return context
+
+
+class CategoryListView(LoginRequiredMixin, ListView):
+    model = Category
+    template_name = 'management/category_list.html'
+    context_object_name = 'categories'
+    
+    def get_queryset(self):
+        return Category.objects.annotate(
+            story_count=Count('story')
+        ).order_by('name')
 
 
 
+# views.py - Add these helper views
 
+@login_required
+def story_publish(request, pk):
+    story = get_object_or_404(Story, pk=pk)
+    
+    if not (request.user.is_superuser or story.author == request.user):
+        messages.error(request, 'You do not have permission to publish this story.')
+        return redirect('story_detail', pk=story.pk)
+    
+    story.status = 'PUBLISHED'
+    story.published_at = timezone.now()
+    story.save()
+    
+    messages.success(request, f'Story "{story.headline}" published successfully!')
+    return redirect('story_detail', pk=story.pk)
+
+@login_required
+def story_unpublish(request, pk):
+    story = get_object_or_404(Story, pk=pk)
+    
+    if not (request.user.is_superuser or story.author == request.user):
+        messages.error(request, 'You do not have permission to unpublish this story.')
+        return redirect('story_detail', pk=story.pk)
+    
+    story.status = 'DRAFT'
+    story.save()
+    
+    messages.success(request, f'Story "{story.headline}" unpublished successfully!')
+    return redirect('story_detail', pk=story.pk)
+
+@login_required
+@permission_required('core.change_vacancy', raise_exception=True)
+def vacancy_activate(request, pk):
+    vacancy = get_object_or_404(Vacancy, pk=pk)
+    vacancy.is_active = True
+    vacancy.save()
+    messages.success(request, f'Vacancy "{vacancy.title}" activated!')
+    return redirect('vacancy_detail', pk=vacancy.pk)
+
+@login_required
+@permission_required('core.change_vacancy', raise_exception=True)
+def vacancy_deactivate(request, pk):
+    vacancy = get_object_or_404(Vacancy, pk=pk)
+    vacancy.is_active = False
+    vacancy.save()
+    messages.success(request, f'Vacancy "{vacancy.title}" deactivated!')
+    return redirect('vacancy_detail', pk=vacancy.pk)
+
+@login_required
+@permission_required('core.change_vacancy', raise_exception=True)
+def vacancy_feature(request, pk):
+    vacancy = get_object_or_404(Vacancy, pk=pk)
+    vacancy.is_featured = True
+    vacancy.save()
+    messages.success(request, f'Vacancy "{vacancy.title}" marked as featured!')
+    return redirect('vacancy_detail', pk=vacancy.pk)
+
+@login_required
+@permission_required('core.change_vacancy', raise_exception=True)
+def vacancy_unfeature(request, pk):
+    vacancy = get_object_or_404(Vacancy, pk=pk)
+    vacancy.is_featured = False
+    vacancy.save()
+    messages.success(request, f'Vacancy "{vacancy.title}" removed from featured!')
+    return redirect('vacancy_detail', pk=vacancy.pk)
+
+@login_required
+@permission_required('core.change_notice', raise_exception=True)
+def notice_activate(request, pk):
+    notice = get_object_or_404(Notice, pk=pk)
+    notice.is_active = True
+    notice.save()
+    messages.success(request, f'Notice "{notice.headline}" activated!')
+    return redirect('notice_detail', pk=notice.pk)
+
+@login_required
+@permission_required('core.change_notice', raise_exception=True)
+def notice_deactivate(request, pk):
+    notice = get_object_or_404(Notice, pk=pk)
+    notice.is_active = False
+    notice.save()
+    messages.success(request, f'Notice "{notice.headline}" deactivated!')
+    return redirect('notice_detail', pk=notice.pk)
+
+@login_required
+@permission_required('core.change_notice', raise_exception=True)
+def notice_mark_important(request, pk):
+    notice = get_object_or_404(Notice, pk=pk)
+    notice.is_important = True
+    notice.save()
+    messages.success(request, f'Notice "{notice.headline}" marked as important!')
+    return redirect('notice_detail', pk=notice.pk)
+
+@login_required
+@permission_required('core.change_notice', raise_exception=True)
+def notice_unmark_important(request, pk):
+    notice = get_object_or_404(Notice, pk=pk)
+    notice.is_important = False
+    notice.save()
+    messages.success(request, f'Notice "{notice.headline}" removed from important!')
+    return redirect('notice_detail', pk=notice.pk)

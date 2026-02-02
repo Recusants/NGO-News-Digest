@@ -1,0 +1,72 @@
+{% extends 'management/management_base.html' %}
+{% comment %} templates/management/confirm_delete.html {% endcomment %}
+{% load static %}
+
+{% block title %}Confirm Delete - {{ object_name }}{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    
+    <main class="main-content" id="mainContent">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12 col-md-6 mx-auto">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-exclamation-triangle"></i> Confirm Deletion
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-trash-alt fa-4x text-danger mb-3"></i>
+                                <h4>Are you sure?</h4>
+                            </div>
+                            
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <strong>Warning:</strong> You are about to delete 
+                                <strong>{{ object_name }}</strong>.
+                            </div>
+                            
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>This action cannot be undone.</strong>
+                                All associated data will be permanently removed.
+                            </div>
+                            
+                            {% if object_type == 'category' and object.story_set.count > 0 %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-ban"></i>
+                                <strong>Cannot Delete:</strong> This category has 
+                                <strong>{{ object.story_set.count }}</strong> story/stories associated with it.
+                                Please reassign or delete those stories first.
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="{{ back_url }}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Cancel
+                                </a>
+                                
+                                {% if object_type == 'category' and object.story_set.count > 0 %}
+                                <button type="button" class="btn btn-danger" disabled>
+                                    <i class="fas fa-trash"></i> Cannot Delete (In Use)
+                                </button>
+                                {% else %}
+                                <form method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-trash"></i> Delete {{ object_type|title }}
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}

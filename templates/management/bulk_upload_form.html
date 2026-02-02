@@ -1,0 +1,110 @@
+{% extends 'management/management_base.html' %}
+{% comment %} templates/management/bulk_upload_form.html {% endcomment %}
+{% load static %}
+
+{% block title %}Bulk Upload Attachments{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    
+    <main class="main-content" id="mainContent">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title mb-0">
+                                <i class="fas fa-file-upload"></i> Bulk Upload Attachments
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" enctype="multipart/form-data" id="bulkUploadForm">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.object_type.id_for_label }}" class="form-label">
+                                        Object Type *
+                                    </label>
+                                    {{ form.object_type }}
+                                    {% if form.object_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.object_type.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.object_id.id_for_label }}" class="form-label">
+                                        Object ID *
+                                    </label>
+                                    {{ form.object_id }}
+                                    {% if form.object_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.object_id.errors }}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Enter the ID of the story, vacancy, or notice
+                                    </small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.files.id_for_label }}" class="form-label">
+                                        Files *
+                                    </label>
+                                    {{ form.files }}
+                                    {% if form.files.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.files.errors }}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Hold Ctrl/Cmd to select multiple files. Max 10MB per file.
+                                    </small>
+                                </div>
+                                
+                                <!-- Form Actions -->
+                                <div class="form-actions mt-4 pt-3 border-top">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-upload"></i> Upload Files
+                                            </button>
+                                            <a href="{% url 'dashboard' %}" 
+                                               class="btn btn-outline-secondary ms-2">
+                                                Cancel
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-fill suggestions
+    document.getElementById('id_object_type').addEventListener('change', function() {
+        const objectType = this.value;
+        const objectIdField = document.getElementById('id_object_id');
+        
+        // You could add AJAX here to fetch recent objects of this type
+        // For now, just clear any previous suggestions
+        if (objectIdField.dataset.suggestions) {
+            delete objectIdField.dataset.suggestions;
+        }
+    });
+</script>
+{% endblock %}

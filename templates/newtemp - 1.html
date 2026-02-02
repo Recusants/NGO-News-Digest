@@ -1,0 +1,3298 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO News Digest - Zimbabwe Civil Society Hub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&family=Georgia:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        /* CSS Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Light Theme Variables */
+            --primary: #c62828;
+            --primary-dark: #8e0000;
+            --primary-light: #ff5f52;
+            --accent: #d32f2f;
+            --text-dark: #212121;
+            --text-light: #757575;
+            --bg-light: #ffffff;
+            --bg-gray: #f8f9fa;
+            --bg-dark: #121212;
+            --border-color: #e0e0e0;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s ease;
+            --border-radius: 6px;
+            --border-radius-lg: 10px;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Theme Variables */
+            --primary: #ff5f52;
+            --primary-dark: #ff8a80;
+            --primary-light: #c62828;
+            --accent: #ff8a80;
+            --text-dark: #f5f5f5;
+            --text-light: #b0b0b0;
+            --bg-light: #1e1e1e;
+            --bg-gray: #2d2d2d;
+            --bg-dark: #121212;
+            --border-color: #444;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            color: var(--text-dark);
+            background-color: var(--bg-gray);
+            line-height: 1.6;
+            transition: var(--transition);
+            overflow-x: hidden;
+            font-size: 16px; /* Base font size */
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        a:hover {
+            color: var(--primary-dark);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .section {
+            padding: 3rem 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            width: auto;
+        }
+
+        .card {
+            background-color: var(--bg-light);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            transition: var(--transition);
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge-red {
+            background-color: rgba(198, 40, 40, 0.1);
+            color: var(--primary);
+        }
+
+        .badge-blue {
+            background-color: rgba(33, 150, 243, 0.1);
+            color: #2196f3;
+        }
+
+        .badge-green {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: #4caf50;
+        }
+
+        .badge-orange {
+            background-color: rgba(255, 152, 0, 0.1);
+            color: #ff9800;
+        }
+
+        .badge-gray {
+            background-color: rgba(117, 117, 117, 0.1);
+            color: var(--text-light);
+        }
+
+        /* Header Styles */
+        header {
+            background-color: var(--bg-light);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: var(--transition);
+            width: 100%;
+            height: 70px; /* Fixed height for header */
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .logo-icon {
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .logo-text {
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 700;
+            font-size: 1.3rem;
+            white-space: nowrap;
+        }
+
+        .logo-text span {
+            color: var(--primary);
+        }
+
+        /* Navigation Styles - DESKTOP */
+        .nav-menu {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            margin-left: 2rem;
+        }
+
+        .nav-link {
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 500;
+            color: var(--text-dark);
+            padding: 0.5rem 0;
+            position: relative;
+            white-space: nowrap;
+            font-size: 0.95rem;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        .nav-link.active {
+            color: var(--primary);
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+            border-radius: 3px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-dark);
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-gray);
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-dark);
+            font-size: 1.5rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            z-index: 1001;
+            padding: 0.5rem;
+        }
+
+        /* Footer Styles */
+        footer {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            padding: 2rem 0 1.5rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-column h3 {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #444;
+            padding-bottom: 0.5rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-links a {
+            color: var(--text-light);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-light);
+            padding-left: 5px;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .social-icons a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background-color: #333;
+            border-radius: 50%;
+            color: white;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .social-icons a:hover {
+            background-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid #444;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, rgba(198, 40, 40, 0.9) 0%, rgba(142, 0, 0, 0.9) 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .hero h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            opacity: 0.9;
+        }
+
+        .subscribe-form {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .subscribe-form .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .subscribe-form input {
+            padding: 0.9rem 1.2rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            width: 100%;
+        }
+
+        /* Story Card */
+        .story-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .story-card-img {
+            height: 200px;
+            width: 100%;
+            object-fit: cover;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        .story-card-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .story-card-title {
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
+        }
+
+        .story-card-excerpt {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            flex: 1;
+            font-size: 0.95rem;
+        }
+
+        .story-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .story-card-author {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .story-card-share {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .share-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .share-btn:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Vacancy Card */
+        .vacancy-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .vacancy-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .vacancy-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .vacancy-org {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .vacancy-featured {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .vacancy-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .vacancy-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .vacancy-deadline {
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+
+        /* Notice Card */
+        .notice-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .notice-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .notice-category {
+            font-weight: 600;
+        }
+
+        .notice-date {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .notice-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .notice-description {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            flex: 1;
+            font-size: 0.95rem;
+        }
+
+        .notice-attachment {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background-color: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+            color: var(--text-dark);
+            white-space: nowrap;
+            font-size: 0.95rem;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1.25rem;
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            font-family: 'Segoe UI', sans-serif;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--border-radius);
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .page-btn:hover, .page-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Back to Top */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            opacity: 0;
+            visibility: hidden;
+            z-index: 999;
+            box-shadow: var(--card-shadow);
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+
+        /* Details Page */
+        .details-header {
+            background-color: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .details-title {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .details-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .details-content {
+            background-color: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            line-height: 1.7;
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .details-content h3 {
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .details-content p {
+            margin-bottom: 1.5rem;
+        }
+
+        .details-content ul, .details-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .details-sidebar {
+            background-color: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            height: fit-content;
+            position: sticky;
+            top: 90px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Stats Counter */
+        .stats-counter {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .stat-item {
+            padding: 1rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Team Member */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .team-member {
+            text-align: center;
+        }
+
+        .team-member-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 1rem;
+            border: 5px solid var(--bg-gray);
+        }
+
+        .team-member-name {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .team-member-position {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* Contact Form */
+        .contact-form {
+            background-color: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.2);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* FAQ */
+        .faq-item {
+            background-color: var(--bg-light);
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .faq-question {
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .faq-answer {
+            padding: 0 1rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .faq-answer.open {
+            padding-bottom: 1rem;
+            max-height: 500px;
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--bg-gray);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .skeleton {
+            background-color: var(--bg-gray);
+            border-radius: var(--border-radius);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .skeleton-text {
+            height: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .skeleton-title {
+            height: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--border-color);
+        }
+
+        /* =========================================== */
+        /* MOBILE RESPONSIVE STYLES - COMPLETE REVAMP  */
+        /* =========================================== */
+        
+        @media (max-width: 992px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+            
+            .stats-counter {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .details-sidebar {
+                position: static;
+                margin-top: 1.5rem;
+            }
+            
+            .section {
+                padding: 2rem 0;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* Base mobile adjustments */
+            body {
+                font-size: 15px;
+            }
+            
+            .container {
+                padding: 0 16px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+            }
+            
+            h3 {
+                font-size: 1.2rem;
+            }
+            
+            /* Header - Fixed for mobile */
+            header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 60px;
+                z-index: 1000;
+            }
+            
+            .header-container {
+                padding: 0 16px;
+                height: 60px;
+            }
+            
+            .logo-icon {
+                font-size: 1.5rem;
+            }
+            
+            .logo-text {
+                font-size: 1.1rem;
+            }
+            
+            /* Hide desktop nav, show mobile toggle */
+            .nav-menu {
+                display: none;
+            }
+            
+            .mobile-toggle {
+                display: block;
+                font-size: 1.3rem;
+            }
+            
+            .theme-toggle {
+                width: 36px;
+                height: 36px;
+                font-size: 1.1rem;
+                margin-right: 0.5rem;
+            }
+            
+            /* Mobile menu - Overlay style */
+            .nav-menu.mobile-open {
+                display: flex;
+                position: fixed;
+                top: 60px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: var(--bg-light);
+                flex-direction: column;
+                padding: 1rem 0;
+                margin: 0;
+                z-index: 999;
+                overflow-y: auto;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            }
+            
+            .nav-link {
+                padding: 1rem 16px;
+                font-size: 1rem;
+                border-bottom: 1px solid var(--border-color);
+                width: 100%;
+            }
+            
+            .nav-link:last-child {
+                border-bottom: none;
+            }
+            
+            .nav-link.active::after {
+                display: none;
+            }
+            
+            /* Add padding to main for fixed header */
+            main {
+                margin-top: 60px;
+                min-height: calc(100vh - 60px);
+            }
+            
+            /* Hero section */
+            .hero {
+                padding: 2.5rem 0 3rem;
+                margin-top: 0;
+            }
+            
+            .hero h1 {
+                font-size: 1.8rem;
+                padding: 0 10px;
+                margin-bottom: 1rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+                padding: 0 10px;
+                margin-bottom: 1.5rem;
+            }
+            
+            .subscribe-form {
+                padding: 0 10px;
+            }
+            
+            .subscribe-form .form-row {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+            
+            /* Content adjustments */
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+            
+            .card {
+                padding: 1.25rem;
+                margin-bottom: 1.25rem;
+            }
+            
+            .story-card-img {
+                height: 180px;
+            }
+            
+            .story-card-content, .vacancy-card, .notice-card {
+                padding: 1.25rem;
+            }
+            
+            /* Filter section */
+            .filter-section {
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+            
+            .filter-btn {
+                width: 100%;
+                text-align: center;
+                padding: 0.75rem 1rem;
+            }
+            
+            .search-box {
+                min-width: 100%;
+                order: -1;
+            }
+            
+            /* Stats */
+            .stats-counter {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                margin: 1.5rem 0;
+            }
+            
+            .stat-item {
+                padding: 0.75rem;
+            }
+            
+            .stat-number {
+                font-size: 1.8rem;
+            }
+            
+            /* Details page */
+            .details-header {
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .details-title {
+                font-size: 1.5rem;
+            }
+            
+            .details-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .details-content {
+                padding: 1.25rem;
+            }
+            
+            /* Contact form */
+            .contact-form {
+                padding: 1.25rem;
+            }
+            
+            /* Footer */
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .footer-column {
+                margin-bottom: 1rem;
+            }
+            
+            /* Back to top button */
+            .back-to-top {
+                right: 1rem;
+                bottom: 1rem;
+                width: 45px;
+                height: 45px;
+                font-size: 1.1rem;
+            }
+            
+            /* Section padding */
+            .section {
+                padding: 1.5rem 0;
+            }
+            
+            /* Form adjustments */
+            .form-control {
+                padding: 0.7rem 0.9rem;
+                font-size: 0.95rem;
+            }
+            
+            /* Story card meta */
+            .story-card-meta {
+                font-size: 0.85rem;
+            }
+            
+            /* Share buttons */
+            .share-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+            
+            /* Team grid */
+            .team-grid {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+            
+            .team-member-img {
+                width: 100px;
+                height: 100px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            /* Extra small devices */
+            body {
+                font-size: 14px;
+            }
+            
+            .container {
+                padding: 0 12px;
+            }
+            
+            header {
+                height: 55px;
+            }
+            
+            .header-container {
+                height: 55px;
+                padding: 0 12px;
+            }
+            
+            .logo-icon {
+                font-size: 1.3rem;
+            }
+            
+            .logo-text {
+                font-size: 1rem;
+            }
+            
+            .mobile-toggle {
+                font-size: 1.2rem;
+            }
+            
+            .theme-toggle {
+                width: 34px;
+                height: 34px;
+                font-size: 1rem;
+            }
+            
+            .nav-menu.mobile-open {
+                top: 55px;
+            }
+            
+            main {
+                margin-top: 55px;
+                min-height: calc(100vh - 55px);
+            }
+            
+            .hero {
+                padding: 2rem 0 2.5rem;
+            }
+            
+            .hero h1 {
+                font-size: 1.6rem;
+            }
+            
+            .hero p {
+                font-size: 0.95rem;
+            }
+            
+            .btn {
+                padding: 0.7rem 1rem;
+                font-size: 0.95rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+            
+            .story-card-img {
+                height: 160px;
+            }
+            
+            .story-card-content, .vacancy-card, .notice-card {
+                padding: 1rem;
+            }
+            
+            .story-card-title, .vacancy-title, .notice-title {
+                font-size: 1.1rem;
+            }
+            
+            .subscribe-form input {
+                padding: 0.8rem 1rem;
+                font-size: 0.95rem;
+            }
+            
+            .stat-number {
+                font-size: 1.6rem;
+            }
+            
+            .back-to-top {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            
+            .details-title {
+                font-size: 1.3rem;
+            }
+            
+            .details-content {
+                padding: 1rem;
+                font-size: 0.95rem;
+            }
+            
+            .sidebar-section h3 {
+                font-size: 1.1rem;
+            }
+            
+            /* Adjust form spacing */
+            .form-group {
+                margin-bottom: 1.25rem;
+            }
+            
+            .form-label {
+                font-size: 0.9rem;
+            }
+            
+            .form-control {
+                font-size: 0.9rem;
+            }
+            
+            /* Adjust badges */
+            .badge {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.6rem;
+            }
+            
+            /* Adjust filter buttons */
+            .filter-btn {
+                font-size: 0.85rem;
+                padding: 0.6rem 0.9rem;
+            }
+            
+            /* Adjust social icons */
+            .social-icons a {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            /* Very small devices */
+            .hero h1 {
+                font-size: 1.4rem;
+            }
+            
+            .hero p {
+                font-size: 0.9rem;
+            }
+            
+            .logo-text {
+                font-size: 0.9rem;
+            }
+            
+            .story-card-img {
+                height: 140px;
+            }
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .justify-center {
+            justify-content: center;
+        }
+
+        .w-100 {
+            width: 100%;
+        }
+
+        .mr-2 {
+            margin-right: 0.5rem;
+        }
+
+        .mb-1 { margin-bottom: 1rem; }
+        .mb-2 { margin-bottom: 1.5rem; }
+        .mb-3 { margin-bottom: 2rem; }
+        .mt-1 { margin-top: 1rem; }
+        .mt-2 { margin-top: 1.5rem; }
+        .mt-3 { margin-top: 2rem; }
+        .py-2 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+        .py-3 { padding-top: 2rem; padding-bottom: 2rem; }
+        
+        /* Mobile-specific utility classes */
+        @media (max-width: 768px) {
+            .mobile-hidden {
+                display: none !important;
+            }
+            
+            .mobile-full-width {
+                width: 100% !important;
+            }
+            
+            .mobile-mb-1 { margin-bottom: 1rem; }
+            .mobile-mb-2 { margin-bottom: 1.5rem; }
+            .mobile-px-0 { padding-left: 0; padding-right: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-hands-helping"></i>
+                </div>
+                <div class="logo-text">NGO <span>News Digest</span></div>
+            </div>
+            
+            <nav class="nav-menu" id="navMenu">
+                <a href="#home" class="nav-link active" data-page="home">Home</a>
+                <a href="#stories" class="nav-link" data-page="stories">Stories</a>
+                <a href="#vacancies" class="nav-link" data-page="vacancies">Vacancies</a>
+                <a href="#notices" class="nav-link" data-page="notices">Notices</a>
+                <a href="#about" class="nav-link" data-page="about">About</a>
+                <a href="#contact" class="nav-link" data-page="contact">Contact</a>
+                <a href="#editors" class="nav-link" data-page="editors">Team</a>
+            </nav>
+            
+            <div class="header-actions">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu" aria-expanded="false">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area - Pages as Sections -->
+    <main id="pageContent">
+        <!-- Home Page -->
+        <section id="home" class="page-section active">
+            <div class="hero">
+                <div class="container">
+                    <h1>Amplifying Zimbabwe's Civil Society Impact</h1>
+                    <p>Stay informed with the latest NGO stories, job vacancies, funding opportunities, and policy updates from across Zimbabwe's civil society sector.</p>
+                    
+                    <!-- UPDATED SUBSCRIPTION FORM WITH NAME FIELD -->
+                    <div class="subscribe-form">
+                        <div class="form-row">
+                            <input type="text" id="subscribeName" placeholder="Your Name">
+                            <input type="email" id="subscribeEmail" placeholder="Your Email">
+                        </div>
+                        <button class="btn" id="subscribeBtn">Subscribe to Updates</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="container section py-2">
+                <h2>Latest Stories</h2>
+                <div class="content-grid" id="featuredStories">
+                    <!-- Featured stories loaded via JS -->
+                </div>
+                <div class="text-center mt-2">
+                    <a href="#stories" class="btn btn-small" data-page="stories">View All Stories</a>
+                </div>
+            </div>
+            
+            <div class="container section py-2" style="background-color: var(--bg-light);">
+                <h2>Urgent Vacancies</h2>
+                <div class="content-grid" id="featuredVacancies">
+                    <!-- Featured vacancies loaded via JS -->
+                </div>
+                <div class="text-center mt-2">
+                    <a href="#vacancies" class="btn btn-small btn-outline" data-page="vacancies">View All Vacancies</a>
+                </div>
+            </div>
+            
+            <div class="container section py-2">
+                <h2>Important Notices</h2>
+                <div class="content-grid" id="featuredNotices">
+                    <!-- Featured notices loaded via JS -->
+                </div>
+                <div class="text-center mt-2">
+                    <a href="#notices" class="btn btn-small" data-page="notices">View All Notices</a>
+                </div>
+            </div>
+            
+            <div class="container section py-2">
+                <h2>Our Impact in Numbers</h2>
+                <div class="stats-counter">
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="245">0</div>
+                        <div class="stat-label">Stories Published</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="187">0</div>
+                        <div class="stat-label">Jobs Listed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="532">0</div>
+                        <div class="stat-label">NGOs Engaged</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" data-count="12400">0</div>
+                        <div class="stat-label">Subscribers</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stories Page -->
+        <section id="stories" class="page-section hidden">
+            <div class="container section py-2">
+                <h1>Stories & Articles</h1>
+                <p class="mb-2">Explore the latest stories from Zimbabwe's civil society sector.</p>
+                
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <span class="filter-label">Filter by:</span>
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="humanitarian">Humanitarian</button>
+                        <button class="filter-btn" data-filter="advocacy">Advocacy</button>
+                        <button class="filter-btn" data-filter="development">Development</button>
+                        <button class="filter-btn" data-filter="health">Health</button>
+                        
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input" id="storySearch" placeholder="Search stories...">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-grid" id="storiesList">
+                    <!-- Stories loaded via JS -->
+                </div>
+                
+                <div class="pagination" id="storiesPagination">
+                    <!-- Pagination loaded via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Story Details Page -->
+        <section id="story-details" class="page-section hidden">
+            <div class="container section py-2">
+                <a href="#stories" class="btn btn-small mb-2" data-page="stories"><i class="fas fa-arrow-left"></i> Back to Stories</a>
+                
+                <div class="details-header">
+                    <div class="badge badge-red" id="storyCategory">Humanitarian</div>
+                    <h1 class="details-title" id="storyTitle">How Local NGOs are Responding to Climate Change in Zimbabwe</h1>
+                    
+                    <div class="details-meta">
+                        <div class="story-card-author">
+                            <i class="fas fa-user"></i>
+                            <span id="storyAuthor">Tendai Moyo</span>
+                        </div>
+                        <div><i class="far fa-calendar"></i> <span id="storyDate">March 15, 2023</span></div>
+                        <div><i class="far fa-clock"></i> <span id="storyReadTime">5 min read</span></div>
+                    </div>
+                    
+                    <div class="story-card-share">
+                        <span>Share:</span>
+                        <a href="#" class="share-btn" data-share="facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="share-btn" data-share="twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="share-btn" data-share="linkedin"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="share-btn" data-share="email"><i class="far fa-envelope"></i></a>
+                    </div>
+                </div>
+                
+                <div class="two-column">
+                    <div class="details-content" id="storyContent">
+                        <!-- Story content loaded via JS -->
+                    </div>
+                    
+                    <div class="details-sidebar">
+                        <div class="sidebar-section">
+                            <h3>About the Author</h3>
+                            <div class="story-card-author">
+                                <i class="fas fa-user-circle fa-2x"></i>
+                                <div>
+                                    <div id="authorName">Tendai Moyo</div>
+                                    <div id="authorTitle" style="font-size: 0.9rem; color: var(--text-light);">Development Journalist</div>
+                                </div>
+                            </div>
+                            <p id="authorBio" class="mt-1" style="font-size: 0.9rem;">Tendai has been covering civil society stories in Zimbabwe for over 8 years, with a focus on sustainable development and climate action.</p>
+                        </div>
+                        
+                        <div class="sidebar-section">
+                            <h3>Related Stories</h3>
+                            <div id="relatedStories">
+                                <!-- Related stories loaded via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vacancies Page -->
+        <section id="vacancies" class="page-section hidden">
+            <div class="container section py-2">
+                <h1>NGO Job Vacancies</h1>
+                <p class="mb-2">Find your next opportunity in Zimbabwe's civil society sector.</p>
+                
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <span class="filter-label">Filter by:</span>
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="fulltime">Full-time</button>
+                        <button class="filter-btn" data-filter="parttime">Part-time</button>
+                        <button class="filter-btn" data-filter="consultancy">Consultancy</button>
+                        <button class="filter-btn" data-filter="remote">Remote</button>
+                        
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input" id="vacancySearch" placeholder="Search vacancies...">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-grid" id="vacanciesList">
+                    <!-- Vacancies loaded via JS -->
+                </div>
+                
+                <div class="pagination" id="vacanciesPagination">
+                    <!-- Pagination loaded via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Vacancy Details Page -->
+        <section id="vacancy-details" class="page-section hidden">
+            <div class="container section py-2">
+                <a href="#vacancies" class="btn btn-small mb-2" data-page="vacancies"><i class="fas fa-arrow-left"></i> Back to Vacancies</a>
+                
+                <div class="details-header">
+                    <div class="badge badge-red" id="vacancyType">Full-time</div>
+                    <h1 class="details-title" id="vacancyTitle">Program Manager - Climate Resilience</h1>
+                    
+                    <div class="details-meta">
+                        <div><i class="fas fa-building"></i> <span id="vacancyOrg">Green Future Zimbabwe</span></div>
+                        <div><i class="fas fa-map-marker-alt"></i> <span id="vacancyLocation">Harare, Zimbabwe</span></div>
+                        <div><i class="far fa-calendar-alt"></i> Deadline: <span id="vacancyDeadline">April 30, 2023</span></div>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <span class="badge badge-green">Urgent</span>
+                        <span class="badge badge-blue">Featured</span>
+                    </div>
+                </div>
+                
+                <div class="two-column">
+                    <div class="details-content" id="vacancyContent">
+                        <!-- Vacancy content loaded via JS -->
+                    </div>
+                    
+                    <div class="details-sidebar">
+                        <div class="sidebar-section">
+                            <h3>Organization</h3>
+                            <p id="orgDescription" style="font-size: 0.95rem;">Green Future Zimbabwe is a leading environmental NGO focused on climate resilience and sustainable development initiatives across the country.</p>
+                        </div>
+                        
+                        <div class="sidebar-section">
+                            <h3>How to Apply</h3>
+                            <p style="font-size: 0.95rem;">Send your CV and cover letter to:</p>
+                            <div class="card mt-1" style="padding: 1rem;">
+                                <div><strong>Email:</strong> <span id="applyEmail">hr@greenfuturezw.org</span></div>
+                                <div class="mt-1"><strong>Subject:</strong> Program Manager Application</div>
+                            </div>
+                            <button class="btn mt-2 w-100" id="applyBtn">Apply Now</button>
+                        </div>
+                        
+                        <div class="sidebar-section">
+                            <h3>Similar Jobs</h3>
+                            <div id="similarJobs">
+                                <!-- Similar jobs loaded via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notices Page -->
+        <section id="notices" class="page-section hidden">
+            <div class="container section py-2">
+                <h1>Notices & Announcements</h1>
+                <p class="mb-2">Stay updated with funding opportunities, events, and policy changes.</p>
+                
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <span class="filter-label">Filter by:</span>
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="funding">Funding</button>
+                        <button class="filter-btn" data-filter="events">Events</button>
+                        <button class="filter-btn" data-filter="policy">Policy</button>
+                        <button class="filter-btn" data-filter="urgent">Urgent</button>
+                        
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input" id="noticeSearch" placeholder="Search notices...">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-grid" id="noticesList">
+                    <!-- Notices loaded via JS -->
+                </div>
+                
+                <div class="pagination" id="noticesPagination">
+                    <!-- Pagination loaded via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Notice Details Page -->
+        <section id="notice-details" class="page-section hidden">
+            <div class="container section py-2">
+                <a href="#notices" class="btn btn-small mb-2" data-page="notices"><i class="fas fa-arrow-left"></i> Back to Notices</a>
+                
+                <div class="details-header">
+                    <div class="badge badge-red" id="noticeCategory">Funding Opportunity</div>
+                    <h1 class="details-title" id="noticeTitle">Call for Proposals: Women's Economic Empowerment Grants</h1>
+                    
+                    <div class="details-meta">
+                        <div><i class="fas fa-building"></i> <span id="noticeOrg">UN Women Zimbabwe</span></div>
+                        <div><i class="far fa-calendar"></i> Posted: <span id="noticeDate">March 10, 2023</span></div>
+                        <div><i class="far fa-calendar-alt"></i> Deadline: <span id="noticeDeadline">May 15, 2023</span></div>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <span class="badge badge-orange">High Priority</span>
+                    </div>
+                </div>
+                
+                <div class="two-column">
+                    <div class="details-content" id="noticeContent">
+                        <!-- Notice content loaded via JS -->
+                    </div>
+                    
+                    <div class="details-sidebar">
+                        <div class="sidebar-section">
+                            <h3>Attachments</h3>
+                            <div id="noticeAttachments">
+                                <!-- Attachments loaded via JS -->
+                            </div>
+                        </div>
+                        
+                        <div class="sidebar-section">
+                            <h3>Contact Information</h3>
+                            <div class="card" style="padding: 1rem;">
+                                <div><strong>Email:</strong> <span id="contactEmail">grants@unwomen.org.zw</span></div>
+                                <div class="mt-1"><strong>Phone:</strong> <span id="contactPhone">+263 242 123456</span></div>
+                                <div class="mt-1"><strong>Website:</strong> <span id="contactWebsite">www.unwomen.org.zw</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="sidebar-section">
+                            <h3>Related Notices</h3>
+                            <div id="relatedNotices">
+                                <!-- Related notices loaded via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Page -->
+        <section id="about" class="page-section hidden">
+            <div class="container section py-2">
+                <h1>About NGO News Digest</h1>
+                <p class="mb-2" style="font-size: 1.1rem;">We are Zimbabwe's premier platform for civil society news, opportunities, and connections.</p>
+                
+                <div class="card mb-2">
+                    <h2>Our Mission</h2>
+                    <p>To amplify the impact of Zimbabwe's civil society by providing a centralized platform for sharing stories, opportunities, and resources that drive positive change across the nation.</p>
+                </div>
+                
+                <div class="card mb-2">
+                    <h2>Our Vision</h2>
+                    <p>A Zimbabwe where civil society organizations are empowered, connected, and effectively contributing to sustainable development and social justice.</p>
+                </div>
+                
+                <h2 class="mt-2">Our Core Values</h2>
+                <div class="content-grid mb-2">
+                    <div class="card text-center">
+                        <i class="fas fa-handshake fa-2x mb-2" style="color: var(--primary);"></i>
+                        <h3>Collaboration</h3>
+                        <p>We believe in the power of partnerships and collective action.</p>
+                    </div>
+                    <div class="card text-center">
+                        <i class="fas fa-balance-scale fa-2x mb-2" style="color: var(--primary);"></i>
+                        <h3>Transparency</h3>
+                        <p>We operate with openness and accountability in all we do.</p>
+                    </div>
+                    <div class="card text-center">
+                        <i class="fas fa-bullhorn fa-2x mb-2" style="color: var(--primary);"></i>
+                        <h3>Amplification</h3>
+                        <p>We elevate the voices and work of Zimbabwe's civil society.</p>
+                    </div>
+                    <div class="card text-center">
+                        <i class="fas fa-users fa-2x mb-2" style="color: var(--primary);"></i>
+                        <h3>Inclusion</h3>
+                        <p>We ensure diverse representation across all sectors and regions.</p>
+                    </div>
+                </div>
+                
+                <h2>Sectors We Cover</h2>
+                <div class="mb-2">
+                    <span class="badge badge-red">Humanitarian Aid</span>
+                    <span class="badge badge-blue">Health & HIV/AIDS</span>
+                    <span class="badge badge-green">Education</span>
+                    <span class="badge badge-orange">Gender Equality</span>
+                    <span class="badge badge-gray">Environmental Conservation</span>
+                    <span class="badge badge-red">Governance & Democracy</span>
+                    <span class="badge badge-blue">Rural Development</span>
+                    <span class="badge badge-green">Youth Empowerment</span>
+                    <span class="badge badge-orange">Disability Rights</span>
+                </div>
+                
+                <h2 class="mt-2">Our Partners</h2>
+                <div class="content-grid">
+                    <div class="card text-center">
+                        <h3>UNDP Zimbabwe</h3>
+                        <p>United Nations Development Programme</p>
+                    </div>
+                    <div class="card text-center">
+                        <h3>NANGO</h3>
+                        <p>National Association of Non-Governmental Organizations</p>
+                    </div>
+                    <div class="card text-center">
+                        <h3>OSISA</h3>
+                        <p>Open Society Initiative for Southern Africa</p>
+                    </div>
+                    <div class="card text-center">
+                        <h3>ActionAid Zimbabwe</h3>
+                        <p>International humanitarian organization</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Page -->
+        <section id="contact" class="page-section hidden">
+            <div class="container section py-2">
+                <h1>Contact Us</h1>
+                <p class="mb-2">Get in touch with us for inquiries, submissions, or partnership opportunities.</p>
+                
+                <div class="two-column">
+                    <div class="contact-form">
+                        <h2>Send a Message</h2>
+                        <form id="contactForm">
+                            <div class="form-group">
+                                <label class="form-label" for="contactName">Full Name</label>
+                                <input type="text" class="form-control" id="contactName" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="contactEmail">Email Address</label>
+                                <input type="email" class="form-control" id="contactEmailInput" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="contactOrg">Organization (Optional)</label>
+                                <input type="text" class="form-control" id="contactOrg">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="contactSubject">Subject</label>
+                                <input type="text" class="form-control" id="contactSubject" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="contactMessage">Message</label>
+                                <textarea class="form-control" id="contactMessage" required></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn">Send Message</button>
+                        </form>
+                    </div>
+                    
+                    <div>
+                        <div class="card mb-2">
+                            <h3>Contact Information</h3>
+                            <div class="mb-2">
+                                <i class="fas fa-map-marker-alt mr-2" style="color: var(--primary);"></i>
+                                <span>123 Civil Society Avenue, Harare, Zimbabwe</span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-phone mr-2" style="color: var(--primary);"></i>
+                                <span>+263 242 700 000</span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-envelope mr-2" style="color: var(--primary);"></i>
+                                <span>info@ngonewsdigest.co.zw</span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-clock mr-2" style="color: var(--primary);"></i>
+                                <span>Mon-Fri: 8:00 AM - 5:00 PM</span>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>Follow Us</h3>
+                            <div class="social-icons">
+                                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                                <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-2">
+                            <h3>Frequently Asked Questions</h3>
+                            <div class="faq-item">
+                                <div class="faq-question">
+                                    <span>How can I submit a story or announcement?</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>Please email your submission to submissions@ngonewsdigest.co.zw with relevant details and attachments. Our editorial team reviews all submissions within 3-5 working days.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="faq-item">
+                                <div class="faq-question">
+                                    <span>Is there a cost to post job vacancies?</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>We offer free job postings for registered Zimbabwean NGOs. International organizations and for-profit companies may be charged a nominal fee.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="faq-item">
+                                <div class="faq-question">
+                                    <span>How often is the digest updated?</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>We update our platform daily with new content. Subscribers receive a weekly digest every Monday morning.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Editors/Team Page -->
+        <section id="editors" class="page-section hidden">
+            <div class="container section py-2">
+                <h1>Our Team</h1>
+                <p class="mb-2">Meet the dedicated professionals behind NGO News Digest.</p>
+                
+                <div class="team-grid mb-2">
+                    <div class="team-member card">
+                        <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Sarah Chideme" class="team-member-img">
+                        <h3 class="team-member-name">Sarah Chideme</h3>
+                        <div class="team-member-position">Editor-in-Chief</div>
+                        <p>Sarah leads our editorial team with 12 years of experience in journalism and civil society engagement.</p>
+                        <div class="social-icons justify-center mt-2">
+                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="team-member card">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Tinashe Moyo" class="team-member-img">
+                        <h3 class="team-member-name">Tinashe Moyo</h3>
+                        <div class="team-member-position">Content Director</div>
+                        <p>Tinashe oversees all content strategy and partnerships with NGOs across Zimbabwe.</p>
+                        <div class="social-icons justify-center mt-2">
+                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="team-member card">
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Rumbidzai Ndlovu" class="team-member-img">
+                        <h3 class="team-member-name">Rumbidzai Ndlovu</h3>
+                        <div class="team-member-position">Technology Manager</div>
+                        <p>Rumbidzai ensures our platform remains accessible, fast, and user-friendly for all visitors.</p>
+                        <div class="social-icons justify-center mt-2">
+                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    
+                    <div class="team-member card">
+                        <img src="https://randomuser.me/api/portraits/men/76.jpg" alt="Takunda Chiweshe" class="team-member-img">
+                        <h3 class="team-member-name">Takunda Chiweshe</h3>
+                        <div class="team-member-position">Community Coordinator</div>
+                        <p>Takunda builds and maintains relationships with NGOs and civil society organizations nationwide.</p>
+                        <div class="social-icons justify-center mt-2">
+                            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>Join Our Team</h2>
+                    <p>We're always looking for passionate individuals to join our mission. Check our <a href="#vacancies" data-page="vacancies">vacancies page</a> for current openings or send your CV to careers@ngonewsdigest.co.zw</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3>NGO News Digest</h3>
+                    <p>Zimbabwe's premier platform for civil society news, opportunities, and connections.</p>
+                    <div class="social-icons">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#home" data-page="home">Home</a></li>
+                        <li><a href="#stories" data-page="stories">Stories</a></li>
+                        <li><a href="#vacancies" data-page="vacancies">Vacancies</a></li>
+                        <li><a href="#notices" data-page="notices">Notices</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul class="footer-links">
+                        <li><a href="#about" data-page="about">About Us</a></li>
+                        <li><a href="#contact" data-page="contact">Contact</a></li>
+                        <li><a href="#editors" data-page="editors">Our Team</a></li>
+                        <li><a href="#" id="privacyLink">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Subscribe</h3>
+                    <p>Get weekly updates on NGO news and opportunities in Zimbabwe.</p>
+                    <div class="subscribe-form" style="margin-top: 1rem;">
+                        <div class="form-row">
+                            <input type="text" placeholder="Your Name">
+                            <input type="email" placeholder="Your Email">
+                        </div>
+                        <button class="btn btn-small">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2023 NGO News Digest. All rights reserved. Serving Zimbabwe's Civil Society.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <div class="back-to-top" id="backToTop">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Data for the application
+        const appData = {
+            stories: [
+                {
+                    id: 1,
+                    title: "How Local NGOs are Responding to Climate Change in Zimbabwe",
+                    excerpt: "Exploring innovative approaches Zimbabwean NGOs are taking to address climate challenges in rural communities.",
+                    author: "Tendai Moyo",
+                    date: "March 15, 2023",
+                    category: "humanitarian",
+                    readTime: "5 min read",
+                    image: "https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    featured: true
+                },
+                {
+                    id: 2,
+                    title: "Women's Rights Advocacy Gains Momentum",
+                    excerpt: "A look at the growing movement for gender equality in Zimbabwe's civil society sector.",
+                    author: "Rumbidzai Chiwara",
+                    date: "March 10, 2023",
+                    category: "advocacy",
+                    readTime: "4 min read",
+                    image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    featured: true
+                },
+                {
+                    id: 3,
+                    title: "Community Health Workers Transform Rural Care",
+                    excerpt: "How trained community health workers are bridging healthcare gaps in remote areas of Zimbabwe.",
+                    author: "Dr. James Ndlovu",
+                    date: "March 5, 2023",
+                    category: "health",
+                    readTime: "6 min read",
+                    image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    featured: true
+                },
+                {
+                    id: 4,
+                    title: "Youth-Led Initiatives Combat Unemployment",
+                    excerpt: "Innovative programs creating opportunities for Zimbabwe's youth through skills development.",
+                    author: "Takunda Maseko",
+                    date: "February 28, 2023",
+                    category: "development",
+                    readTime: "4 min read",
+                    image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    featured: false
+                },
+                {
+                    id: 5,
+                    title: "Food Security Programs Show Promise",
+                    excerpt: "NGO-led agricultural initiatives helping communities achieve sustainable food production.",
+                    author: "Sarah Chideme",
+                    date: "February 22, 2023",
+                    category: "humanitarian",
+                    readTime: "5 min read",
+                    image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    featured: false
+                },
+                {
+                    id: 6,
+                    title: "Digital Literacy Expands in Rural Schools",
+                    excerpt: "How NGOs are bringing technology education to underserved communities across Zimbabwe.",
+                    author: "Farai Mubata",
+                    date: "February 18, 2023",
+                    category: "development",
+                    readTime: "3 min read",
+                    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80",
+                    featured: false
+                }
+            ],
+            vacancies: [
+                {
+                    id: 1,
+                    title: "Program Manager - Climate Resilience",
+                    organization: "Green Future Zimbabwe",
+                    location: "Harare, Zimbabwe",
+                    type: "fulltime",
+                    deadline: "April 30, 2023",
+                    description: "Lead climate resilience programs across multiple districts.",
+                    urgent: true,
+                    featured: true
+                },
+                {
+                    id: 2,
+                    title: "Monitoring & Evaluation Officer",
+                    organization: "Health for All Trust",
+                    location: "Bulawayo, Zimbabwe",
+                    type: "fulltime",
+                    deadline: "April 15, 2023",
+                    description: "Develop and implement M&E frameworks for health programs.",
+                    urgent: false,
+                    featured: true
+                },
+                {
+                    id: 3,
+                    title: "Gender Specialist Consultant",
+                    organization: "Women's Rights Coalition",
+                    location: "Remote",
+                    type: "consultancy",
+                    deadline: "March 31, 2023",
+                    description: "Provide technical expertise on gender mainstreaming projects.",
+                    urgent: true,
+                    featured: false
+                },
+                {
+                    id: 4,
+                    title: "Finance Administrator",
+                    organization: "Youth Empowerment Initiative",
+                    location: "Mutare, Zimbabwe",
+                    type: "parttime",
+                    deadline: "April 10, 2023",
+                    description: "Manage financial records and reporting for youth programs.",
+                    urgent: false,
+                    featured: false
+                },
+                {
+                    id: 5,
+                    title: "Community Mobilizer",
+                    organization: "Rural Development Network",
+                    location: "Masvingo, Zimbabwe",
+                    type: "fulltime",
+                    deadline: "April 5, 2023",
+                    description: "Engage communities in development planning and implementation.",
+                    urgent: false,
+                    featured: false
+                },
+                {
+                    id: 6,
+                    title: "Communications Officer",
+                    organization: "Disability Rights Forum",
+                    location: "Harare, Zimbabwe",
+                    type: "fulltime",
+                    deadline: "April 20, 2023",
+                    description: "Develop and implement communication strategies for advocacy.",
+                    urgent: false,
+                    featured: false
+                }
+            ],
+            notices: [
+                {
+                    id: 1,
+                    title: "Call for Proposals: Women's Economic Empowerment Grants",
+                    organization: "UN Women Zimbabwe",
+                    category: "funding",
+                    date: "March 10, 2023",
+                    deadline: "May 15, 2023",
+                    description: "Funding available for NGOs working on women's economic empowerment initiatives.",
+                    priority: "high",
+                    urgent: true
+                },
+                {
+                    id: 2,
+                    title: "Civil Society Conference 2023",
+                    organization: "NANGO",
+                    category: "events",
+                    date: "March 5, 2023",
+                    deadline: "April 30, 2023",
+                    description: "Annual gathering for civil society organizations across Zimbabwe.",
+                    priority: "medium",
+                    urgent: false
+                },
+                {
+                    id: 3,
+                    title: "New NGO Registration Requirements",
+                    organization: "Government of Zimbabwe",
+                    category: "policy",
+                    date: "February 28, 2023",
+                    deadline: "June 30, 2023",
+                    description: "Updated registration procedures for all NGOs operating in Zimbabwe.",
+                    priority: "high",
+                    urgent: true
+                },
+                {
+                    id: 4,
+                    title: "Climate Action Fund Launch",
+                    organization: "European Union Delegation",
+                    category: "funding",
+                    date: "February 25, 2023",
+                    deadline: "May 30, 2023",
+                    description: "New funding opportunity for climate adaptation projects.",
+                    priority: "medium",
+                    urgent: false
+                },
+                {
+                    id: 5,
+                    title: "Training: Project Management for NGOs",
+                    organization: "Capacity Building Trust",
+                    category: "events",
+                    date: "February 20, 2023",
+                    deadline: "March 25, 2023",
+                    description: "Free training workshop on effective project management.",
+                    priority: "low",
+                    urgent: false
+                },
+                {
+                    id: 6,
+                    title: "Call for Research Participants",
+                    organization: "University of Zimbabwe",
+                    category: "policy",
+                    date: "February 15, 2023",
+                    deadline: "March 31, 2023",
+                    description: "Study on the impact of NGO interventions in rural communities.",
+                    priority: "low",
+                    urgent: false
+                }
+            ]
+        };
+
+        // DOM Elements
+        const themeToggle = document.getElementById('themeToggle');
+        const mobileToggle = document.getElementById('mobileToggle');
+        const navMenu = document.getElementById('navMenu');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const pageSections = document.querySelectorAll('.page-section');
+        const backToTop = document.getElementById('backToTop');
+        const subscribeBtn = document.getElementById('subscribeBtn');
+        const contactForm = document.getElementById('contactForm');
+        const faqQuestions = document.querySelectorAll('.faq-question');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const searchInputs = document.querySelectorAll('.search-input');
+
+        // Current page state
+        let currentPage = 'home';
+        let currentFilter = 'all';
+        let currentSearch = '';
+
+        // Initialize the application
+        function initApp() {
+            // Set initial theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+            
+            // Load initial content
+            renderFeaturedContent();
+            renderStories();
+            renderVacancies();
+            renderNotices();
+            
+            // Initialize counters
+            animateCounters();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Show home page
+            showPage('home');
+            
+            // Check if we're on mobile
+            checkMobileView();
+        }
+
+        // Check if mobile view and adjust accordingly
+        function checkMobileView() {
+            if (window.innerWidth <= 768) {
+                // Mobile specific adjustments
+                document.body.classList.add('mobile-view');
+                // Ensure menu is closed initially on mobile
+                closeMobileMenu();
+            } else {
+                document.body.classList.remove('mobile-view');
+            }
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Theme toggle
+            themeToggle.addEventListener('click', toggleTheme);
+            
+            // Mobile menu toggle
+            mobileToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleMobileMenu();
+            });
+            
+            // Navigation links
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = link.getAttribute('data-page');
+                    showPage(page);
+                    
+                    // Close mobile menu if open
+                    closeMobileMenu();
+                });
+            });
+            
+            // Back to top button
+            backToTop.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            
+            // Scroll event for back to top button
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    backToTop.classList.add('visible');
+                } else {
+                    backToTop.classList.remove('visible');
+                }
+            });
+            
+            // Subscribe button - UPDATED FOR NAME FIELD
+            subscribeBtn.addEventListener('click', handleSubscribe);
+            
+            // Contact form submission
+            if (contactForm) {
+                contactForm.addEventListener('submit', handleContactSubmit);
+            }
+            
+            // FAQ toggle
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', () => {
+                    const answer = question.nextElementSibling;
+                    answer.classList.toggle('open');
+                    const icon = question.querySelector('i');
+                    icon.classList.toggle('fa-chevron-down');
+                    icon.classList.toggle('fa-chevron-up');
+                });
+            });
+            
+            // Filter buttons
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const filter = btn.getAttribute('data-filter');
+                    currentFilter = filter;
+                    
+                    // Update active state
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Re-render content based on current page
+                    if (currentPage === 'stories') {
+                        renderStories();
+                    } else if (currentPage === 'vacancies') {
+                        renderVacancies();
+                    } else if (currentPage === 'notices') {
+                        renderNotices();
+                    }
+                });
+            });
+            
+            // Search inputs
+            searchInputs.forEach(input => {
+                input.addEventListener('input', (e) => {
+                    currentSearch = e.target.value.toLowerCase();
+                    
+                    // Re-render content based on current page
+                    if (currentPage === 'stories') {
+                        renderStories();
+                    } else if (currentPage === 'vacancies') {
+                        renderVacancies();
+                    } else if (currentPage === 'notices') {
+                        renderNotices();
+                    }
+                });
+            });
+            
+            // Privacy link
+            document.getElementById('privacyLink')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Privacy Policy',
+                    html: '<p>We respect your privacy and are committed to protecting your personal data. We only collect information necessary to provide our services and never share your data with third parties without your consent.</p><p>For full details, please contact us at privacy@ngonewsdigest.co.zw</p>',
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#c62828'
+                });
+            });
+            
+            // Apply button
+            document.getElementById('applyBtn')?.addEventListener('click', () => {
+                Swal.fire({
+                    title: 'Apply for Job',
+                    html: '<p>To apply for this position, please send your CV and cover letter to the email provided in the "How to Apply" section.</p><p>Good luck with your application!</p>',
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#c62828'
+                });
+            });
+            
+            // Share buttons
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.share-btn')) {
+                    e.preventDefault();
+                    const shareBtn = e.target.closest('.share-btn');
+                    const platform = shareBtn.getAttribute('data-share');
+                    const pageTitle = document.title;
+                    const pageUrl = window.location.href;
+                    
+                    let shareUrl = '';
+                    switch(platform) {
+                        case 'facebook':
+                            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
+                            break;
+                        case 'twitter':
+                            shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(pageTitle)}`;
+                            break;
+                        case 'linkedin':
+                            shareUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(pageUrl)}&title=${encodeURIComponent(pageTitle)}`;
+                            break;
+                        case 'email':
+                            shareUrl = `mailto:?subject=${encodeURIComponent(pageTitle)}&body=${encodeURIComponent(`Check out this article: ${pageUrl}`)}`;
+                            break;
+                    }
+                    
+                    if (platform === 'email') {
+                        window.location.href = shareUrl;
+                    } else {
+                        window.open(shareUrl, '_blank', 'width=600,height=400');
+                    }
+                }
+            });
+            
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768 && 
+                    !navMenu.contains(e.target) && 
+                    !mobileToggle.contains(e.target) &&
+                    navMenu.classList.contains('mobile-open')) {
+                    closeMobileMenu();
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', handleResize);
+        }
+
+        // Handle window resize
+        function handleResize() {
+            checkMobileView();
+            
+            // If resizing to desktop and menu is open, close it
+            if (window.innerWidth > 768 && navMenu.classList.contains('mobile-open')) {
+                closeMobileMenu();
+            }
+        }
+
+        // Mobile menu functions
+        function toggleMobileMenu() {
+            const isOpen = navMenu.classList.contains('mobile-open');
+            
+            if (isOpen) {
+                closeMobileMenu();
+            } else {
+                openMobileMenu();
+            }
+        }
+        
+        function openMobileMenu() {
+            navMenu.classList.add('mobile-open');
+            mobileToggle.innerHTML = '<i class="fas fa-times"></i>';
+            mobileToggle.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMobileMenu() {
+            navMenu.classList.remove('mobile-open');
+            mobileToggle.innerHTML = '<i class="fas fa-bars"></i>';
+            mobileToggle.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+        }
+
+        // Theme functionality
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            if (theme === 'light') {
+                icon.className = 'fas fa-moon';
+                icon.setAttribute('title', 'Switch to dark mode');
+            } else {
+                icon.className = 'fas fa-sun';
+                icon.setAttribute('title', 'Switch to light mode');
+            }
+        }
+
+        // Page navigation
+        function showPage(pageId) {
+            // Update current page
+            currentPage = pageId;
+            
+            // Hide all pages
+            pageSections.forEach(section => {
+                section.classList.add('hidden');
+                section.classList.remove('active');
+            });
+            
+            // Show selected page
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+                targetPage.classList.add('active');
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+            }
+            
+            // Update active nav link
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-page') === pageId) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Update page title
+            const pageTitles = {
+                'home': 'Home - NGO News Digest',
+                'stories': 'Stories - NGO News Digest',
+                'vacancies': 'Vacancies - NGO News Digest',
+                'notices': 'Notices - NGO News Digest',
+                'about': 'About - NGO News Digest',
+                'contact': 'Contact - NGO News Digest',
+                'editors': 'Our Team - NGO News Digest'
+            };
+            
+            document.title = pageTitles[pageId] || 'NGO News Digest';
+            
+            // Re-render content if needed
+            if (pageId === 'stories') {
+                renderStories();
+            } else if (pageId === 'vacancies') {
+                renderVacancies();
+            } else if (pageId === 'notices') {
+                renderNotices();
+            }
+        }
+
+        // Show details page
+        function showDetailsPage(type, id) {
+            let pageId = '';
+            let data = null;
+            
+            if (type === 'story') {
+                pageId = 'story-details';
+                data = appData.stories.find(story => story.id === id);
+                
+                if (data) {
+                    document.getElementById('storyTitle').textContent = data.title;
+                    document.getElementById('storyCategory').textContent = data.category.charAt(0).toUpperCase() + data.category.slice(1);
+                    document.getElementById('storyAuthor').textContent = data.author;
+                    document.getElementById('storyDate').textContent = data.date;
+                    document.getElementById('storyReadTime').textContent = data.readTime;
+                    
+                    // Set story content
+                    document.getElementById('storyContent').innerHTML = `
+                        <img src="${data.image}" alt="${data.title}" style="width: 100%; height: 300px; object-fit: cover; border-radius: var(--border-radius); margin-bottom: 1.5rem;">
+                        <p>This is a detailed exploration of "${data.title}". The full article would contain comprehensive analysis, interviews with key stakeholders, and data visualizations to support the narrative.</p>
+                        <p>In this article, we dive deep into the subject matter, providing context, historical background, and projections for the future. We examine multiple perspectives and present findings from recent research and field observations.</p>
+                        <h3>Key Findings</h3>
+                        <p>The article highlights several important findings that are relevant to Zimbabwe's civil society sector:</p>
+                        <ul>
+                            <li>Impact measurement approaches that have shown success</li>
+                            <li>Collaboration models between NGOs and government agencies</li>
+                            <li>Resource mobilization strategies in challenging economic environments</li>
+                            <li>Community engagement techniques that build sustainable partnerships</li>
+                        </ul>
+                        <h3>Conclusion</h3>
+                        <p>This story illustrates the resilience and innovation of Zimbabwe's civil society sector. Despite challenges, organizations continue to develop impactful interventions that address critical needs across the country.</p>
+                    `;
+                    
+                    // Set author info
+                    document.getElementById('authorName').textContent = data.author;
+                    document.getElementById('authorBio').textContent = `${data.author} has been covering civil society stories in Zimbabwe for over 8 years, with a focus on sustainable development and community empowerment.`;
+                    
+                    // Set related stories
+                    const relatedStories = appData.stories.filter(story => story.id !== id).slice(0, 3);
+                    const relatedStoriesHTML = relatedStories.map(story => `
+                        <div class="mb-2">
+                            <a href="#" class="story-card-title" style="font-size: 1rem;" onclick="showDetailsPage('story', ${story.id}); return false;">${story.title}</a>
+                            <div style="font-size: 0.8rem; color: var(--text-light);">${story.date}</div>
+                        </div>
+                    `).join('');
+                    document.getElementById('relatedStories').innerHTML = relatedStoriesHTML;
+                }
+            } else if (type === 'vacancy') {
+                pageId = 'vacancy-details';
+                data = appData.vacancies.find(vacancy => vacancy.id === id);
+                
+                if (data) {
+                    document.getElementById('vacancyTitle').textContent = data.title;
+                    document.getElementById('vacancyType').textContent = data.type.charAt(0).toUpperCase() + data.type.slice(1);
+                    document.getElementById('vacancyOrg').textContent = data.organization;
+                    document.getElementById('vacancyLocation').textContent = data.location;
+                    document.getElementById('vacancyDeadline').textContent = data.deadline;
+                    document.getElementById('applyEmail').textContent = `hr@${data.organization.toLowerCase().replace(/\s+/g, '')}.org`;
+                    
+                    // Set vacancy content
+                    document.getElementById('vacancyContent').innerHTML = `
+                        <h2>Job Description</h2>
+                        <p>${data.organization} is seeking a qualified ${data.title} to join our team. This position offers an exciting opportunity to contribute to meaningful work in Zimbabwe's civil society sector.</p>
+                        
+                        <h3>Responsibilities</h3>
+                        <ul>
+                            <li>Develop and implement program strategies in alignment with organizational goals</li>
+                            <li>Manage project budgets and ensure efficient resource utilization</li>
+                            <li>Build and maintain partnerships with stakeholders and community organizations</li>
+                            <li>Monitor and evaluate program impact, preparing comprehensive reports</li>
+                            <li>Supervise program staff and provide mentorship and guidance</li>
+                            <li>Represent the organization at meetings, workshops, and conferences</li>
+                        </ul>
+                        
+                        <h3>Requirements</h3>
+                        <ul>
+                            <li>Bachelor's degree in a relevant field (Master's preferred)</li>
+                            <li>Minimum of 5 years experience in NGO program management</li>
+                            <li>Strong understanding of the Zimbabwean civil society context</li>
+                            <li>Excellent communication and leadership skills</li>
+                            <li>Proven ability to manage budgets and resources effectively</li>
+                            <li>Fluency in English and at least one local language</li>
+                        </ul>
+                        
+                        <h3>What We Offer</h3>
+                        <ul>
+                            <li>Competitive salary commensurate with experience</li>
+                            <li>Comprehensive health insurance package</li>
+                            <li>Professional development opportunities</li>
+                            <li>Supportive and collaborative work environment</li>
+                            <li>Opportunity to make a tangible impact in communities across Zimbabwe</li>
+                        </ul>
+                    `;
+                    
+                    // Set organization description
+                    document.getElementById('orgDescription').textContent = `${data.organization} is a leading organization in Zimbabwe's civil society sector, focused on creating positive change through innovative programs and partnerships.`;
+                    
+                    // Set similar jobs
+                    const similarJobs = appData.vacancies.filter(vacancy => vacancy.id !== id && vacancy.type === data.type).slice(0, 3);
+                    const similarJobsHTML = similarJobs.map(job => `
+                        <div class="mb-2">
+                            <a href="#" class="story-card-title" style="font-size: 1rem;" onclick="showDetailsPage('vacancy', ${job.id}); return false;">${job.title}</a>
+                            <div style="font-size: 0.8rem; color: var(--text-light);">${job.organization} • ${job.location}</div>
+                        </div>
+                    `).join('');
+                    document.getElementById('similarJobs').innerHTML = similarJobsHTML || '<p>No similar jobs found.</p>';
+                }
+            } else if (type === 'notice') {
+                pageId = 'notice-details';
+                data = appData.notices.find(notice => notice.id === id);
+                
+                if (data) {
+                    document.getElementById('noticeTitle').textContent = data.title;
+                    document.getElementById('noticeCategory').textContent = data.category.charAt(0).toUpperCase() + data.category.slice(1);
+                    document.getElementById('noticeOrg').textContent = data.organization;
+                    document.getElementById('noticeDate').textContent = data.date;
+                    document.getElementById('noticeDeadline').textContent = data.deadline;
+                    document.getElementById('contactEmail').textContent = `info@${data.organization.toLowerCase().replace(/\s+/g, '')}.org`;
+                    document.getElementById('contactPhone').textContent = '+263 242 123456';
+                    document.getElementById('contactWebsite').textContent = `www.${data.organization.toLowerCase().replace(/\s+/g, '')}.org`;
+                    
+                    // Set notice content
+                    document.getElementById('noticeContent').innerHTML = `
+                        <h2>Overview</h2>
+                        <p>${data.organization} is pleased to announce this ${data.category.toLowerCase()} opportunity for qualified organizations and individuals working in Zimbabwe's civil society sector.</p>
+                        
+                        <h3>Details</h3>
+                        <p>This ${data.category.toLowerCase()} focuses on supporting initiatives that align with sustainable development goals and address critical needs in Zimbabwean communities. The opportunity is open to registered NGOs, community-based organizations, and qualified individuals with proven experience in the sector.</p>
+                        
+                        <h3>Eligibility Criteria</h3>
+                        <ul>
+                            <li>Registered organization operating in Zimbabwe for at least 2 years</li>
+                            <li>Demonstrated experience in relevant sector areas</li>
+                            <li>Sound financial management systems and audit reports</li>
+                            <li>Proven track record of successful project implementation</li>
+                            <li>Commitment to transparency and accountability</li>
+                        </ul>
+                        
+                        <h3>Application Process</h3>
+                        <ol>
+                            <li>Review the full guidelines and eligibility criteria</li>
+                            <li>Prepare required documents (proposal, budget, organizational profile)</li>
+                            <li>Submit complete application by the deadline: <strong>${data.deadline}</strong></li>
+                            <li>Shortlisted applicants will be contacted for further assessment</li>
+                            <li>Final decisions will be communicated within 30 days of the deadline</li>
+                        </ol>
+                        
+                        <h3>Timeline</h3>
+                        <ul>
+                            <li><strong>Announcement:</strong> ${data.date}</li>
+                            <li><strong>Application Deadline:</strong> ${data.deadline}</li>
+                            <li><strong>Review Period:</strong> 4-6 weeks after deadline</li>
+                            <li><strong>Award Notification:</strong> Within 8 weeks of deadline</li>
+                            <li><strong>Project Start:</strong> Within 30 days of award notification</li>
+                        </ul>
+                    `;
+                    
+                    // Set attachments
+                    document.getElementById('noticeAttachments').innerHTML = `
+                        <div class="card mb-1" style="padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <i class="fas fa-file-pdf mr-2" style="color: #e53935;"></i>
+                                <span>Full Guidelines Document</span>
+                            </div>
+                            <a href="#" style="color: var(--primary);">Download</a>
+                        </div>
+                        <div class="card mb-1" style="padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <i class="fas fa-file-word mr-2" style="color: #2b579a;"></i>
+                                <span>Application Template</span>
+                            </div>
+                            <a href="#" style="color: var(--primary);">Download</a>
+                        </div>
+                        <div class="card" style="padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <i class="fas fa-file-excel mr-2" style="color: #217346;"></i>
+                                <span>Budget Template</span>
+                            </div>
+                            <a href="#" style="color: var(--primary);">Download</a>
+                        </div>
+                    `;
+                    
+                    // Set related notices
+                    const relatedNotices = appData.notices.filter(notice => notice.id !== id && notice.category === data.category).slice(0, 3);
+                    const relatedNoticesHTML = relatedNotices.map(notice => `
+                        <div class="mb-2">
+                            <a href="#" class="story-card-title" style="font-size: 1rem;" onclick="showDetailsPage('notice', ${notice.id}); return false;">${notice.title}</a>
+                            <div style="font-size: 0.8rem; color: var(--text-light);">${notice.organization} • ${notice.date}</div>
+                        </div>
+                    `).join('');
+                    document.getElementById('relatedNotices').innerHTML = relatedNoticesHTML || '<p>No related notices found.</p>';
+                }
+            }
+            
+            // Show the details page
+            showPage(pageId);
+        }
+
+        // Render featured content on home page
+        function renderFeaturedContent() {
+            // Featured stories
+            const featuredStories = appData.stories.filter(story => story.featured).slice(0, 3);
+            const storiesHTML = featuredStories.map(story => `
+                <div class="card story-card">
+                    <img src="${story.image}" alt="${story.title}" class="story-card-img">
+                    <div class="story-card-content">
+                        <div class="badge badge-red">${story.category.charAt(0).toUpperCase() + story.category.slice(1)}</div>
+                        <h3 class="story-card-title">
+                            <a href="#" onclick="showDetailsPage('story', ${story.id}); return false;">${story.title}</a>
+                        </h3>
+                        <p class="story-card-excerpt">${story.excerpt}</p>
+                        <div class="story-card-meta">
+                            <div class="story-card-author">
+                                <i class="fas fa-user-circle"></i>
+                                <span>${story.author}</span>
+                            </div>
+                            <div>${story.date}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('featuredStories').innerHTML = storiesHTML;
+            
+            // Featured vacancies
+            const featuredVacancies = appData.vacancies.filter(vacancy => vacancy.featured).slice(0, 3);
+            const vacanciesHTML = featuredVacancies.map(vacancy => `
+                <div class="card vacancy-card">
+                    <div class="vacancy-card-header">
+                        <div>
+                            <h3 class="vacancy-title">
+                                <a href="#" onclick="showDetailsPage('vacancy', ${vacancy.id}); return false;">${vacancy.title}</a>
+                            </h3>
+                            <div class="vacancy-org">${vacancy.organization}</div>
+                        </div>
+                        ${vacancy.urgent ? '<span class="vacancy-featured">Urgent</span>' : ''}
+                    </div>
+                    
+                    <div class="vacancy-details">
+                        <div class="vacancy-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>${vacancy.location}</span>
+                        </div>
+                        <div class="vacancy-detail">
+                            <i class="fas fa-briefcase"></i>
+                            <span>${vacancy.type.charAt(0).toUpperCase() + vacancy.type.slice(1)}</span>
+                        </div>
+                    </div>
+                    
+                    <p>${vacancy.description}</p>
+                    
+                    <div class="vacancy-deadline">
+                        <i class="far fa-calendar-alt"></i>
+                        Deadline: ${vacancy.deadline}
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('featuredVacancies').innerHTML = vacanciesHTML;
+            
+            // Featured notices
+            const featuredNotices = appData.notices.filter(notice => notice.urgent).slice(0, 3);
+            const noticesHTML = featuredNotices.map(notice => `
+                <div class="card notice-card">
+                    <div class="notice-card-header">
+                        <div class="notice-category badge ${notice.category === 'funding' ? 'badge-green' : notice.category === 'events' ? 'badge-blue' : 'badge-orange'}">
+                            ${notice.category.charAt(0).toUpperCase() + notice.category.slice(1)}
+                        </div>
+                        <div class="notice-date">${notice.date}</div>
+                    </div>
+                    
+                    <h3 class="notice-title">
+                        <a href="#" onclick="showDetailsPage('notice', ${notice.id}); return false;">${notice.title}</a>
+                    </h3>
+                    
+                    <p class="notice-description">${notice.description}</p>
+                    
+                    <div class="notice-attachment">
+                        <i class="fas fa-paperclip"></i>
+                        <span>More details available</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('featuredNotices').innerHTML = noticesHTML;
+        }
+
+        // Render stories with filtering and search
+        function renderStories() {
+            let filteredStories = [...appData.stories];
+            
+            // Apply filter
+            if (currentFilter !== 'all') {
+                filteredStories = filteredStories.filter(story => story.category === currentFilter);
+            }
+            
+            // Apply search
+            if (currentSearch) {
+                filteredStories = filteredStories.filter(story => 
+                    story.title.toLowerCase().includes(currentSearch) || 
+                    story.excerpt.toLowerCase().includes(currentSearch) ||
+                    story.author.toLowerCase().includes(currentSearch)
+                );
+            }
+            
+            // Render stories
+            const storiesHTML = filteredStories.map(story => `
+                <div class="card story-card">
+                    <img src="${story.image}" alt="${story.title}" class="story-card-img">
+                    <div class="story-card-content">
+                        <div class="badge badge-red">${story.category.charAt(0).toUpperCase() + story.category.slice(1)}</div>
+                        <h3 class="story-card-title">
+                            <a href="#" onclick="showDetailsPage('story', ${story.id}); return false;">${story.title}</a>
+                        </h3>
+                        <p class="story-card-excerpt">${story.excerpt}</p>
+                        <div class="story-card-meta">
+                            <div class="story-card-author">
+                                <i class="fas fa-user-circle"></i>
+                                <span>${story.author}</span>
+                            </div>
+                            <div>${story.date}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('storiesList').innerHTML = storiesHTML || '<div class="empty-state"><i class="fas fa-newspaper empty-state-icon"></i><h3>No stories found</h3><p>Try adjusting your filters or search term</p></div>';
+            
+            // Render pagination
+            renderPagination('storiesPagination', filteredStories.length, 6);
+        }
+
+        // Render vacancies with filtering and search
+        function renderVacancies() {
+            let filteredVacancies = [...appData.vacancies];
+            
+            // Apply filter
+            if (currentFilter !== 'all') {
+                filteredVacancies = filteredVacancies.filter(vacancy => vacancy.type === currentFilter);
+            }
+            
+            // Apply search
+            if (currentSearch) {
+                filteredVacancies = filteredVacancies.filter(vacancy => 
+                    vacancy.title.toLowerCase().includes(currentSearch) || 
+                    vacancy.organization.toLowerCase().includes(currentSearch) ||
+                    vacancy.location.toLowerCase().includes(currentSearch) ||
+                    vacancy.description.toLowerCase().includes(currentSearch)
+                );
+            }
+            
+            // Render vacancies
+            const vacanciesHTML = filteredVacancies.map(vacancy => `
+                <div class="card vacancy-card">
+                    <div class="vacancy-card-header">
+                        <div>
+                            <h3 class="vacancy-title">
+                                <a href="#" onclick="showDetailsPage('vacancy', ${vacancy.id}); return false;">${vacancy.title}</a>
+                            </h3>
+                            <div class="vacancy-org">${vacancy.organization}</div>
+                        </div>
+                        ${vacancy.urgent ? '<span class="badge badge-red">Urgent</span>' : ''}
+                        ${vacancy.featured ? '<span class="badge badge-blue">Featured</span>' : ''}
+                    </div>
+                    
+                    <div class="vacancy-details">
+                        <div class="vacancy-detail">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>${vacancy.location}</span>
+                        </div>
+                        <div class="vacancy-detail">
+                            <i class="fas fa-briefcase"></i>
+                            <span>${vacancy.type.charAt(0).toUpperCase() + vacancy.type.slice(1)}</span>
+                        </div>
+                    </div>
+                    
+                    <p>${vacancy.description}</p>
+                    
+                    <div class="vacancy-deadline">
+                        <i class="far fa-calendar-alt"></i>
+                        Deadline: ${vacancy.deadline}
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('vacanciesList').innerHTML = vacanciesHTML || '<div class="empty-state"><i class="fas fa-briefcase empty-state-icon"></i><h3>No vacancies found</h3><p>Try adjusting your filters or search term</p></div>';
+            
+            // Render pagination
+            renderPagination('vacanciesPagination', filteredVacancies.length, 6);
+        }
+
+        // Render notices with filtering and search
+        function renderNotices() {
+            let filteredNotices = [...appData.notices];
+            
+            // Apply filter
+            if (currentFilter !== 'all') {
+                filteredNotices = filteredNotices.filter(notice => {
+                    if (currentFilter === 'urgent') return notice.urgent;
+                    return notice.category === currentFilter;
+                });
+            }
+            
+            // Apply search
+            if (currentSearch) {
+                filteredNotices = filteredNotices.filter(notice => 
+                    notice.title.toLowerCase().includes(currentSearch) || 
+                    notice.organization.toLowerCase().includes(currentSearch) ||
+                    notice.description.toLowerCase().includes(currentSearch)
+                );
+            }
+            
+            // Render notices
+            const noticesHTML = filteredNotices.map(notice => `
+                <div class="card notice-card">
+                    <div class="notice-card-header">
+                        <div class="notice-category badge ${notice.category === 'funding' ? 'badge-green' : notice.category === 'events' ? 'badge-blue' : 'badge-orange'}">
+                            ${notice.category.charAt(0).toUpperCase() + notice.category.slice(1)}
+                        </div>
+                        <div class="notice-date">${notice.date}</div>
+                    </div>
+                    
+                    <h3 class="notice-title">
+                        <a href="#" onclick="showDetailsPage('notice', ${notice.id}); return false;">${notice.title}</a>
+                    </h3>
+                    
+                    <p class="notice-description">${notice.description}</p>
+                    
+                    <div class="notice-attachment">
+                        <i class="fas fa-paperclip"></i>
+                        <span>More details available</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('noticesList').innerHTML = noticesHTML || '<div class="empty-state"><i class="fas fa-bullhorn empty-state-icon"></i><h3>No notices found</h3><p>Try adjusting your filters or search term</p></div>';
+            
+            // Render pagination
+            renderPagination('noticesPagination', filteredNotices.length, 6);
+        }
+
+        // Render pagination
+        function renderPagination(containerId, totalItems, itemsPerPage) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            
+            if (totalPages <= 1) {
+                document.getElementById(containerId).innerHTML = '';
+                return;
+            }
+            
+            let paginationHTML = `
+                <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+            `;
+            
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHTML += `
+                    <button class="page-btn ${i === 1 ? 'active' : ''}">${i}</button>
+                `;
+            }
+            
+            paginationHTML += `
+                <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+            `;
+            
+            document.getElementById(containerId).innerHTML = paginationHTML;
+        }
+
+        // Animate counters
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-number');
+            const speed = 200; // Lower is faster
+            
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-count');
+                const count = +counter.innerText;
+                const increment = target / speed;
+                
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + increment);
+                    setTimeout(() => animateCounters(), 1);
+                } else {
+                    counter.innerText = target.toLocaleString();
+                }
+            });
+        }
+
+        // Handle subscription - UPDATED FOR NAME FIELD
+        function handleSubscribe() {
+            const name = document.getElementById('subscribeName').value;
+            const email = document.getElementById('subscribeEmail').value;
+            
+            if (!name || !email || !email.includes('@')) {
+                Swal.fire({
+                    title: 'Missing Information',
+                    text: 'Please enter both your name and a valid email address.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#c62828'
+                });
+                return;
+            }
+            
+            // Simulate API call
+            setTimeout(() => {
+                Swal.fire({
+                    title: 'Subscribed Successfully!',
+                    html: `Thank you <strong>${name}</strong>! You will now receive weekly updates from NGO News Digest.`,
+                    icon: 'success',
+                    confirmButtonText: 'Great!',
+                    confirmButtonColor: '#c62828'
+                });
+                
+                document.getElementById('subscribeName').value = '';
+                document.getElementById('subscribeEmail').value = '';
+            }, 500);
+        }
+
+        // Handle contact form submission
+        function handleContactSubmit(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('contactName').value;
+            const email = document.getElementById('contactEmailInput').value;
+            const subject = document.getElementById('contactSubject').value;
+            const message = document.getElementById('contactMessage').value;
+            
+            if (!name || !email || !subject || !message) {
+                Swal.fire({
+                    title: 'Missing Information',
+                    text: 'Please fill in all required fields.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#c62828'
+                });
+                return;
+            }
+            
+            // Simulate API call
+            setTimeout(() => {
+                Swal.fire({
+                    title: 'Message Sent!',
+                    text: 'Thank you for contacting us. We will respond within 2 business days.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#c62828'
+                });
+                
+                // Reset form
+                contactForm.reset();
+            }, 500);
+        }
+
+        // Make showDetailsPage available globally
+        window.showDetailsPage = showDetailsPage;
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

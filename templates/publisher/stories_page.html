@@ -1,216 +1,147 @@
 {% extends 'partials/base.html' %}
+{% load static %}
 
-{% block title %}NGO News Digest - Home{% endblock %}
+{% block title %}NGO News Digest - Stories{% endblock %}
+
 {% block content %}
     {% include 'partials/header.html' %}
-    <section id="stories" class="section stories-section">
-        <div class="container">
-            <h2 class="section-title">NGO Success Stories</h2>
-            
-            <div class="stories-filters">
-                <button class="filter-btn active" data-filter="all">All Stories</button>
-                <button class="filter-btn" data-filter="health">Health & WASH</button>
-                <button class="filter-btn" data-filter="agriculture">Agriculture</button>
-                <button class="filter-btn" data-filter="education">Education</button>
-                <button class="filter-btn" data-filter="livelihoods">Livelihoods</button>
-            </div>
-            
-            <div class="stories-grid" id="stories-grid">
-                <div class="story-card" data-category="health">
-                    <img src="https://images.unsplash.com/photo-1576765974257-b414b9ea0051?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Maternal Health" class="story-image">
-                    <div class="story-content">
-                        <div class="story-meta">
-                            <span class="story-category">Health & WASH</span>
-                            <span>May 10, 2023</span>
-                        </div>
-                        <h3 class="story-title">Maternal Health Program Reduces Mortality by 40%</h3>
-                        <p class="story-excerpt">Partnership between Ministry of Health and NGO consortium trains midwives and equips clinics in 5 provinces.</p>
-                        <div class="story-footer">
-                            <span class="story-author">By Dr. Lisa Mangwana</span>
-                            <div class="share-buttons">
-                                <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
-                                <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
-                                <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
-                            </div>
+    <main id="pageContent">
+        <section id="stories" class="page-section">
+            <div class="container section py-2">
+                <h1>Stories & Articles</h1>
+                <p class="mb-2">Explore the latest stories from Zimbabwe's civil society sector.</p>
+                
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <span class="filter-label">Filter by:</span>
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        {% for category in categories %}
+                            <button class="filter-btn" data-filter="{{ category.name }}">{{ category.name }}</button>
+                        {% endfor %}
+                        
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input" id="storySearch" placeholder="Search stories...">
                         </div>
                     </div>
                 </div>
                 
-                <div class="story-card" data-category="education">
-                    <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="School Children" class="story-image">
-                    <div class="story-content">
-                        <div class="story-meta">
-                            <span class="story-category">Education</span>
-                            <span>May 8, 2023</span>
-                        </div>
-                        <h3 class="story-title">Digital Learning Reaches 10,000 Rural Students</h3>
-                        <p class="story-excerpt">Save the Children's tablet-based learning program bridges the education gap in remote communities.</p>
-                        <div class="story-footer">
-                            <span class="story-author">By Farai Chikwava</span>
-                            <div class="share-buttons">
-                                <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
-                                <button class="share-btn" data-platform="facebook"><i class="fab fa-facebook-f"></i></button>
-                                <button class="share-btn" data-platform="twitter"><i class="fab fa-twitter"></i></button>
-                            </div>
-                        </div>
+                <div class="content-grid" id="storiesList">
+                    <!-- Stories loaded via JS -->
+                </div>
+                <center id="more-stories-btn-container">
+                    <div class="text-center mt-2">
+                        <button id="more-stories-btn" class="btn btn-small" data-page="stories">More Stories</button>
                     </div>
+                </center>
+                
+                <div class="pagination" id="storiesPagination">
+                    <!-- Pagination loaded via JS -->
                 </div>
             </div>
-            
-            <div class="action-buttons">
-                <div href="" class="read-more-btn" id="read-more-stories-btn">
-                    <i class="fas fa-book-open"></i> More Stories
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        </section>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
-        // State variables
-        let currentPage = 1;
-        let pageSize = 6;
-        let storyCategory = "";
-        let sortBy = 'created_at';
-        let sortOrder = 'desc';
-
         $(document).ready(function() {
-            clearStories()
-            getStories()
-        })
+            var page = 1
+            var page_size = 9
+            var category = "All"
 
-        function clearStories(){
-            const storiesGrid = $('#stories-grid');
-            storiesGrid.empty();
-        }
+            clearStoriesGrid()
+            loadStories(page, page_size, category)
 
 
-        function getStories(){
-            let loadingAlert = Swal.fire({
-                title: 'Loading...',
-                text: 'Please wait while we fetch stories',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+            /*-----------------------------------------------------------------------------------------------------------
+            EVENTS >>>>>
+            -------------------------------------------------------------------------------------------------------------*/
+
+            $('#more-stories-btn').on('click', function() {
+                page++
+                loadStories(page, page_size, category)
             });
-            
-            $.ajax({
-                url: '{% url "stories" %}',
-                method: 'GET',
-                dataType: 'json',
-                data: {
-                    page: currentPage,
-                    page_size: pageSize,
-                    category: storyCategory,
-                    sort_by: sortBy,
-                    sort_order: sortOrder
-                },
-                success: function(responseData) {
-                    loadingAlert.close();
-                    renderStories(responseData.stories)
-                },
-                error: function(jqXHR) {
-                    Swal.fire({
-                        title: 'Error',
-                        text: jqXHR.responseJSON?.error || 'Server error. Try again',
-                        icon: 'error'
-                    });
-                },
-            })
-        }
 
-        function renderStories(stories){
-            const storiesGrid = $('#stories-grid');
-
-
-            
-            if (stories.length < pageSize ) {
-                $('#read-more-stories-btn').hide();
-            }
-
-
-            if (stories.length === 0 && currentPage == 1 ) {
-                storiesGrid.html(`
-                    <div class="story-card no-stories-card text-center">
-                        <div class="story-image-placeholder no-stories-image">
-                            <i class="fas fa-inbox fa-3x"></i>
-                        </div>
-                        
-                        <div class="story-content">
-                            <div class="story-meta justify-content-center mb-3">
-                                <span class="story-category no-stories-category">
-                                    <i class="fas fa-exclamation-circle me-1"></i>Empty
-                                </span>
-                            </div>
-                            
-                            <h3 class="story-title no-stories-title mb-3">
-                                No Stories Available
-                            </h3>
-                            
-                            <p class="story-excerpt no-stories-excerpt mb-4">
-                                There are no stories matching your criteria.<br>
-                                Try adjusting your filters or check back later.
-                            </p>
-                            
-                            <div class="story-footer">
-                                <button class="btn btn-outline-primary" onclick="clearFilters()">
-                                    <i class="fas fa-filter me-1"></i>Clear Filters
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `);
-                return;
-            }
-
-            
-            stories.forEach(story => {
-                console.log(story.snippet)
-                storiesGrid.append(`
-                    <div class="story-card" data-category="${story.category}">
-                        ${story.image_url ? `
-                            <img src="${story.image_url}" class="card-img-top"
-                                 alt="${story.title}" style="height: 200px; object-fit: cover;">
-                        ` : ''}
-                        <div class="story-content">
-                            <div class="story-meta">
-                                <span class="story-category">${story.category}</span>
-                                <span>${story.date_and_time}</span>
-                            </div>
-                            <h3 class="story-title">${story.title}</h3>
-                            <a href="story_page/${story.id}" class="story-excerpt">${story.snippet}</a>
-                            <div class="story-footer">
-                                <span class="story-author">By ${story.author}</span>
-                                <div class="share-buttons">
-                                    <button class="share-btn" onclick="window.open('https://www.facebook.com/${story.author_facebook}', '_blank')">
-                                        <i class="fab fa-facebook-f"></i>
-                                    </button>
-                                    <button class="share-btn" onclick="window.open('https://www.twitter.com/${story.author_twitter}', '_blank')">
-                                        <i class="fab fa-twitter"></i>
-                                    </button>
-                                    <button class="share-btn share-native" type="button" title="Share">
-                                        <i class="fas fa-share-alt"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `)
-            })
-        }
-
-
-        /*EVENT LISTNERS -------------------------------------------------------------------------------------------------------------->>*/
-        $('#read-more-stories-btn').on('click', function() {
-            currentPage = currentPage + 1
-            getStories()
-        })
-        /*EVENT LISTNERS --------------------------------------------------------------------------------------------------------------<<*/
-
+            /*-----------------------------------------------------------------------------------------------------------
+            EVENTS <<<<<
+            -------------------------------------------------------------------------------------------------------------*/
         
+
+            function loadStories(page, page_size, category){
+                $.ajax({
+                    url: "{% url 'stories' %}",
+                    data: {
+                        page: page,
+                        page_size: page_size,
+                        category: category,
+                     },
+                    success: function(responseData) {
+                        const storiesGrid = $('#storiesList');
+                        var stories = responseData.stories
+                        
+
+                        if (stories.length < page_size){
+                            $('#more-stories-btn-container').hide()
+                        }
+                        
+                        if (stories.length == 0 && page < 1) {
+                            storiesGrid.html(`
+                                <div class="empty-state">
+                                    <i class="fas fa-newspaper empty-state-icon"></i>
+                                    <h3>No stories found</h3>
+                                    <p>Try adjusting your filters or search term</p>
+                                </div>`)
+                            return;
+                        }
+                        
+                        stories.forEach(story => {
+                            storiesGrid.append(`
+                                <a href="/story_page/${story.id}/" 
+                                   class="card-link" 
+                                   aria-label="Read story: ${story.headline}">
+                                    <div class="card story-card">
+                                        <img src="${story.image_url}" alt="${story.headline}" class="story-card-img">
+                                        <div class="story-card-content">
+                                            <div class="badge badge-red">${story.category}</div>
+                                            <h3 class="story-card-title">${story.headline}</h3>
+                                            <p class="story-card-excerpt">${story.snippet}</p>
+                                            <div class="story-card-meta">
+                                                <div class="story-card-author">
+                                                    <i class="fas fa-user-circle"></i>
+                                                    <span>${story.author}</span>
+                                                </div>
+                                                <div>${story.date_and_time}</div>
+                                            </div>
+                                            <div class="read-more-indicator">
+                                                <i class="fas fa-arrow-right"></i> Read full story
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>`
+                            )
+                        })
+                        
+                    },
+                    error: function(){
+                        Swal.fire({
+                            title: "Error",
+                            text: "An error ocured!",
+                            icon: "error"
+                        });
+                    }
+                })
+
+            }
+
+
+            function clearStoriesGrid(){
+                const storiesGrid = $('#storiesList');
+                storiesGrid.empty();
+            }
+        })
+
+
+
 
     </script>
     {% include 'partials/footer.html' %}
 {% endblock %}
-

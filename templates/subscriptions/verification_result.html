@@ -1,23 +1,136 @@
 {% extends 'partials/base.html' %}
 {% load static %}
 
-{% block title %}NGO News Digest - Home{% endblock %}
+{% block title %}NGO News Digest - Email Verification{% endblock %}
+
 {% block content %}
-    {% csrf_token %}
-    <div id="subscriptionSuccessPage" class="status-page">
-        <div class="status-container">
-            <div class="status-icon">
-                <i class="fas fa-check-circle"></i>
+<div class="container section">
+    <div class="card" style="max-width: 600px; margin: 3rem auto; text-align: center;">
+        {% if success %}
+            <!-- SUCCESS STATE -->
+            <div class="mb-3">
+                <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-check-circle" style="font-size: 3rem; color: white;"></i>
+                </div>
             </div>
-            <h2 class="status-title">Subscription Confirmed!</h2>
-            <p class="status-message">Thank you for subscribing to NGO News Digest. You will now receive our weekly newsletter with the latest stories, vacancies, and notices from Zimbabwe's civil society sector.</p>
-            <p class="status-message">Your first newsletter will arrive within 24 hours.</p>
-            <div class="action-buttons">
-                <a href="{% url 'stories_page' %}" class="read-more-btn">
-                    <i class="fas fa-newspaper"></i> Browse Latest Stories
+            
+            <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: var(--text-dark);">
+                {{ title|default:"Email Verified!" }}
+            </h2>
+            
+            <div class="mb-3">
+                <p style="color: var(--text-light); line-height: 1.6; margin-bottom: 1rem; font-size: 1.05rem;">
+                    {{ message|default:"Your email has been verified successfully!" }}
+                </p>
+                
+                {% if email %}
+                <div class="email-display" style="background-color: var(--bg-gray); padding: 1rem; border-radius: var(--border-radius); margin: 1rem 0;">
+                    <i class="fas fa-envelope mr-2" style="color: var(--primary);"></i>
+                    <span style="font-weight: 600; color: var(--text-dark);">{{ email }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="success-notice" style="background-color: rgba(76, 175, 80, 0.1); padding: 1rem; border-radius: var(--border-radius); margin: 1.5rem 0;">
+                    <i class="fas fa-bell" style="color: #4CAF50; margin-right: 0.5rem;"></i>
+                    <span style="color: var(--text-dark); font-weight: 500;">
+                        First newsletter arriving within 24 hours
+                    </span>
+                </div>
+            </div>
+        {% else %}
+            <!-- ERROR STATE -->
+            <div class="mb-3">
+                <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #c62828 0%, #8e0000 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                    <i class="fas fa-times-circle" style="font-size: 3rem; color: white;"></i>
+                </div>
+            </div>
+            
+            <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: var(--text-dark);">
+                {{ title|default:"Verification Failed" }}
+            </h2>
+            
+            <div class="mb-3">
+                <p style="color: var(--text-light); line-height: 1.6; margin-bottom: 1.5rem; font-size: 1.05rem;">
+                    {{ message|default:"There was an issue verifying your email." }}
+                </p>
+                
+                <div class="error-notice" style="background-color: rgba(198, 40, 40, 0.1); padding: 1rem; border-radius: var(--border-radius); border-left: 4px solid var(--primary);">
+                    <i class="fas fa-exclamation-triangle mr-2" style="color: var(--primary);"></i>
+                    <span style="color: var(--text-dark);">
+                        Please try subscribing again or contact support if the problem persists.
+                    </span>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Action Buttons -->
+        <div class="mt-3">
+            {% if success %}
+                <a href="{% url 'stories_page' %}" data-page="stories" class="btn" style="width: 100%;">
+                    <i class="fas fa-newspaper mr-2"></i> Explore Stories Now
                 </a>
+            {% else %}
+                <a href="{% url 'home' %}" class="btn" style="width: 100%;">
+                    <i class="fas fa-redo mr-2"></i> Try Subscribing Again
+                </a>
+            {% endif %}
+        </div>
+        
+        <!-- Secondary Links -->
+        <div class="mt-3" style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+            <a href="{% url 'home' %}" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-home mr-1"></i> Home
+            </a>
+            <a href="{% url 'about_page' %}" data-page="about" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-info-circle mr-1"></i> About Us
+            </a>
+            <a href="{% url 'contact_page' %}" data-page="contact" style="color: var(--primary); text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-envelope mr-1"></i> Contact
+            </a>
+        </div>
+        
+        <!-- Debug info (remove in production) -->
+        {% if not success and debug %}
+        <div class="mt-3" style="margin-top: 2rem; padding: 1rem; background-color: var(--bg-gray); border-radius: var(--border-radius); font-size: 0.85rem; text-align: left;">
+            <strong>Debug Info:</strong>
+            <div style="margin-top: 0.5rem;">
+                <div>Token used: {{ token|default:"N/A" }}</div>
+                <div>Error: {{ message }}</div>
             </div>
         </div>
+        {% endif %}
     </div>
-{% endblock %}
+</div>
 
+<style>
+    @media (max-width: 768px) {
+        .container.section {
+            padding: 1.5rem 0;
+        }
+        
+        .card {
+            margin: 1rem auto !important;
+            padding: 1.5rem !important;
+        }
+        
+        h2 {
+            font-size: 1.5rem !important;
+        }
+        
+        .mt-3 {
+            margin-top: 1rem !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .card {
+            padding: 1.25rem !important;
+        }
+        
+        .mt-3[style*="display: flex"] {
+            flex-wrap: wrap;
+            gap: 1rem !important;
+        }
+    }
+</style>
+{% endblock %}

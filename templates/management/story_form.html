@@ -1,0 +1,344 @@
+{% extends 'management/management_base.html' %}
+{% comment %} templates/management/story_form.html {% endcomment %}
+{% load static %}
+
+{% block title %}{% if story %}Edit Story{% else %}Create Story{% endif %}{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    
+    <main class="main-content" id="mainContent">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title mb-0">
+                                {% if story %}
+                                    <i class="fas fa-edit"></i> Edit Story: {{ story.headline }}
+                                {% else %}
+                                    <i class="fas fa-plus"></i> Create New Story
+                                {% endif %}
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" enctype="multipart/form-data" id="storyForm">
+                                {% csrf_token %}
+                                
+                                {{ form.media }}  {# Required for CKEditor #}
+                                
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <!-- Basic Information -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">Basic Information</h5>
+                                            <div class="row">
+                                                <div class="col-12 mb-3">
+                                                    <label for="{{ form.headline.id_for_label }}" class="form-label">
+                                                        Headline *
+                                                    </label>
+                                                    {{ form.headline }}
+                                                    {% if form.headline.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.headline.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="col-12 mb-3">
+                                                    <label for="{{ form.snippet.id_for_label }}" class="form-label">
+                                                        Snippet *
+                                                    </label>
+                                                    {{ form.snippet }}
+                                                    {% if form.snippet.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.snippet.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <small class="form-text text-muted">
+                                                        Brief summary (max 500 characters)
+                                                    </small>
+                                                </div>
+                                                
+                                                <div class="col-12 mb-3">
+                                                    <label for="{{ form.content.id_for_label }}" class="form-label">
+                                                        Content *
+                                                    </label>
+                                                    {{ form.content }}
+                                                    {% if form.content.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.content.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Category & Thumbnail -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">Category & Thumbnail</h5>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="{{ form.category.id_for_label }}" class="form-label">
+                                                        Category
+                                                    </label>
+                                                    {{ form.category }}
+                                                    {% if form.category.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.category.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="{{ form.read_time.id_for_label }}" class="form-label">
+                                                        Read Time *
+                                                    </label>
+                                                    {{ form.read_time }}
+                                                    {% if form.read_time.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.read_time.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <small class="form-text text-muted">
+                                                        e.g., "5 min read"
+                                                    </small>
+                                                </div>
+                                                
+                                                <div class="col-12 mb-3">
+                                                    <label for="{{ form.thumbnail.id_for_label }}" class="form-label">
+                                                        Thumbnail Image
+                                                    </label>
+                                                    {{ form.thumbnail }}
+                                                    {% if form.thumbnail.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.thumbnail.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <small class="form-text text-muted">
+                                                        Recommended size: 1200x630px
+                                                    </small>
+                                                    {% if story and story.thumbnail %}
+                                                    <div class="mt-2">
+                                                        <img src="{{ story.thumbnail.url }}" 
+                                                             alt="Current thumbnail" 
+                                                             style="max-width: 200px; max-height: 150px;"
+                                                             class="img-thumbnail">
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <!-- Status & Settings -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">Status & Settings</h5>
+                                            <div class="mb-3">
+                                                <label for="{{ form.status.id_for_label }}" class="form-label">
+                                                    Status *
+                                                </label>
+                                                {{ form.status }}
+                                                {% if form.status.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.status.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            {% if story and story.published_at %}
+                                            <div class="mb-3">
+                                                <label class="form-label">Published Date</label>
+                                                <input type="text" class="form-control" 
+                                                       value="{{ story.published_at|date:'Y-m-d H:i' }}" 
+                                                       readonly>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            {% if story and story.created_at %}
+                                            <div class="mb-3">
+                                                <label class="form-label">Created Date</label>
+                                                <input type="text" class="form-control" 
+                                                       value="{{ story.created_at|date:'Y-m-d H:i' }}" 
+                                                       readonly>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            {% if story %}
+                                            <div class="mb-3">
+                                                <label class="form-label">Author</label>
+                                                <input type="text" class="form-control" 
+                                                       value="{{ story.author.get_full_name|default:story.author.username }}" 
+                                                       readonly>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- File Attachments -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">File Attachments</h5>
+                                            <div class="mb-3">
+                                                <label for="{{ form.attachments.id_for_label }}" class="form-label">
+                                                    Add Files
+                                                </label>
+                                                {{ form.attachments }}
+                                                {% if form.attachments.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.attachments.errors }}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    Hold Ctrl/Cmd to select multiple files. Max size: 10MB per file.
+                                                </small>
+                                            </div>
+                                            
+                                            <!-- Existing Attachments -->
+                                            {% if story and story.attachments %}
+                                            <div class="existing-attachments">
+                                                <h6 class="mt-3 mb-2">Existing Files:</h6>
+                                                <div class="list-group">
+                                                    {% for attachment in story.attachments %}
+                                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <i class="fas fa-file me-2"></i>
+                                                            <a href="{{ attachment.file.url }}" 
+                                                               target="_blank" 
+                                                               class="text-decoration-none">
+                                                                {{ attachment.file_name }}
+                                                            </a>
+                                                            <small class="text-muted d-block">
+                                                                {{ attachment.get_file_size_display }}
+                                                            </small>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input type="checkbox" 
+                                                                   name="delete_attachments" 
+                                                                   value="{{ attachment.id }}"
+                                                                   class="form-check-input"
+                                                                   id="delete_attachment_{{ attachment.id }}">
+                                                            <label class="form-check-label" 
+                                                                   for="delete_attachment_{{ attachment.id }}"
+                                                                   title="Delete">
+                                                                <i class="fas fa-trash text-danger"></i>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Form Actions -->
+                                <div class="form-actions mt-4 pt-3 border-top">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save"></i> Save Story
+                                            </button>
+                                            <a href="{% if story %}{% url 'story_detail' story.pk %}{% else %}{% url 'story_list' %}{% endif %}" 
+                                               class="btn btn-outline-secondary ms-2">
+                                                Cancel
+                                            </a>
+                                        </div>
+                                        
+                                        {% if story and story.status == 'DRAFT' %}
+                                        <button type="submit" name="status" value="PUBLISHED" 
+                                                class="btn btn-success">
+                                            <i class="fas fa-paper-plane"></i> Publish Now
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <style>
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .form-section-title {
+            color: #495057;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .ckeditor {
+            min-height: 300px;
+        }
+        .existing-attachments .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+        input.form-control, select.form-control, textarea.form-control {
+            border-radius: 4px;
+            border: 1px solid #ced4da;
+        }
+        input.form-control:focus, select.form-control:focus, textarea.form-control:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize CKEditor
+    if (typeof CKEDITOR !== 'undefined') {
+        CKEDITOR.replace('id_content', {
+            toolbar: [
+                { name: 'document', items: ['Source', '-', 'Save', 'NewPage', 'Preview', 'Print', '-', 'Templates'] },
+                { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'PasteText', 'PasteFromWord', '-', 'Undo', 'Redo'] },
+                { name: 'editing', items: ['Find', 'Replace', '-', 'SelectAll', '-', 'Scayt'] },
+                { name: 'forms', items: ['Form', 'Checkbox', 'Radio', 'TextField', 'Textarea', 'Select', 'Button', 'ImageButton', 'HiddenField'] },
+                '/',
+                { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', '-', 'CopyFormatting', 'RemoveFormat'] },
+                { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'Blockquote', 'CreateDiv', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock', '-', 'BidiLtr', 'BidiRtl', 'Language'] },
+                { name: 'links', items: ['Link', 'Unlink', 'Anchor'] },
+                { name: 'insert', items: ['Image', 'Flash', 'Table', 'HorizontalRule', 'Smiley', 'SpecialChar', 'PageBreak', 'Iframe'] },
+                '/',
+                { name: 'styles', items: ['Styles', 'Format', 'Font', 'FontSize'] },
+                { name: 'colors', items: ['TextColor', 'BGColor'] },
+                { name: 'tools', items: ['Maximize', 'ShowBlocks'] },
+                { name: 'about', items: ['About'] }
+            ],
+            height: 400
+        });
+    }
+    
+    // Form validation
+    document.getElementById('storyForm').addEventListener('submit', function(e) {
+        const headline = document.getElementById('id_headline').value.trim();
+        const snippet = document.getElementById('id_snippet').value.trim();
+        
+        if (headline.length < 5) {
+            e.preventDefault();
+            alert('Headline must be at least 5 characters long.');
+            return false;
+        }
+        
+        if (snippet.length < 10) {
+            e.preventDefault();
+            alert('Snippet must be at least 10 characters long.');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

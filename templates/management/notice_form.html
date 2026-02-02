@@ -1,191 +1,314 @@
 {% extends 'management/management_base.html' %}
+{% comment %} templates/management/notice_form.html {% endcomment %}
 {% load static %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{% if notice %}Edit Notice{% else %}Create Notice{% endif %}{% endblock %}
 
 {% block content %}
     {% include 'management/management_header.html' %}
     {% include 'management/management_side_bar.html' %}
     
     <main class="main-content" id="mainContent">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">{{ title }}</h2>
-            </div>
-            <div class="card-body">
-                {% if messages %}
-                <div class="messages mb-3">
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="close" data-dismiss="alert">
-                            <span>&times;</span>
-                        </button>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title mb-0">
+                                {% if notice %}
+                                    <i class="fas fa-edit"></i> Edit Notice: {{ notice.headline }}
+                                {% else %}
+                                    <i class="fas fa-bullhorn"></i> Create New Notice
+                                {% endif %}
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" enctype="multipart/form-data" id="noticeForm">
+                                {% csrf_token %}
+                                
+                                {{ form.media }}  {# Required for CKEditor #}
+                                
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <!-- Notice Details -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">Notice Details</h5>
+                                            <div class="row">
+                                                <div class="col-12 mb-3">
+                                                    <label for="{{ form.headline.id_for_label }}" class="form-label">
+                                                        Headline *
+                                                    </label>
+                                                    {{ form.headline }}
+                                                    {% if form.headline.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.headline.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="col-12 mb-3">
+                                                    <label for="{{ form.overview.id_for_label }}" class="form-label">
+                                                        Overview *
+                                                    </label>
+                                                    {{ form.overview }}
+                                                    {% if form.overview.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.overview.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <small class="form-text text-muted">
+                                                        Brief summary (max 500 characters)
+                                                    </small>
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="{{ form.organization.id_for_label }}" class="form-label">
+                                                        Organization *
+                                                    </label>
+                                                    {{ form.organization }}
+                                                    {% if form.organization.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.organization.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="{{ form.category.id_for_label }}" class="form-label">
+                                                        Category *
+                                                    </label>
+                                                    {{ form.category }}
+                                                    {% if form.category.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.category.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="col-12 mb-3">
+                                                    <label for="{{ form.description.id_for_label }}" class="form-label">
+                                                        Description *
+                                                    </label>
+                                                    {{ form.description }}
+                                                    {% if form.description.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.description.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <!-- Dates -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">Dates</h5>
+                                            <div class="mb-3">
+                                                <label for="{{ form.publish_date.id_for_label }}" class="form-label">
+                                                    Publish Date *
+                                                </label>
+                                                {{ form.publish_date }}
+                                                {% if form.publish_date.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.publish_date.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="{{ form.expiration_date.id_for_label }}" class="form-label">
+                                                    Expiration Date
+                                                </label>
+                                                {{ form.expiration_date }}
+                                                {% if form.expiration_date.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.expiration_date.errors }}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    When notice should be deactivated
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Status -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">Status</h5>
+                                            <div class="mb-3">
+                                                <div class="form-check form-switch">
+                                                    {{ form.is_active }}
+                                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                                        Active
+                                                    </label>
+                                                </div>
+                                                {% if form.is_active.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.is_active.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <div class="form-check form-switch">
+                                                    {{ form.is_important }}
+                                                    <label class="form-check-label" for="{{ form.is_important.id_for_label }}">
+                                                        Important
+                                                    </label>
+                                                </div>
+                                                {% if form.is_important.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.is_important.errors }}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    Important notices are highlighted
+                                                </small>
+                                            </div>
+                                            
+                                            {% if notice %}
+                                            <div class="mb-3">
+                                                <label class="form-label">Created Date</label>
+                                                <input type="text" class="form-control" 
+                                                       value="{{ notice.created_at|date:'Y-m-d H:i' }}" 
+                                                       readonly>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- File Attachments -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">File Attachments</h5>
+                                            <div class="mb-3">
+                                                <label for="{{ form.attachments.id_for_label }}" class="form-label">
+                                                    Add Files
+                                                </label>
+                                                {{ form.attachments }}
+                                                {% if form.attachments.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.attachments.errors }}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    Hold Ctrl/Cmd to select multiple files.
+                                                </small>
+                                            </div>
+                                            
+                                            <!-- Existing Attachments -->
+                                            {% if notice and notice.attachments %}
+                                            <div class="existing-attachments">
+                                                <h6 class="mt-3 mb-2">Existing Files:</h6>
+                                                <div class="list-group">
+                                                    {% for attachment in notice.attachments %}
+                                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <i class="fas fa-file me-2"></i>
+                                                            <a href="{{ attachment.file.url }}" 
+                                                               target="_blank" 
+                                                               class="text-decoration-none">
+                                                                {{ attachment.file_name }}
+                                                            </a>
+                                                            <small class="text-muted d-block">
+                                                                {{ attachment.get_file_size_display }}
+                                                            </small>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input type="checkbox" 
+                                                                   name="delete_attachments" 
+                                                                   value="{{ attachment.id }}"
+                                                                   class="form-check-input"
+                                                                   id="delete_attachment_{{ attachment.id }}">
+                                                            <label class="form-check-label" 
+                                                                   for="delete_attachment_{{ attachment.id }}"
+                                                                   title="Delete">
+                                                                <i class="fas fa-trash text-danger"></i>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Form Actions -->
+                                <div class="form-actions mt-4 pt-3 border-top">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save"></i> Save Notice
+                                            </button>
+                                            <a href="{% if notice %}{% url 'notice_detail' notice.pk %}{% else %}{% url 'notice_list' %}{% endif %}" 
+                                               class="btn btn-outline-secondary ms-2">
+                                                Cancel
+                                            </a>
+                                        </div>
+                                        
+                                        {% if notice and notice.is_active %}
+                                        <a href="{% url 'notice_detail' notice.pk %}" 
+                                           class="btn btn-info" target="_blank">
+                                            <i class="fas fa-eye"></i> Preview
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                    {% endfor %}
                 </div>
-                {% endif %}
-                
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    
-                    {{ form.clear_attachment }}
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
-                                {{ form.title }}
-                                {% if form.title.errors %}
-                                <div class="text-danger small">{{ form.title.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.organization.id_for_label }}">{{ form.organization.label }}</label>
-                                {{ form.organization }}
-                                {% if form.organization.errors %}
-                                <div class="text-danger small">{{ form.organization.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
-                        {{ form.description }}
-                        {% if form.description.errors %}
-                        <div class="text-danger small">{{ form.description.errors }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
-                                {{ form.category }}
-                                {% if form.category.errors %}
-                                <div class="text-danger small">{{ form.category.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.publish_date.id_for_label }}">{{ form.publish_date.label }}</label>
-                                {{ form.publish_date }}
-                                {% if form.publish_date.errors %}
-                                <div class="text-danger small">{{ form.publish_date.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="{{ form.attachment.id_for_label }}">{{ form.attachment.label }}</label>
-                        {{ form.attachment }}
-                        {% if form.attachment.errors %}
-                        <div class="text-danger small">{{ form.attachment.errors }}</div>
-                        {% endif %}
-                        <small class="form-text text-muted">
-                            Allowed: PDF, DOC, DOCX, JPG, JPEG, PNG (Max: 10MB)
-                        </small>
-                        
-                        {% if notice and notice.attachment %}
-                        <div class="mt-2 p-2 bg-light rounded">
-                            <strong>Current file:</strong> 
-                            <a href="{{ notice.attachment.url }}" target="_blank" class="ml-2">
-                                <i class="fas fa-download"></i> {{ notice.attachment.name|cut:"notices/" }}
-                            </a>
-                            <div class="form-check mt-2">
-                                <input type="checkbox" name="clear_attachment" id="clear_attachment" class="form-check-input" 
-                                       onchange="document.getElementById('id_clear_attachment').value = this.checked ? 'true' : ''">
-                                <label for="clear_attachment" class="form-check-label text-danger">
-                                    <i class="fas fa-trash"></i> Remove current file
-                                </label>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.is_active }}
-                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
-                                    {{ form.is_active.label }}
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.is_important }}
-                                <label class="form-check-label" for="{{ form.is_important.id_for_label }}">
-                                    {{ form.is_important.label }}
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Save
-                        </button>
-                        <a href="{% url 'notice_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                        {% if notice %}
-                        <button type="button" class="btn btn-danger float-right" onclick="deleteNotice({{ notice.pk }})">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                        {% endif %}
-                    </div>
-                </form>
             </div>
         </div>
     </main>
     
-    <!-- Include SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <script>
-        function deleteNotice(pk) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "This notice will be deleted permanently!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = `/management/notices/${pk}/delete/`;
-                    
-                    const csrfInput = document.createElement('input');
-                    csrfInput.type = 'hidden';
-                    csrfInput.name = 'csrfmiddlewaretoken';
-                    csrfInput.value = '{{ csrf_token }}';
-                    
-                    form.appendChild(csrfInput);
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            });
+    <style>
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
         }
-        
-        // Handle clear attachment checkbox
-        document.addEventListener('DOMContentLoaded', function() {
-            const clearCheckbox = document.getElementById('clear_attachment');
-            const hiddenClearField = document.getElementById('id_clear_attachment');
-            
-            if (clearCheckbox && hiddenClearField) {
-                clearCheckbox.addEventListener('change', function() {
-                    hiddenClearField.value = this.checked ? 'true' : '';
-                });
-            }
+        .form-section-title {
+            color: #495057;
+            border-bottom: 2px solid #ffc107;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize CKEditor
+    if (typeof CKEDITOR !== 'undefined') {
+        CKEDITOR.replace('id_description', {
+            toolbar: 'Basic',
+            height: 300
         });
-    </script>
+    }
+    
+    // Date validation
+    document.getElementById('noticeForm').addEventListener('submit', function(e) {
+        const publishDate = document.getElementById('id_publish_date').value;
+        const expirationDate = document.getElementById('id_expiration_date').value;
+        
+        if (publishDate && expirationDate) {
+            const publish = new Date(publishDate);
+            const expiration = new Date(expirationDate);
+            
+            if (expiration < publish) {
+                e.preventDefault();
+                alert('Expiration date cannot be before publish date.');
+                return false;
+            }
+        }
+    });
+</script>
 {% endblock %}

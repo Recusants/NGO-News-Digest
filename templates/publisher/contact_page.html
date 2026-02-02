@@ -1,64 +1,121 @@
 {% extends 'partials/base.html' %}
+{% load static %}
 
-{% block title %}NGO News Digest - Home{% endblock %}
+{% block title %}NGO News Digest - Contact{% endblock %}
+
 {% block content %}
     {% include 'partials/header.html' %}
-    <!-- 14. Contact Section -->
-    <section id="contact" class="section">
-        <div class="container">
-            <h2 class="section-title">Contact Us</h2>
-            
-            <div class="contact-content">
-                <div class="contact-item">
-                    <div class="contact-icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <h3>Email</h3>
-                    <p>editor@ngonewsdigest.co.zw</p>
-                    <p>subscriptions@ngonewsdigest.co.zw</p>
-                </div>
+    <main id="pageContent">
+        <section id="contact" class="page-section">
+            <div class="container section py-2">
+                <center>
+                    <h1>Contact Us</h1>
+                    <p class="mb-2">Get in touch with us for inquiries, submissions, or partnership opportunities.</p>
+                </center>
                 
-                <div class="contact-item">
-                    <div class="contact-icon">
-                        <i class="fas fa-phone"></i>
+                <div class="two-column">
+                    <div class="contact-form">
+                        <h2>Send a Message</h2>
+                        <form id="contactForm">
+                            <div class="form-group">
+                                <label class="form-label" for="contactName">Full Name</label>
+                                <input type="text" class="form-control" id="contactName" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="contactEmail">Email Address</label>
+                                <input type="email" class="form-control" id="contactEmailInput" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="contactOrg">Organization (Optional)</label>
+                                <input type="text" class="form-control" id="contactOrg">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="contactSubject">Subject</label>
+                                <input type="text" class="form-control" id="contactSubject" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="contactMessage">Message</label>
+                                <textarea class="form-control" id="contactMessage" required></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn">Send Message</button>
+                        </form>
                     </div>
-                    <h3>Phone</h3>
-                    <p>+263 242 123 456</p>
-                    <p>+263 772 987 654</p>
-                </div>
-                
-                <div class="contact-item">
-                    <div class="contact-icon">
-                        <i class="fas fa-map-marker-alt"></i>
+                    
+                    <div>
+                        <div class="card mb-2">
+                            <h3>Contact Information</h3>
+                            <div class="mb-2">
+                                <i class="fas fa-phone mr-2" style="color: var(--primary);"></i>
+                                <span>{{ site_info.contact_phone }}</span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-envelope mr-2" style="color: var(--primary);"></i>
+                                <span>{{ site_info.contact_email }}</span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-map-marker-alt mr-2" style="color: var(--primary);"></i>
+                                <span>{{ site_info.address|linebreaks }}</span>
+                            </div>
+                            <!-- 
+                            <div class="mb-2">
+                                <i class="fas fa-clock mr-2" style="color: var(--primary);"></i>
+                                <span>Mon-Fri: 8:00 AM - 5:00 PM</span>
+                            </div> -->
+                        </div>
+                        
+                        <div class="card">
+                            <h3>Follow Us</h3>
+                            <div class="social-icons">
+                                <a href="{{ site_info.facebook_url }}" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                                <a href="{{ site_info.twitter_url }}" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                                <a href="{{ site_info.linkedin_url }}" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                                <a href="{{ site_info.youtube_url }}" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                                <a href="{{ site_info.instagram_url }}" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            </div>
+                        </div>
+                        
+                        <!-- <div class="card mt-2">
+                            <h3>Frequently Asked Questions</h3>
+                            <div class="faq-item">
+                                <div class="faq-question">
+                                    <span>How can I submit a story or announcement?</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>Please email your submission to submissions@ngonewsdigest.co.zw with relevant details and attachments. Our editorial team reviews all submissions within 3-5 working days.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="faq-item">
+                                <div class="faq-question">
+                                    <span>Is there a cost to post job vacancies?</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>We offer free job postings for registered Zimbabwean NGOs. International organizations and for-profit companies may be charged a nominal fee.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="faq-item">
+                                <div class="faq-question">
+                                    <span>How often is the digest updated?</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                <div class="faq-answer">
+                                    <p>We update our platform daily with new content. Subscribers receive a weekly digest every Monday morning.</p>
+                                </div>
+                            </div>
+                        </div> -->
                     </div>
-                    <h3>Address</h3>
-                    <p>156 Jason Moyo Avenue</p>
-                    <p>Harare, Zimbabwe</p>
                 </div>
             </div>
-            
-            <div class="social-links">
-                <a href="#" class="social-link">
-                    <i class="fab fa-whatsapp"></i>
-                </a>
-                <a href="#" class="social-link">
-                    <i class="fas fa-envelope"></i>
-                </a>
-                <a href="#" class="social-link">
-                    <i class="fab fa-facebook-f"></i>
-                </a>
-                <a href="#" class="social-link">
-                    <i class="fab fa-twitter"></i>
-                </a>
-                <a href="#" class="social-link">
-                    <i class="fab fa-linkedin-in"></i>
-                </a>
-                <a href="#" class="social-link">
-                    <i class="fas fa-share-alt"></i>
-                </a>
-            </div>
-        </div>
-    </section>
+        </section>
+    </main>
+</style>
     {% include 'partials/footer.html' %}
 {% endblock %}
-

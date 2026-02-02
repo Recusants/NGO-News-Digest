@@ -1,197 +1,345 @@
 {% extends 'management/management_base.html' %}
+{% comment %} templates/management/vacancy_form.html {% endcomment %}
 {% load static %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{% if vacancy %}Edit Vacancy{% else %}Create Vacancy{% endif %}{% endblock %}
 
 {% block content %}
     {% include 'management/management_header.html' %}
     {% include 'management/management_side_bar.html' %}
     
     <main class="main-content" id="mainContent">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">{{ title }}</h2>
-            </div>
-            <div class="card-body">
-                {% if messages %}
-                <div class="messages mb-3">
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="close" data-dismiss="alert">
-                            <span>&times;</span>
-                        </button>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title mb-0">
+                                {% if vacancy %}
+                                    <i class="fas fa-edit"></i> Edit Vacancy: {{ vacancy.title }}
+                                {% else %}
+                                    <i class="fas fa-briefcase"></i> Create New Vacancy
+                                {% endif %}
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" enctype="multipart/form-data" id="vacancyForm">
+                                {% csrf_token %}
+                                
+                                {{ form.media }}  {# Required for CKEditor #}
+                                
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <!-- Job Details -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">Job Details</h5>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="{{ form.title.id_for_label }}" class="form-label">
+                                                        Job Title *
+                                                    </label>
+                                                    {{ form.title }}
+                                                    {% if form.title.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.title.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="{{ form.organization.id_for_label }}" class="form-label">
+                                                        Organization *
+                                                    </label>
+                                                    {{ form.organization }}
+                                                    {% if form.organization.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.organization.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="{{ form.location.id_for_label }}" class="form-label">
+                                                        Location *
+                                                    </label>
+                                                    {{ form.location }}
+                                                    {% if form.location.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.location.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <small class="form-text text-muted">
+                                                        e.g., "New York, NY" or "Remote"
+                                                    </small>
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="{{ form.job_type.id_for_label }}" class="form-label">
+                                                        Job Type *
+                                                    </label>
+                                                    {{ form.job_type }}
+                                                    {% if form.job_type.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.job_type.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="col-12 mb-3">
+                                                    <label for="{{ form.description.id_for_label }}" class="form-label">
+                                                        Job Description *
+                                                    </label>
+                                                    {{ form.description }}
+                                                    {% if form.description.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.description.errors }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <!-- Application Information -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">Application Information</h5>
+                                            <div class="mb-3">
+                                                <label for="{{ form.application_deadline.id_for_label }}" class="form-label">
+                                                    Application Deadline *
+                                                </label>
+                                                {{ form.application_deadline }}
+                                                {% if form.application_deadline.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.application_deadline.errors }}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    Last day to apply
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="{{ form.application_link.id_for_label }}" class="form-label">
+                                                    Application Link
+                                                </label>
+                                                {{ form.application_link }}
+                                                {% if form.application_link.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.application_link.errors }}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    URL where applicants can apply
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label for="{{ form.expiration_date.id_for_label }}" class="form-label">
+                                                    Expiration Date
+                                                </label>
+                                                {{ form.expiration_date }}
+                                                {% if form.expiration_date.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.expiration_date.errors }}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    When vacancy should be deactivated
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Status -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">Status</h5>
+                                            <div class="mb-3">
+                                                <div class="form-check form-switch">
+                                                    {{ form.is_active }}
+                                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                                        Active
+                                                    </label>
+                                                </div>
+                                                {% if form.is_active.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.is_active.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <div class="form-check form-switch">
+                                                    {{ form.is_featured }}
+                                                    <label class="form-check-label" for="{{ form.is_featured.id_for_label }}">
+                                                        Featured
+                                                    </label>
+                                                </div>
+                                                {% if form.is_featured.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.is_featured.errors }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            {% if vacancy %}
+                                            <div class="mb-3">
+                                                <label class="form-label">Created Date</label>
+                                                <input type="text" class="form-control" 
+                                                       value="{{ vacancy.created_at|date:'Y-m-d H:i' }}" 
+                                                       readonly>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Last Updated</label>
+                                                <input type="text" class="form-control" 
+                                                       value="{{ vacancy.updated_at|date:'Y-m-d H:i' }}" 
+                                                       readonly>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- File Attachments -->
+                                        <div class="form-section mb-4">
+                                            <h5 class="form-section-title">File Attachments</h5>
+                                            <div class="mb-3">
+                                                <label for="{{ form.attachments.id_for_label }}" class="form-label">
+                                                    Add Files
+                                                </label>
+                                                {{ form.attachments }}
+                                                {% if form.attachments.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.attachments.errors }}
+                                                </div>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    Hold Ctrl/Cmd to select multiple files.
+                                                </small>
+                                            </div>
+                                            
+                                            <!-- Existing Attachments -->
+                                            {% if vacancy and vacancy.attachments %}
+                                            <div class="existing-attachments">
+                                                <h6 class="mt-3 mb-2">Existing Files:</h6>
+                                                <div class="list-group">
+                                                    {% for attachment in vacancy.attachments %}
+                                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <i class="fas fa-file me-2"></i>
+                                                            <a href="{{ attachment.file.url }}" 
+                                                               target="_blank" 
+                                                               class="text-decoration-none">
+                                                                {{ attachment.file_name }}
+                                                            </a>
+                                                            <small class="text-muted d-block">
+                                                                {{ attachment.get_file_size_display }}
+                                                            </small>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input type="checkbox" 
+                                                                   name="delete_attachments" 
+                                                                   value="{{ attachment.id }}"
+                                                                   class="form-check-input"
+                                                                   id="delete_attachment_{{ attachment.id }}">
+                                                            <label class="form-check-label" 
+                                                                   for="delete_attachment_{{ attachment.id }}"
+                                                                   title="Delete">
+                                                                <i class="fas fa-trash text-danger"></i>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Form Actions -->
+                                <div class="form-actions mt-4 pt-3 border-top">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save"></i> Save Vacancy
+                                            </button>
+                                            <a href="{% if vacancy %}{% url 'vacancy_detail' vacancy.pk %}{% else %}{% url 'vacancy_list' %}{% endif %}" 
+                                               class="btn btn-outline-secondary ms-2">
+                                                Cancel
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                    {% endfor %}
                 </div>
-                {% endif %}
-                
-                <form method="POST">
-                    {% csrf_token %}
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
-                                {{ form.title }}
-                                {% if form.title.errors %}
-                                <div class="text-danger small">{{ form.title.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.organization.id_for_label }}">{{ form.organization.label }}</label>
-                                {{ form.organization }}
-                                {% if form.organization.errors %}
-                                <div class="text-danger small">{{ form.organization.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
-                        {{ form.description }}
-                        {% if form.description.errors %}
-                        <div class="text-danger small">{{ form.description.errors }}</div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.location.id_for_label }}">{{ form.location.label }}</label>
-                                {{ form.location }}
-                                {% if form.location.errors %}
-                                <div class="text-danger small">{{ form.location.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.job_type.id_for_label }}">{{ form.job_type.label }}</label>
-                                {{ form.job_type }}
-                                {% if form.job_type.errors %}
-                                <div class="text-danger small">{{ form.job_type.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.application_deadline.id_for_label }}">{{ form.application_deadline.label }}</label>
-                                {{ form.application_deadline }}
-                                {% if form.application_deadline.errors %}
-                                <div class="text-danger small">{{ form.application_deadline.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="{{ form.application_link.id_for_label }}">{{ form.application_link.label }}</label>
-                                {{ form.application_link }}
-                                {% if form.application_link.errors %}
-                                <div class="text-danger small">{{ form.application_link.errors }}</div>
-                                {% endif %}
-                                <small class="form-text text-muted">Leave blank if not applicable</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.is_active }}
-                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
-                                    {{ form.is_active.label }}
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check">
-                                {{ form.is_featured }}
-                                <label class="form-check-label" for="{{ form.is_featured.id_for_label }}">
-                                    {{ form.is_featured.label }}
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Save
-                        </button>
-                        <a href="{% url 'vacancy_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                        {% if vacancy %}
-                        <button type="button" class="btn btn-danger float-right" onclick="deleteVacancy({{ vacancy.pk }})">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                        {% endif %}
-                    </div>
-                </form>
             </div>
         </div>
     </main>
     
-    <!-- Include SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <script>
-        function deleteVacancy(pk) {
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "This vacancy will be deleted permanently!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = `/management/vacancies/${pk}/delete/`;
-                    
-                    const csrfInput = document.createElement('input');
-                    csrfInput.type = 'hidden';
-                    csrfInput.name = 'csrfmiddlewaretoken';
-                    csrfInput.value = '{{ csrf_token }}';
-                    
-                    form.appendChild(csrfInput);
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            });
-        }
-    </script>
-    
     <style>
-        .form-group {
-            margin-bottom: 1.5rem;
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
         }
-        .form-control {
-            width: 100%;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            border: 1px solid #ced4da;
-            border-radius: 0.25rem;
+        .form-section-title {
+            color: #495057;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
         }
-        .form-check {
-            padding-left: 1.25rem;
-            margin-bottom: 0.5rem;
-        }
-        .form-check-input {
-            margin-left: -1.25rem;
-            margin-top: 0.3rem;
-        }
-        .text-danger small {
-            font-size: 0.875rem;
+        .form-check-switch .form-check-input {
+            width: 3em;
+            height: 1.5em;
         }
     </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize CKEditor
+    if (typeof CKEDITOR !== 'undefined') {
+        CKEDITOR.replace('id_description', {
+            toolbar: 'Basic',
+            height: 300
+        });
+    }
+    
+    // Date validation
+    document.getElementById('vacancyForm').addEventListener('submit', function(e) {
+        const deadlineInput = document.getElementById('id_application_deadline');
+        const expirationInput = document.getElementById('id_expiration_date');
+        
+        if (deadlineInput.value) {
+            const deadline = new Date(deadlineInput.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (deadline < today) {
+                e.preventDefault();
+                alert('Application deadline cannot be in the past.');
+                return false;
+            }
+        }
+        
+        if (expirationInput.value && deadlineInput.value) {
+            const expiration = new Date(expirationInput.value);
+            const deadline = new Date(deadlineInput.value);
+            
+            if (expiration < deadline) {
+                e.preventDefault();
+                alert('Expiration date cannot be before application deadline.');
+                return false;
+            }
+        }
+    });
+</script>
 {% endblock %}

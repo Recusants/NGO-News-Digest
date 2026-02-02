@@ -1,42 +1,56 @@
-{% extends 'partials/base.html' %}
-
-{% block title %}NGO News Digest - Home{% endblock %}
-{% block content %}
-    {% include 'partials/header.html' %}
-    <!-- 11. About Section -->
-    <section id="about" class="section">
-        <div class="container">
-            <h2 class="section-title">About NGO News Digest</h2>
-            
-            <div class="about-content">
-                <div class="about-card">
-                    <h3><i class="fas fa-info-circle"></i> Who We Are</h3>
-                    <p>NGO News Digest is a Zimbabwe-based news and media initiative dedicated to sharing, amplifying, and celebrating the work of non-governmental organisations operating across Zimbabwe.</p>
-                </div>
-                
-                <div class="about-card">
-                    <h3><i class="fas fa-bullseye"></i> Our Mission & Vision</h3>
-                    <p><strong>Vision:</strong> To be Zimbabwe's leading platform for celebrating and amplifying civil society impact.</p>
-                    <p><strong>Mission:</strong> To document, share, and elevate the work of NGOs in Zimbabwe through timely coverage.</p>
-                </div>
-                
-                <div class="about-card">
-                    <h3><i class="fas fa-star"></i> What Makes Us Unique</h3>
-                    <ul>
-                        <li>Documenting grassroots impact</li>
-                        <li>Showing linkages between NGO programmes and national development goals</li>
-                        <li>Serving as a repository of positive change</li>
-                    </ul>
-                </div>
+<!-- Team Preview -->
+{% if site_info.show_team_preview %}
+<div class="team-preview-section">
+    <h2 class="section-title">Meet Our Team</h2>
+    <p class="section-subtitle">Dedicated professionals committed to amplifying civil society impact</p>
+    
+    <div class="team-grid">
+        {% for member in team_members %}
+        <div class="team-card">
+            <div class="team-image">
+                <img src="https://images.unsplash.com/photo-{{ forloop.counter|add:1576765974 }}?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" 
+                     alt="{{ member.user.get_full_name }}" loading="lazy">
             </div>
-            
-            <div class="action-buttons">
-                <a href="{% url 'editors_page' %}" class="read-more-btn">
-                    <i class="fas fa-book-open"></i> Our Team
-                </a>
+            <div class="team-content">
+                <h4 class="team-name">{{ member.user.get_full_name }}</h4>
+                <p class="team-role">{{ member.position }}</p>
+                <p class="team-bio">{{ member.bio|truncatewords:20 }}</p>
+                
+                {% if member.twitter_url or member.linkedin_url %}
+                <div class="team-social">
+                    {% if member.twitter_url %}
+                    <a href="{{ member.twitter_url }}" target="_blank" class="team-social-link">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    {% endif %}
+                    
+                    {% if member.linkedin_url %}
+                    <a href="{{ member.linkedin_url }}" target="_blank" class="team-social-link">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
-    </section>
-    {% include 'partials/footer.html' %}
-{% endblock %}
-
+        {% empty %}
+        <div class="no-team-message">
+            <i class="fas fa-users fa-3x"></i>
+            <h4>Our Team</h4>
+            <p>Meet our dedicated team members</p>
+            <a href="{% url 'editors_page' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i> Meet the Team
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if team_members|length > 0 %}
+    <div class="action-buttons">
+        <a href="{% url 'editors_page' %}" class="read-more-btn">
+            <i class="fas fa-users"></i> View Full Team
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}

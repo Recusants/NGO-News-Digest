@@ -1,0 +1,64 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}NGO News Digest - Vacancy {% endblock %}
+
+{% block content %}
+    {% include 'partials/header.html' %}
+    <main id="pageContent">
+        <section id="vacancy-details" class="page-section">
+            <div class="container section py-2">
+                <a href="#vacancies" class="btn btn-small mb-2" data-page="vacancies"><i class="fas fa-arrow-left"></i> Back to Vacancies</a>
+                
+                <div class="details-header">
+                    <div class="badge badge-red" id="vacancyType">{{ vacancy.job_type }}</div>
+                    <h1 class="details-title" id="vacancyTitle">{{ vacancy.title }}</h1>
+                    
+                    <div class="details-meta">
+                        <div><i class="fas fa-building"></i> <span id="vacancyOrg">{{ vacancy.organization }}</span></div>
+                        <div><i class="fas fa-map-marker-alt"></i> <span id="vacancyLocation">{{ vacancy.location }}</span></div>
+                        <div><i class="far fa-calendar-alt"></i> Deadline: <span id="vacancyDeadline">{{ vacancy.application_deadline }}</span></div>
+                    </div>
+                    
+                    <!-- <div class="mt-2">
+                        <span class="badge badge-green">Urgent</span>
+                        <span class="badge badge-blue">Featured</span>
+                    </div> -->
+                </div>
+                
+                <div class="two-column">
+                    <div class="details-content" id="vacancyContent">
+                        {{ vacancy.description|safe }}
+                    </div>
+                    
+                    <div class="details-sidebar">
+                        <div class="sidebar-section">
+                            <h3>Organization</h3>
+                            <p id="orgDescription" style="font-size: 0.95rem;">{{ vacancy.organization_details }}</p>
+                        </div>
+                        
+                        <div class="sidebar-section">
+                            <h3>How to Apply</h3>
+                            <p>{{ vacancy.how_to_apply|safe }}</p>
+                            <a href="{{ vacancy.application_link }}" class="btn mt-2 w-100" id="applyBtn">Apply Via Link</a>
+                        </div>
+                        {% if similar_jobs %}
+                            <div class="sidebar-section">
+                                <h3>Similar Jobs</h3>
+                                <div id="similarJobs">
+                                    {% for job in similar_jobs %}
+                                        <div class="mb-2">
+                                            <a href="vacancy/{{ job.id }}" class="story-card-title" style="font-size: 1rem;">{{ job.title }}</a>
+                                            <div style="font-size: 0.8rem; color: var(--text-light);">{{ job.organization }} • {{ job.location }}</div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    {% include 'partials/footer.html' %}
+{% endblock %}

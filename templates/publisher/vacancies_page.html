@@ -1,56 +1,160 @@
 {% extends 'partials/base.html' %}
+{% load static %}
 
-{% block title %}NGO News Digest - Home{% endblock %}
+{% block title %}NGO News Digest - Vacancies {% endblock %}
+
 {% block content %}
     {% include 'partials/header.html' %}
-    <section id="vacancies" class="section">
-        <div class="container">
-            <h2 class="section-title">NGO Job Vacancies</h2>
-            
-            <div class="stories-filters">
-                <button class="filter-btn active" data-filter="all">All Vacancies</button>
-                <button class="filter-btn" data-filter="programme">Programme</button>
-                <button class="filter-btn" data-filter="finance">Finance</button>
-                <button class="filter-btn" data-filter="monitoring">M&E</button>
-                <button class="filter-btn" data-filter="management">Management</button>
-            </div>
-            
-            <div class="vacancies-grid">
-                <div class="vacancy-card" data-category="programme">
-                    <h3 class="vacancy-title">Programme Manager - Health</h3>
-                    <span class="vacancy-organization">Health Innovation Trust Zimbabwe</span>
-                    <div class="vacancy-details">
-                        <div class="vacancy-detail">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Harare, with travel</span>
-                        </div>
-                        <div class="vacancy-detail">
-                            <i class="fas fa-clock"></i>
-                            <span>Full-time</span>
-                        </div>
-                        <div class="vacancy-detail">
-                            <i class="fas fa-money-bill-wave"></i>
-                            <span>Competitive NGO Package</span>
-                        </div>
-                    </div>
-                    <p class="vacancy-description">Lead the implementation of health programmes across 3 provinces, manage partnerships with Ministry of Health.</p>
-                    <div class="story-footer">
-                        <span>Deadline: 30 May 2023</span>
-                        <div class="share-buttons">
-                            <button class="share-btn" data-platform="share"><i class="fas fa-share-alt"></i></button>
-                            <button class="share-btn" data-platform="linkedin"><i class="fab fa-linkedin-in"></i></button>
+    <main id="pageContent">
+        <section id="vacancies" class="page-section">
+            <div class="container section py-2">
+                <h1>NGO Job Vacancies</h1>
+                <p class="mb-2">Find your next opportunity in Zimbabwe's civil society sector.</p>
+                
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <span class="filter-label">Filter by:</span>
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        {% for category in categories %}
+                            <button class="filter-btn" data-filter="{{ category.name  }}">{{ category.name }}</button>
+                        {% endfor %}
+                        
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input" id="vacancySearch" placeholder="Search vacancies...">
                         </div>
                     </div>
                 </div>
+                
+                <div class="content-grid" id="vacanciesList">
+                    <!-- Vacancies loaded via JS -->
+                </div>
+
+                <center id="more-vacancies-btn-container">
+                    <div class="text-center mt-2">
+                        <button id="more-vacancies-btn" class="btn btn-small" data-page="vacancies">More Vacancies</button>
+                    </div>
+                </center>
+                
+                <div class="pagination" id="vacanciesPagination">
+                    <!-- Pagination loaded via JS -->
+                </div>
             </div>
-            
-            <div class="action-buttons">
-                <button class="read-more-btn" onclick="scrollToSection('detailedVacancyPage')">
-                    <i class="fas fa-briefcase"></i> View Full Job Details
-                </button>
-            </div>
-        </div>
-    </section>
+        </section>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+        
+        $(document).ready(function() {
+            var page = 1
+            var page_size = 3
+            var category = "All"
+
+            clearVacanciesGrid()
+            loadVacancies(page, page_size, category)
+
+
+            /*-----------------------------------------------------------------------------------------------------------
+            EVENTS >>>>>
+            -------------------------------------------------------------------------------------------------------------*/
+
+            $('#more-vacancies-btn').on('click', function() {
+                page++
+                loadVacancies(page, page_size, category)
+            });
+
+            /*-----------------------------------------------------------------------------------------------------------
+            EVENTS <<<<<
+            -------------------------------------------------------------------------------------------------------------*/
+        
+
+            function loadVacancies(page, page_size, category){
+                $.ajax({
+                    url: "{% url 'vacancies' %}",
+                    data: {
+                        page: page,
+                        page_size: page_size,
+                        category: category,
+                     },
+                    success: function(responseData) {
+                        const vacanciesGrid = $('#vacanciesList');
+                        var vacancies = responseData.vacancies
+                        
+
+                        if (vacancies.length < page_size){
+                            $('#more-vacancies-btn-container').hide()
+                        }
+                        
+                        if (vacancies.length == 0 && page < 1) {
+                            vacanciesGrid.html(`
+                                <div class="empty-state">
+                                    <i class="fas fa-briefcase empty-state-icon"></i>
+                                    <h3>No vacancies found</h3>
+                                    <p>Try adjusting your filters or search term</p>
+                                </div>`)
+                            return;
+                        }
+                        
+                        vacancies.forEach(vacancy => {
+                            vacanciesGrid.append(`
+                                <div class="card vacancy-card" data-vacancy-id="${vacancy.id}">
+                                    <div class="vacancy-card-header">
+                                        <div>
+                                            <h3 class="vacancy-title">
+                                                <a href="/vacancy_page/${vacancy.id}">
+                                                    ${vacancy.title || 'Untitled Position'}
+                                                </a>
+                                            </h3>
+                                            <div class="vacancy-org">${vacancy.organization || 'Organization not specified'}</div>
+                                        </div>
+                                        ${vacancy.urgent ? '<span class="badge badge-red">Urgent</span>' : ''}
+                                        ${vacancy.featured ? '<span class="badge badge-blue">Featured</span>' : ''}
+                                    </div>
+                                    
+                                    <div class="vacancy-details">
+                                        <div class="vacancy-detail">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span>${vacancy.location || 'Location not specified'}</span>
+                                        </div>
+                                        <div class="vacancy-detail">
+                                            <i class="fas fa-briefcase"></i>
+                                            <span>${vacancy.job_type || 'Type not specified'}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <p>${vacancy.description ? vacancy.description.replace(/<[^>]*>/g, '').substring(0, 150) + (vacancy.description.length > 150 ? '...' : '') : 'No description available'}</p>
+                                    
+                                    <div class="vacancy-deadline">
+                                        <i class="far fa-calendar-alt"></i>
+                                        Deadline: 
+                                        ${vacancy.expiration_date ? formatDate(vacancy.expiration_date) : '<span style="color: #999;">Not specified</span>'}
+                                    </div>
+                                </div>`
+                            )
+                        })
+                        
+                    },
+                    error: function(){
+                        Swal.fire({
+                            title: "Error",
+                            text: "An error ocured!",
+                            icon: "error"
+                        });
+                    }
+                })
+
+            }
+
+
+            function clearVacanciesGrid(){
+                const vacanciesGrid = $('#vacanciesList');
+                vacanciesGrid.empty();
+            }
+        })
+
+
+
+
+    </script>
     {% include 'partials/footer.html' %}
 {% endblock %}
-

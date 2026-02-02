@@ -1,0 +1,71 @@
+{% extends 'management/management_base.html' %}
+{% comment %} templates/management/category_form.html {% endcomment %}
+{% load static %}
+
+{% block title %}{% if category %}Edit Category{% else %}Create Category{% endif %}{% endblock %}
+
+{% block content %}
+    {% include 'management/management_header.html' %}
+    {% include 'management/management_side_bar.html' %}
+    
+    <main class="main-content" id="mainContent">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title mb-0">
+                                {% if category %}
+                                    <i class="fas fa-edit"></i> Edit Category: {{ category.name }}
+                                {% else %}
+                                    <i class="fas fa-folder-plus"></i> Create New Category
+                                {% endif %}
+                            </h2>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" id="categoryForm">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                                        Category Name *
+                                    </label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.name.errors }}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        Enter a unique category name
+                                    </small>
+                                </div>
+                                
+                                <!-- Form Actions -->
+                                <div class="form-actions mt-4 pt-3 border-top">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save"></i> Save Category
+                                            </button>
+                                            <a href="{% url 'category_list' %}" 
+                                               class="btn btn-outline-secondary ms-2">
+                                                Cancel
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}
