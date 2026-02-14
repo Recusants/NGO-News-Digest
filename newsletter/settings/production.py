@@ -100,6 +100,7 @@ SECURE_HSTS_SECONDS = 0  # Set to 31536000 after testing
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+
 # Add debug logging to see values
 print("="*60)
 print("PRODUCTION SETTINGS LOADED")
