@@ -1,0 +1,1107 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}{{ vacancy.title }} - Vacancy{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Vacancy Detail Container */
+    .vacancy-detail-container {
+        padding: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Header */
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .header-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .header-subtitle {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .back-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        color: #6b7280;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .back-btn:hover {
+        background: #f8fafc;
+        color: #2563eb;
+        border-color: #2563eb;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .status-active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-inactive {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    .status-featured {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-expired {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Info Badges */
+    .info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        background: #dbeafe;
+        color: #1e40af;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    /* Messages */
+    .messages-container {
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .message-alert {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: slideInDown 0.3s ease;
+        border-left: 4px solid;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .message-success {
+        background: #d1fae5;
+        color: #065f46;
+        border-left-color: #10b981;
+    }
+
+    .message-error {
+        background: #fee2e2;
+        color: #991b1b;
+        border-left-color: #ef4444;
+    }
+
+    .message-warning {
+        background: #fef3c7;
+        color: #92400e;
+        border-left-color: #f59e0b;
+    }
+
+    .message-info {
+        background: #dbeafe;
+        color: #1e40af;
+        border-left-color: #3b82f6;
+    }
+
+    .message-content {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        gap: 0.5rem;
+    }
+
+    .message-close {
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        padding: 0.25rem;
+        margin-left: 0.5rem;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        border-radius: 4px;
+    }
+
+    .message-close:hover {
+        opacity: 1;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Main Layout */
+    .detail-layout {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 2rem;
+    }
+
+    @media (max-width: 1024px) {
+        .detail-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Content Sections */
+    .content-section {
+        background: white;
+        border: 1px solid #e1e5eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 1rem 0;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #3b82f6;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Content */
+    .vacancy-content {
+        line-height: 1.8;
+        color: #374151;
+        font-size: 1rem;
+    }
+
+    .vacancy-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+
+    .vacancy-content p {
+        margin-bottom: 1rem;
+    }
+
+    .vacancy-content ul, .vacancy-content ol {
+        margin-bottom: 1rem;
+        padding-left: 1.5rem;
+    }
+
+    .vacancy-content li {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Apply Button */
+    .apply-btn {
+        padding: 0.75rem 1.5rem;
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .apply-btn:hover {
+        background: #0da271;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        color: white;
+    }
+
+    /* Attachments */
+    .attachments-section {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e1e5eb;
+    }
+
+    .attachment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .attachment-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border: 1px solid #e1e5eb;
+        border-radius: 8px;
+        background: white;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .attachment-item:hover {
+        border-color: #3b82f6;
+        background: #f8fafc;
+        transform: translateX(4px);
+    }
+
+    .attachment-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 1;
+    }
+
+    .attachment-icon {
+        font-size: 1.25rem;
+        color: #3b82f6;
+    }
+
+    .attachment-details {
+        flex: 1;
+    }
+
+    .attachment-name {
+        display: block;
+        color: #1f2937;
+        font-weight: 500;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .attachment-meta {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .attachment-download {
+        color: #6b7280;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+    }
+
+    .attachment-item:hover .attachment-download {
+        opacity: 1;
+        color: #3b82f6;
+    }
+
+    /* Sidebar Cards */
+    .sidebar-card {
+        background: white;
+        border: 1px solid #e1e5eb;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e1e5eb;
+        background: #f8fafc;
+    }
+
+    .card-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        padding: 0.75rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border: 1px solid transparent;
+        text-align: center;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-edit {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+
+    .btn-edit:hover {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-activate {
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+
+    .btn-activate:hover {
+        background: #0da271;
+        color: white;
+    }
+
+    .btn-deactivate {
+        background: #f59e0b;
+        color: white;
+        border-color: #f59e0b;
+    }
+
+    .btn-deactivate:hover {
+        background: #d97706;
+        color: white;
+    }
+
+    .btn-feature {
+        background: #f3e8ff;
+        color: #7c3aed;
+        border-color: #f3e8ff;
+    }
+
+    .btn-feature:hover {
+        background: #7c3aed;
+        color: white;
+    }
+
+    .btn-unfeature {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fef3c7;
+    }
+
+    .btn-unfeature:hover {
+        background: #d97706;
+        color: white;
+    }
+
+    .btn-delete {
+        background: #fee2e2;
+        color: #ef4444;
+        border-color: #fee2e2;
+    }
+
+    .btn-delete:hover {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-secondary {
+        background: white;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+    }
+
+    .btn-secondary:hover {
+        background: #f8fafc;
+        color: #2563eb;
+        border-color: #2563eb;
+    }
+
+    /* Info Table */
+    .info-table {
+        width: 100%;
+    }
+
+    .info-row {
+        display: flex;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        flex: 0 0 40%;
+        font-weight: 500;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .info-value {
+        flex: 1;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .loading-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .loading-spinner {
+        color: #2563eb;
+        margin-bottom: 1rem;
+    }
+
+    .loading-text {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    /* Animations */
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .vacancy-detail-container {
+            padding: 1rem;
+        }
+
+        .header-content {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .back-btn {
+            align-self: stretch;
+            text-align: center;
+        }
+
+        .content-section, .sidebar-card {
+            padding: 1rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .action-btn {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .header-subtitle {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .info-row {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .info-label {
+            flex: none;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vacancy-detail-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <div>
+                <h1 class="header-title">
+                    {{ vacancy.title }}
+                </h1>
+                <div class="header-subtitle">
+                    <span class="status-badge {% if vacancy.is_active %}status-active{% else %}status-inactive{% endif %}">
+                        {% if vacancy.is_active %}Active{% else %}Closed{% endif %}
+                    </span>
+                    
+                    {% if vacancy.is_featured %}
+                    <span class="status-featured">Featured</span>
+                    {% endif %}
+                    
+                    <span class="info-badge">
+                        <i class="fas fa-building"></i>
+                        {{ vacancy.organization }}
+                    </span>
+                    
+                    <span class="info-badge">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{ vacancy.location }}
+                    </span>
+                    
+                    <span class="info-badge">
+                        <i class="fas fa-briefcase"></i>
+                        {{ vacancy.get_job_type_display }}
+                    </span>
+                </div>
+            </div>
+            <a href="{% url 'vacancy_list' %}" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Vacancies
+            </a>
+        </div>
+    </div>
+    
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="message-alert {% if 'success' in message.tags %}message-success
+            {% elif 'error' in message.tags %}message-error
+            {% elif 'warning' in message.tags %}message-warning
+            {% else %}message-info{% endif %}">
+            <div class="message-content">
+                <i class="fas 
+                    {% if 'success' in message.tags %}fa-check-circle 
+                    {% elif 'error' in message.tags %}fa-exclamation-circle 
+                    {% elif 'warning' in message.tags %}fa-exclamation-triangle 
+                    {% else %}fa-info-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+            <button onclick="closeMessage(this)" class="message-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <div class="detail-layout">
+        <!-- Main Content -->
+        <div class="content-main">
+            <!-- Description -->
+            <div class="content-section">
+                <h2 class="section-title">
+                    <i class="fas fa-file-alt"></i> Job Description
+                </h2>
+                <div class="vacancy-content">
+                    {{ vacancy.description|safe }}
+                </div>
+            </div>
+            
+            <!-- How to Apply -->
+            <div class="content-section">
+                <h2 class="section-title">
+                    <i class="fas fa-clipboard-check"></i> How to Apply
+                </h2>
+                <div class="vacancy-content">
+                    {{ vacancy.how_to_apply|safe }}
+                </div>
+                
+                {% if vacancy.application_link %}
+                <div class="mt-3">
+                    <a href="{{ vacancy.application_link }}" 
+                       target="_blank" 
+                       class="apply-btn">
+                        <i class="fas fa-external-link-alt"></i> Apply Online
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Organization Details -->
+            {% if vacancy.organization_details %}
+            <div class="content-section">
+                <h2 class="section-title">
+                    <i class="fas fa-building"></i> About the Organization
+                </h2>
+                <div class="vacancy-content">
+                    {{ vacancy.organization_details|safe }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Attachments -->
+            {% if attachments %}
+            <div class="content-section attachments-section">
+                <h2 class="section-title">
+                    <i class="fas fa-paperclip"></i> Attachments
+                </h2>
+                <div class="attachment-list">
+                    {% for attachment in attachments %}
+                    <a href="{{ attachment.file.url }}" 
+                       target="_blank" 
+                       class="attachment-item">
+                        <div class="attachment-info">
+                            {% if attachment.is_image %}
+                            <i class="fas fa-image attachment-icon"></i>
+                            {% elif attachment.is_pdf %}
+                            <i class="fas fa-file-pdf attachment-icon"></i>
+                            {% elif attachment.is_document %}
+                            <i class="fas fa-file-word attachment-icon"></i>
+                            {% else %}
+                            <i class="fas fa-file attachment-icon"></i>
+                            {% endif %}
+                            
+                            <div class="attachment-details">
+                                <span class="attachment-name">{{ attachment.file_name }}</span>
+                                <div class="attachment-meta">
+                                    {{ attachment.get_file_size_display }} • {{ attachment.file_type|upper }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="attachment-download">
+                            <i class="fas fa-download"></i>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="content-sidebar">
+            <!-- Action Buttons -->
+            <div class="sidebar-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-cog"></i> Actions
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="action-buttons">
+                        {% if can_edit %}
+                        <a href="{% url 'vacancy_edit' vacancy.pk %}" class="action-btn btn-edit">
+                            <i class="fas fa-edit"></i> Edit Vacancy
+                        </a>
+                        
+                        {% if vacancy.is_active %}
+                        <button class="action-btn btn-deactivate deactivate-btn" 
+                                data-vacancy-id="{{ vacancy.pk }}"
+                                data-vacancy-title="{{ vacancy.title|escapejs }}">
+                            <i class="fas fa-times"></i> Deactivate
+                        </button>
+                        {% else %}
+                        <button class="action-btn btn-activate activate-btn"
+                                data-vacancy-id="{{ vacancy.pk }}"
+                                data-vacancy-title="{{ vacancy.title|escapejs }}">
+                            <i class="fas fa-check"></i> Activate
+                        </button>
+                        {% endif %}
+                        
+                        {% if vacancy.is_featured %}
+                        <button class="action-btn btn-unfeature unfeature-btn"
+                                data-vacancy-id="{{ vacancy.pk }}"
+                                data-vacancy-title="{{ vacancy.title|escapejs }}">
+                            <i class="fas fa-star"></i> Remove Featured
+                        </button>
+                        {% else %}
+                        <button class="action-btn btn-feature feature-btn"
+                                data-vacancy-id="{{ vacancy.pk }}"
+                                data-vacancy-title="{{ vacancy.title|escapejs }}">
+                            <i class="fas fa-star"></i> Mark as Featured
+                        </button>
+                        {% endif %}
+                        
+                        <button class="action-btn btn-delete delete-btn"
+                                data-vacancy-id="{{ vacancy.pk }}"
+                                data-vacancy-title="{{ vacancy.title|escapejs }}">
+                            <i class="fas fa-trash"></i> Delete Vacancy
+                        </button>
+                        {% endif %}
+                        
+                        <a href="{% url 'vacancy_list' %}" class="action-btn btn-secondary">
+                            <i class="fas fa-list"></i> View All Vacancies
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vacancy Information -->
+            <div class="sidebar-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-info-circle"></i> Vacancy Information
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="info-table">
+                        <div class="info-row">
+                            <div class="info-label">Organization:</div>
+                            <div class="info-value">{{ vacancy.organization }}</div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">Location:</div>
+                            <div class="info-value">{{ vacancy.location }}</div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">Job Type:</div>
+                            <div class="info-value">{{ vacancy.get_job_type_display }}</div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">Status:</div>
+                            <div class="info-value">
+                                <span class="status-badge {% if vacancy.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                    {% if vacancy.is_active %}Active{% else %}Closed{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">Featured:</div>
+                            <div class="info-value">
+                                {% if vacancy.is_featured %}
+                                <span class="status-featured">Yes</span>
+                                {% else %}
+                                <span class="text-muted">No</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">Deadline:</div>
+                            <div class="info-value">
+                                {{ vacancy.application_deadline|date:"M d, Y" }}
+                                {% if vacancy.is_expired %}
+                                <span class="status-expired ms-1">Expired</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">Days Left:</div>
+                            <div class="info-value">
+                                {% if vacancy.days_until_deadline >= 0 %}
+                                    {{ vacancy.days_until_deadline }} days
+                                {% else %}
+                                    <span class="status-expired">Expired</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">Created:</div>
+                            <div class="info-value">{{ vacancy.created_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                        
+                        <div class="info-row">
+                            <div class="info-label">Updated:</div>
+                            <div class="info-value">{{ vacancy.updated_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <i class="fas fa-spinner fa-spin fa-3x loading-spinner"></i>
+        <p class="loading-text">Processing...</p>
+    </div>
+</div>
+
+<!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Function to show loading overlay
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+// Function to hide loading overlay
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Function to close message
+function closeMessage(button) {
+    const message = button.closest('.message-alert');
+    if (message) {
+        message.style.opacity = '0';
+        message.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            if (message.parentNode) {
+                message.remove();
+            }
+        }, 300);
+    }
+}
+
+// Function to show confirmation alert
+function showConfirmAlert(title, text, confirmText, icon = 'warning') {
+    return Swal.fire({
+        title: title,
+        text: text,
+        icon: icon,
+        showCancelButton: true,
+        confirmButtonColor: icon === 'error' ? '#ef4444' : (icon === 'warning' ? '#f59e0b' : '#10b981'),
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        customClass: {
+            confirmButton: 'swal-confirm-btn',
+            cancelButton: 'swal-cancel-btn'
+        }
+    });
+}
+
+// Function to show success message
+function showSuccessMessage(message) {
+    return Swal.fire({
+        title: 'Success!',
+        text: message,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+    });
+}
+
+// Function to handle action
+function handleAction(actionType, vacancyId, vacancyTitle) {
+    const urls = {
+        'activate': `/management/vacancies/${vacancyId}/activate/`,
+        'deactivate': `/management/vacancies/${vacancyId}/deactivate/`,
+        'feature': `/management/vacancies/${vacancyId}/feature/`,
+        'unfeature': `/management/vacancies/${vacancyId}/unfeature/`,
+        'delete': `/management/vacancies/${vacancyId}/delete/`
+    };
+    
+    const messages = {
+        'activate': {
+            title: 'Activate Vacancy',
+            text: `Are you sure you want to activate "${vacancyTitle}"?`,
+            confirmText: 'Activate',
+            icon: 'success',
+            success: `Vacancy "${vacancyTitle}" activated successfully!`
+        },
+        'deactivate': {
+            title: 'Deactivate Vacancy',
+            text: `Are you sure you want to deactivate "${vacancyTitle}"?`,
+            confirmText: 'Deactivate',
+            icon: 'warning',
+            success: `Vacancy "${vacancyTitle}" deactivated successfully!`
+        },
+        'feature': {
+            title: 'Feature Vacancy',
+            text: `Are you sure you want to mark "${vacancyTitle}" as featured?`,
+            confirmText: 'Feature',
+            icon: 'info',
+            success: `Vacancy "${vacancyTitle}" marked as featured!`
+        },
+        'unfeature': {
+            title: 'Remove Featured',
+            text: `Are you sure you want to remove "${vacancyTitle}" from featured?`,
+            confirmText: 'Remove',
+            icon: 'warning',
+            success: `Vacancy "${vacancyTitle}" removed from featured!`
+        },
+        'delete': {
+            title: 'Delete Vacancy',
+            text: `Are you sure you want to delete "${vacancyTitle}"? This action cannot be undone.`,
+            confirmText: 'Delete',
+            icon: 'error',
+            success: `Vacancy "${vacancyTitle}" deleted successfully!`
+        }
+    };
+    
+    const config = messages[actionType];
+    
+    showConfirmAlert(config.title, config.text, config.confirmText, config.icon).then((result) => {
+        if (result.isConfirmed) {
+            showLoading();
+            
+            // For delete, we need to POST to the URL
+            if (actionType === 'delete') {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = urls[actionType];
+                form.style.display = 'none';
+                
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = '{{ csrf_token }}';
+                form.appendChild(csrfInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+                return;
+            }
+            
+            // For other actions, redirect to the URL
+            window.location.href = urls[actionType];
+        }
+    });
+}
+
+// Initialize event listeners
+function initializeEventListeners() {
+    // Auto-hide messages after 5 seconds
+    setTimeout(() => {
+        document.querySelectorAll('.message-alert').forEach(message => {
+            message.style.opacity = '0';
+            message.style.transform = 'translateY(-10px)';
+            setTimeout(() => message.remove(), 300);
+        });
+    }, 5000);
+    
+    // Activate button listener
+    document.querySelectorAll('.activate-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const vacancyId = this.dataset.vacancyId;
+            const vacancyTitle = this.dataset.vacancyTitle;
+            handleAction('activate', vacancyId, vacancyTitle);
+        });
+    });
+    
+    // Deactivate button listener
+    document.querySelectorAll('.deactivate-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const vacancyId = this.dataset.vacancyId;
+            const vacancyTitle = this.dataset.vacancyTitle;
+            handleAction('deactivate', vacancyId, vacancyTitle);
+        });
+    });
+    
+    // Feature button listener
+    document.querySelectorAll('.feature-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const vacancyId = this.dataset.vacancyId;
+            const vacancyTitle = this.dataset.vacancyTitle;
+            handleAction('feature', vacancyId, vacancyTitle);
+        });
+    });
+    
+    // Unfeature button listener
+    document.querySelectorAll('.unfeature-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const vacancyId = this.dataset.vacancyId;
+            const vacancyTitle = this.dataset.vacancyTitle;
+            handleAction('unfeature', vacancyId, vacancyTitle);
+        });
+    });
+    
+    // Delete button listener
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const vacancyId = this.dataset.vacancyId;
+            const vacancyTitle = this.dataset.vacancyTitle;
+            handleAction('delete', vacancyId, vacancyTitle);
+        });
+    });
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeEventListeners);
+</script>
+{% endblock %}

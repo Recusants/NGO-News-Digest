@@ -1,71 +1,530 @@
 {% extends 'management/management_base.html' %}
-{% comment %} templates/management/category_form.html {% endcomment %}
 {% load static %}
 
-{% block title %}{% if category %}Edit Category{% else %}Create Category{% endif %}{% endblock %}
+{% block title %}
+    {% if category %}Edit Category: {{ category.name }}{% else %}Create New Category{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Category Form Container */
+    .category-form-container {
+        padding: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Form Header */
+    .form-header {
+        margin-bottom: 2rem;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .form-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .cancel-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--secondary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: var(--transition);
+    }
+
+    .cancel-btn:hover {
+        background: var(--light);
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    /* Form Card */
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    /* Form Elements */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--dark);
+        font-size: 0.875rem;
+    }
+
+    .required {
+        color: #ef4444;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-family: inherit;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Form Help Text */
+    .form-help {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--secondary);
+    }
+
+    /* Error Messages */
+    .form-errors {
+        padding: 1rem;
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        border-radius: var(--radius);
+        color: #991b1b;
+        margin-bottom: 1.5rem;
+    }
+
+    .error-message {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: #ef4444;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        padding: 0.75rem 1.5rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius);
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        transition: var(--transition);
+        text-decoration: none;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-secondary {
+        padding: 0.75rem 1.5rem;
+        background: white;
+        color: var(--secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        transition: var(--transition);
+        text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+        background: var(--light);
+        color: var(--primary);
+        border-color: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    /* Character Counter */
+    .char-counter {
+        text-align: right;
+        font-size: 0.75rem;
+        color: var(--secondary);
+        margin-top: 0.5rem;
+    }
+
+    .char-counter.warning {
+        color: #f59e0b;
+    }
+
+    .char-counter.error {
+        color: #ef4444;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .loading-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .loading-spinner {
+        color: var(--primary);
+        margin-bottom: 1rem;
+    }
+
+    .loading-text {
+        color: var(--secondary);
+        margin: 0;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* Success Message */
+    .success-message {
+        padding: 1.5rem;
+        background: #d1fae5;
+        border: 1px solid #a7f3d0;
+        border-radius: var(--radius);
+        color: #065f46;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        animation: slideInDown 0.3s ease;
+    }
+
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .category-form-container {
+            padding: 1rem;
+        }
+
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .cancel-btn {
+            align-self: stretch;
+            text-align: center;
+        }
+
+        .form-card {
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn-primary, .btn-secondary {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .form-title {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-    {% include 'management/management_header.html' %}
-    {% include 'management/management_side_bar.html' %}
+<div class="category-form-container">
+    <!-- Form Header -->
+    <div class="form-header">
+        <div class="header-content">
+            <div>
+                <h1 class="form-title">
+                    {% if category %}
+                        <i class="fas fa-edit me-2"></i> Edit Category: {{ category.name }}
+                    {% else %}
+                        <i class="fas fa-folder-plus me-2"></i> Create New Category
+                    {% endif %}
+                </h1>
+            </div>
+            <a href="{% url 'category_list' %}" class="cancel-btn">
+                Cancel
+            </a>
+        </div>
+    </div>
     
-    <main class="main-content" id="mainContent">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12 col-md-8 col-lg-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title mb-0">
-                                {% if category %}
-                                    <i class="fas fa-edit"></i> Edit Category: {{ category.name }}
-                                {% else %}
-                                    <i class="fas fa-folder-plus"></i> Create New Category
-                                {% endif %}
-                            </h2>
-                        </div>
-                        <div class="card-body">
-                            <form method="POST" id="categoryForm">
-                                {% csrf_token %}
-                                
-                                {% if form.non_field_errors %}
-                                <div class="alert alert-danger">
-                                    {{ form.non_field_errors }}
-                                </div>
-                                {% endif %}
-                                
-                                <div class="mb-3">
-                                    <label for="{{ form.name.id_for_label }}" class="form-label">
-                                        Category Name *
-                                    </label>
-                                    {{ form.name }}
-                                    {% if form.name.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.name.errors }}
-                                    </div>
-                                    {% endif %}
-                                    <small class="form-text text-muted">
-                                        Enter a unique category name
-                                    </small>
-                                </div>
-                                
-                                <!-- Form Actions -->
-                                <div class="form-actions mt-4 pt-3 border-top">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="fas fa-save"></i> Save Category
-                                            </button>
-                                            <a href="{% url 'category_list' %}" 
-                                               class="btn btn-outline-secondary ms-2">
-                                                Cancel
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+    <!-- Main Form -->
+    <div class="form-card">
+        <div class="card-header">
+            <h2 class="card-title">
+                <i class="fas fa-info-circle me-2"></i>
+                {% if category %}Edit Category Details{% else %}Category Information{% endif %}
+            </h2>
+        </div>
+        
+        <div class="card-body">
+            <form method="POST" id="categoryForm" class="category-form">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="form-errors">
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        {{ form.non_field_errors }}
                     </div>
                 </div>
-            </div>
+                {% endif %}
+                
+                <!-- Name Field -->
+                <div class="form-group">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                        Category Name <span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                           name="{{ form.name.html_name }}"
+                           id="{{ form.name.id_for_label }}"
+                           class="form-control"
+                           value="{{ form.name.value|default:'' }}"
+                           placeholder="Enter category name"
+                           required
+                           maxlength="100"
+                           oninput="updateCharCounter(this, 'nameCounter', 100)">
+                    {% if form.name.errors %}
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        {{ form.name.errors }}
+                    </div>
+                    {% endif %}
+                    <div class="form-help">
+                        Enter a unique category name (max 100 characters)
+                    </div>
+                    <div id="nameCounter" class="char-counter">
+                        0/100 characters
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <div class="action-buttons">
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save me-2"></i> 
+                            {% if category %}Update Category{% else %}Create Category{% endif %}
+                        </button>
+                        
+                        <a href="{% url 'category_list' %}" class="btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
         </div>
-    </main>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <i class="fas fa-spinner fa-spin fa-3x loading-spinner"></i>
+        <p class="loading-text">Saving category...</p>
+    </div>
+</div>
+
+<script>
+// Function to show loading overlay
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+// Function to hide loading overlay
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Function to update character counter
+function updateCharCounter(input, counterId, maxLength) {
+    const counter = document.getElementById(counterId);
+    if (counter) {
+        const length = input.value.length;
+        counter.textContent = `${length}/${maxLength} characters`;
+        
+        // Update color based on length
+        if (length > maxLength * 0.9) {
+            counter.className = 'char-counter error';
+        } else if (length > maxLength * 0.75) {
+            counter.className = 'char-counter warning';
+        } else {
+            counter.className = 'char-counter';
+        }
+    }
+}
+
+// Function to initialize character counter
+function initializeCharCounter() {
+    const nameInput = document.getElementById('{{ form.name.id_for_label }}');
+    if (nameInput) {
+        const initialValue = nameInput.value || '';
+        updateCharCounter({ value: initialValue }, 'nameCounter', 100);
+        
+        nameInput.addEventListener('input', function() {
+            updateCharCounter(this, 'nameCounter', 100);
+        });
+    }
+}
+
+// Form validation
+document.getElementById('categoryForm').addEventListener('submit', function(e) {
+    const nameInput = document.getElementById('{{ form.name.id_for_label }}');
+    const name = nameInput ? nameInput.value.trim() : '';
+    
+    // Basic validation
+    if (!name) {
+        e.preventDefault();
+        showErrorAlert('Category name is required.');
+        return false;
+    }
+    
+    if (name.length < 2) {
+        e.preventDefault();
+        showErrorAlert('Category name must be at least 2 characters long.');
+        return false;
+    }
+    
+    if (name.length > 100) {
+        e.preventDefault();
+        showErrorAlert('Category name cannot exceed 100 characters.');
+        return false;
+    }
+    
+    // Show loading overlay
+    showLoading();
+    
+    // Form will submit normally
+    return true;
+});
+
+// Function to show error alert
+function showErrorAlert(message) {
+    Swal.fire({
+        title: 'Validation Error',
+        text: message,
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#ef4444',
+    });
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize character counter
+    initializeCharCounter();
+    
+    // Auto-focus on name input
+    const nameInput = document.getElementById('{{ form.name.id_for_label }}');
+    if (nameInput) {
+        nameInput.focus();
+    }
+    
+    // Check for existing messages and auto-hide
+    setTimeout(() => {
+        const successMessage = document.querySelector('.success-message');
+        if (successMessage) {
+            successMessage.style.opacity = '0';
+            successMessage.style.transform = 'translateY(-10px)';
+            setTimeout(() => successMessage.remove(), 300);
+        }
+    }, 5000);
+});
+</script>
+
+<!-- Include SweetAlert2 for nice alerts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {% endblock %}

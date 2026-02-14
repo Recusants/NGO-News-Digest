@@ -3,12 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% load static %}
-    <title>{% block title %}Admin NGO-ND{% endblock %}</title>
+    <title>{% block title %}NGO Admin Dashboard{% endblock %}</title>
+    
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.ckeditor.com/4.20.1/standard/ckeditor.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Base CSS -->
     <style>
-        /* RESET & BASE */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #6b7280;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --light: #f8fafc;
+            --dark: #1f2937;
+            --border: #e1e5eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.15);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --transition: all 0.3s ease;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -20,9 +40,10 @@
             background: #f5f7fa;
             color: #333;
             line-height: 1.6;
+            overflow-x: hidden;
         }
         
-        /* UTILITIES */
+        /* Utilities */
         .hidden { display: none !important; }
         .flex { display: flex; }
         .flex-col { flex-direction: column; }
@@ -41,33 +62,37 @@
         .text-muted { color: #666; }
         .text-center { text-align: center; }
         .w-100 { width: 100%; }
+        .cursor-pointer { cursor: pointer; }
         
-        /* LAYOUT */
+        /* Layout */
         .app {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
         
-        /* HEADER - FIXED */
+        /* Header Styles */
         .header {
             height: 60px;
             background: white;
-            border-bottom: 1px solid #e1e5eb;
+            border-bottom: 1px solid var(--border);
             padding: 0 2rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             position: sticky;
             top: 0;
-            z-index: 100;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 1000;
+            box-shadow: var(--shadow);
         }
         
         .logo {
             font-weight: 700;
             font-size: 1.25rem;
-            color: #2563eb;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .user-menu {
@@ -80,32 +105,19 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background: #2563eb;
+            background: var(--primary);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
             cursor: pointer;
+            transition: var(--transition);
         }
         
-        /* SIDEBAR - FIXED WIDTH */
-        .sidebar {
-            width: 240px;
-            background: white;
-            border-right: 1px solid #e1e5eb;
-            padding: 2rem 0;
-            position: fixed;
-            top: 60px;
-            bottom: 0;
-            left: 0;
-            overflow-y: auto;
-            transition: transform 0.3s ease;
-            z-index: 99;
-        }
-        
-        .sidebar.collapsed {
-            transform: translateX(-240px);
+        .user-avatar:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
         }
         
         .sidebar-toggle {
@@ -115,10 +127,57 @@
             cursor: pointer;
             color: #4b5563;
             padding: 0.5rem;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
+        /* Sidebar Styles */
+        .sidebar {
+            width: 240px;
+            background: white;
+            border-right: 1px solid var(--border);
+            padding: 2rem 0;
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999;
+        }
+        
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        
+        .sidebar.collapsed .nav-text {
+            display: none;
+        }
+        
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding: 0.75rem;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 2rem;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: calc(100vh - 60px);
+            margin-top: 60px;
+        }
+        
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 70px;
+        }
+        
+        /* Navigation */
         .nav-item {
-            padding: 0.75rem 2rem;
+            padding: 0.75rem 1.5rem;
             display: flex;
             align-items: center;
             gap: 0.75rem;
@@ -126,44 +185,79 @@
             text-decoration: none;
             border-left: 3px solid transparent;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: var(--transition);
+            margin: 0.25rem 0.5rem;
+            border-radius: var(--radius);
         }
         
         .nav-item:hover {
-            background: #f8fafc;
-            color: #2563eb;
+            background: var(--light);
+            color: var(--primary);
+            transform: translateX(3px);
         }
         
         .nav-item.active {
             background: #eff6ff;
-            color: #2563eb;
-            border-left-color: #2563eb;
+            color: var(--primary);
+            border-left-color: var(--primary);
         }
         
-        /* MAIN CONTENT AREA */
-        .main-content {
-            flex: 1;
-            margin-left: 240px;
-            padding: 2rem;
-            transition: margin-left 0.3s ease;
+        .nav-text {
+            white-space: nowrap;
+            transition: opacity 0.2s ease;
         }
         
-        .sidebar.collapsed ~ .main-content {
-            margin-left: 0;
+        .sidebar.collapsed .nav-text {
+            opacity: 0;
+            width: 0;
         }
         
-        /* SECTION STYLES */
+        /* Tooltip for collapsed sidebar */
+        .nav-item[data-tooltip] {
+            position: relative;
+        }
+        
+        .nav-item[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--dark);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-left: 0.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .nav-item[data-tooltip]:hover::before {
+            content: '';
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 5px solid transparent;
+            border-right-color: var(--dark);
+            margin-left: -0.25rem;
+            z-index: 1000;
+        }
+        
+        /* Section Styles */
         .section {
             background: white;
-            border-radius: 12px;
-            border: 1px solid #e1e5eb;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
             margin-bottom: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow);
         }
         
         .section-header {
             padding: 1.5rem 2rem;
-            border-bottom: 1px solid #e1e5eb;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -172,163 +266,17 @@
         .section-title {
             font-size: 1.5rem;
             font-weight: 600;
-            color: #1f2937;
+            color: var(--dark);
         }
         
         .section-body {
             padding: 2rem;
         }
         
-        /* LOGIN/AUTH SECTION */
-        .auth-section {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .auth-tabs {
-            display: flex;
-            border-bottom: 1px solid #e1e5eb;
-            margin-bottom: 2rem;
-        }
-        
-        .auth-tab {
-            padding: 1rem 2rem;
-            background: none;
-            border: none;
-            font-size: 1rem;
-            color: #666;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-        }
-        
-        .auth-tab.active {
-            color: #2563eb;
-            border-bottom-color: #2563eb;
-            font-weight: 600;
-        }
-        
-        .auth-content {
-            padding: 1rem 0;
-        }
-        
-        .auth-form {
-            max-width: 400px;
-            margin: 0 auto;
-        }
-        
-        /* PASSWORD RECOVERY */
-        .recovery-steps {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 2rem;
-            gap: 2rem;
-        }
-        
-        .step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .step-number {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #e5e7eb;
-            color: #6b7280;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-        
-        .step.active .step-number {
-            background: #2563eb;
-            color: white;
-        }
-        
-        /* STATS GRID */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .stat-card {
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid #e1e5eb;
-            background: white;
-        }
-        
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0.5rem 0;
-            color: #1f2937;
-        }
-        
-        /* TABLES */
-        .table-container {
-            overflow-x: auto;
-            border-radius: 8px;
-            border: 1px solid #e1e5eb;
-            background: white;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th {
-            text-align: left;
-            padding: 1rem;
-            font-weight: 600;
-            color: #4b5563;
-            border-bottom: 2px solid #e1e5eb;
-            background: #f8fafc;
-        }
-        
-        td {
-            padding: 1rem;
-            border-bottom: 1px solid #e1e5eb;
-        }
-        
-        tr:hover {
-            background: #f8fafc;
-        }
-        
-        /* BADGES */
-        .badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        
-        .badge-draft {
-            background: #fef3c7;
-            color: #92400e;
-        }
-        
-        .badge-published {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .badge-pending {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        
-        /* BUTTONS */
+        /* Buttons */
         .btn {
             padding: 0.625rem 1.25rem;
-            border-radius: 8px;
+            border-radius: var(--radius);
             border: none;
             font-weight: 500;
             cursor: pointer;
@@ -337,16 +285,18 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            transition: all 0.2s;
+            transition: var(--transition);
         }
         
         .btn-primary {
-            background: #2563eb;
+            background: var(--primary);
             color: white;
         }
         
         .btn-primary:hover {
-            background: #1d4ed8;
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
         
         .btn-secondary {
@@ -357,6 +307,7 @@
         
         .btn-secondary:hover {
             background: #e2e8f0;
+            transform: translateY(-1px);
         }
         
         .btn-sm {
@@ -364,7 +315,7 @@
             font-size: 0.75rem;
         }
         
-        /* FORM ELEMENTS */
+        /* Form Elements */
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -380,60 +331,19 @@
             width: 100%;
             padding: 0.75rem;
             border: 1px solid #d1d5db;
-            border-radius: 8px;
+            border-radius: var(--radius);
             font-family: inherit;
             font-size: 1rem;
-            transition: all 0.2s;
+            transition: var(--transition);
         }
         
         .form-control:focus {
             outline: none;
-            border-color: #2563eb;
+            border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
         
-        /* EDITOR */
-        .editor-wrapper {
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #d1d5db;
-        }
-        
-        /* SCROLL TO TOP BUTTON */
-        .scroll-top {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            width: 50px;
-            height: 50px;
-            background: #2563eb;
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 100;
-        }
-        
-        .scroll-top.visible {
-            opacity: 1;
-        }
-        
-        /* SECTION ANCHOR HIGHLIGHT */
-        .section.highlighted {
-            animation: highlight 2s ease;
-        }
-        
-        @keyframes highlight {
-            0%, 100% { border-color: #e1e5eb; }
-            50% { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-        }
-        
-        /* MOBILE DISABLED - Only tablets and above */
+        /* Mobile Message */
         @media (max-width: 768px) {
             .app {
                 display: none;
@@ -449,22 +359,14 @@
                 background: #f5f7fa;
                 color: #4b5563;
             }
-        }
-        
-        /* TABLET OPTIMIZATIONS */
-        @media (max-width: 1024px) {
-            .sidebar {
-                position: fixed;
-                z-index: 1000;
-                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            }
             
-            .sidebar:not(.collapsed) ~ .main-content {
-                margin-left: 240px;
+            .mobile-message h2 {
+                margin-bottom: 1rem;
+                color: var(--dark);
             }
         }
         
-        /* SCROLLBAR STYLING */
+        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -472,6 +374,7 @@
         
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
+            border-radius: 4px;
         }
         
         ::-webkit-scrollbar-thumb {
@@ -483,81 +386,177 @@
             background: #94a3b8;
         }
         
-        /* MODAL */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            width: 100%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        /* NOTIFICATIONS */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #10b981;
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 1001;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
+        {% block extra_css %}{% endblock %}
     </style>
     
+    <!-- Inline JavaScript that loads immediately -->
+    <script>
+        // Define global functions immediately
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.querySelector('.sidebar-toggle');
+            
+            if (sidebar) {
+                sidebar.classList.toggle('collapsed');
+                
+                // Rotate toggle button
+                if (toggleBtn) {
+                    if (sidebar.classList.contains('collapsed')) {
+                        toggleBtn.style.transform = 'rotate(180deg)';
+                    } else {
+                        toggleBtn.style.transform = 'rotate(0deg)';
+                    }
+                }
+                
+                // Save state to localStorage
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+                
+                // Update tooltips
+                if (window.updateTooltips) {
+                    window.updateTooltips();
+                }
+                
+                // Show tooltip/hint for first time
+                const firstToggle = localStorage.getItem('firstSidebarToggle');
+                if (!firstToggle && sidebar.classList.contains('collapsed')) {
+                    setTimeout(() => {
+                        if (window.showSweetAlert) {
+                            window.showSweetAlert('Sidebar Collapsed', 'Click the hamburger menu again to expand. Hover over icons to see tooltips.', 'info');
+                        }
+                        localStorage.setItem('firstSidebarToggle', 'true');
+                    }, 500);
+                }
+            }
+        };
+    </script>
 </head>
-
 <body>
     <div class="mobile-message hidden">
         <div>
-            <h2>🖥️ <br>Larger Screen Required</h2>
-            <p>This admin dashboard is optimized for laptops, desktops, and tablets.</p>
-            <p>Please access from a device with a screen width of 768px or larger.</p>
+            <h2><i class="fas fa-desktop me-2"></i>Desktop Only</h2>
+            <p>This admin dashboard is optimized for tablets and desktop devices only.</p>
+            <p>Please access from a device with a larger screen.</p>
         </div>
     </div>
+    
     <div class="app">
+        {% include 'management/management_header.html' %}
+        {% include 'management/management_side_bar.html' %}
         
+        <main class="main-content" id="mainContent">
             {% block content %}{% endblock %}
-        
+        </main>
     </div>
-    <!-- Back to Top Button -->
-    <button class="back-to-top" id="backToTop">
-        <i class="fas fa-chevron-up"></i>
-    </button>
 
-
+    <!-- Main JavaScript (loads after DOM) -->
     <script>
-        // ======================
-        // INITIALIZATION
-        // ======================
+        // ===== GLOBAL FUNCTIONS =====
+        
+        // Tooltip management
+        window.updateTooltips = function() {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+            
+            const navItems = document.querySelectorAll('.nav-item');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            
+            navItems.forEach(item => {
+                const title = item.getAttribute('title') || '';
+                if (isCollapsed && title) {
+                    item.setAttribute('data-tooltip', title);
+                } else {
+                    item.removeAttribute('data-tooltip');
+                }
+            });
+        };
+        
+        // SweetAlert2 helpers
+        window.showSweetAlert = function(title, text, icon = 'info', confirmButtonText = 'OK') {
+            return Swal.fire({
+                title: title,
+                text: text,
+                icon: icon,
+                confirmButtonText: confirmButtonText,
+                confirmButtonColor: '#2563eb',
+                showClass: { popup: 'animate__animated animate__fadeInDown' },
+                hideClass: { popup: 'animate__animated animate__fadeOutUp' }
+            });
+        };
+        
+        window.showSuccessAlert = function(message) {
+            return Swal.fire({
+                title: 'Success!',
+                text: message,
+                icon: 'success',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#10b981',
+                timer: 3000,
+                timerProgressBar: true
+            });
+        };
+        
+        window.showErrorAlert = function(message) {
+            return Swal.fire({
+                title: 'Error!',
+                text: message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#ef4444'
+            });
+        };
+        
+        window.showConfirmAlert = function(title, text, confirmButtonText = 'Yes, proceed') {
+            return Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            });
+        };
+        
+        window.showLoadingAlert = function(title = 'Loading...') {
+            Swal.fire({
+                title: title,
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => { Swal.showLoading(); }
+            });
+        };
+        
+        window.closeLoadingAlert = function() {
+            Swal.close();
+        };
+        
+        // Utility functions
+        window.showModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        };
+        
+        window.closeModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        };
+        
+        window.moveToNext = function(input) {
+            if (input.value.length === 1) {
+                const next = input.nextElementSibling;
+                if (next && next.tagName === 'INPUT') {
+                    next.focus();
+                }
+            }
+        };
+        
+        // ===== INITIALIZATION =====
         document.addEventListener('DOMContentLoaded', function() {
             // Check if mobile
             if (window.innerWidth <= 768) {
@@ -565,214 +564,50 @@
                 return;
             }
             
-            // Initialize CKEditor
-            initCKEditor();
+            // Load sidebar state from localStorage
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.querySelector('.sidebar-toggle');
             
+            if (sidebar && isCollapsed) {
+                sidebar.classList.add('collapsed');
+                if (toggleBtn) {
+                    toggleBtn.style.transform = 'rotate(180deg)';
+                }
+            }
             
+            // Initial tooltip setup
+            if (window.updateTooltips) {
+                window.updateTooltips();
+            }
             
-            // Setup scroll to top button
+            // Monitor sidebar for changes
+            const observer = new MutationObserver(function() {
+                if (window.updateTooltips) {
+                    window.updateTooltips();
+                }
+            });
             
+            if (sidebar) {
+                observer.observe(sidebar, { 
+                    attributes: true, 
+                    attributeFilter: ['class'] 
+                });
+            }
             
+            // Initialize CKEditor if needed
+            if (typeof CKEDITOR !== 'undefined' && document.getElementById('ckeditor')) {
+                initCKEditor();
+            }
             
+            // Setup event listeners
+            setupEventListeners();
         });
-
-        // ======================
-        // NAVIGATION & SCROLLING
-        // ======================
-        function scrollToSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            if (section) {
-                // Remove highlight from all sections
-                document.querySelectorAll('.section').forEach(s => {
-                    s.classList.remove('highlighted');
-                });
-                
-                // Add highlight to target section
-                section.classList.add('highlighted');
-                
-                // Scroll to section
-                section.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-                
-                // Update active nav item
-                updateActiveNav(sectionId);
-                
-                // If scrolling to editor, initialize CKEditor
-                if (sectionId === 'editor') {
-                    initCKEditor();
-                }
-            }
-        }
-
-        function updateActiveNav(sectionId) {
-            // Remove active class from all nav items
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Map section IDs to nav indices
-            const navMap = {
-                'login': 0,
-                'dashboard': 1,
-                'stories': 2,
-                'editor': 3,
-                'subscribers': 4,
-                'profile': 5,
-                'settings': 6
-            };
-            
-            if (navMap[sectionId] !== undefined) {
-                document.querySelectorAll('.nav-item')[navMap[sectionId]].classList.add('active');
-            }
-        }
-
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-
         
-
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        }
-
-        // ======================
-        // AUTHENTICATION TABS
-        // ======================
-        function showAuthTab(tabName) {
-            // Update tabs
-            document.querySelectorAll('.auth-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Show/hide content
-            document.getElementById('loginTab').classList.add('hidden');
-            document.getElementById('forgotTab').classList.add('hidden');
-            document.getElementById('registerTab').classList.add('hidden');
-            
-            document.getElementById(tabName + 'Tab').classList.remove('hidden');
-            
-            // Reset recovery steps if showing forgot password
-            if (tabName === 'forgot') {
-                resetRecoverySteps();
-            }
-        }
-
-        
-
-        // ======================
-        // PASSWORD RECOVERY
-        // ======================
-        let recoveryStep = 1;
-        let countdownTimer = null;
-        let countdownSeconds = 60;
-
-        function resetRecoverySteps() {
-            recoveryStep = 1;
-            document.querySelectorAll('.step').forEach(step => {
-                step.classList.remove('active');
-            });
-            document.querySelector('.step[data-step="1"]').classList.add('active');
-            
-            document.getElementById('step1').classList.remove('hidden');
-            document.getElementById('step2').classList.add('hidden');
-            document.getElementById('step3').classList.add('hidden');
-            
-            if (countdownTimer) {
-                clearInterval(countdownTimer);
-            }
-        }
-
-        function goToStep(step) {
-            recoveryStep = step;
-            
-            // Update step indicators
-            document.querySelectorAll('.step').forEach(s => {
-                s.classList.remove('active');
-            });
-            document.querySelector(`.step[data-step="${step}"]`).classList.add('active');
-            
-            // Show/hide forms
-            document.getElementById('step1').classList.add('hidden');
-            document.getElementById('step2').classList.add('hidden');
-            document.getElementById('step3').classList.add('hidden');
-            document.getElementById(`step${step}`).classList.remove('hidden');
-            
-            // Start countdown for step 2
-            if (step === 2) {
-                startCountdown();
-            }
-        }
-
-        function backToStep1() {
-            goToStep(1);
-        }
-
-        function backToStep2() {
-            goToStep(2);
-        }
-
-        function startCountdown() {
-            countdownSeconds = 60;
-            const countdownElement = document.getElementById('countdown');
-            
-            if (countdownTimer) {
-                clearInterval(countdownTimer);
-            }
-            
-            countdownTimer = setInterval(() => {
-                countdownSeconds--;
-                countdownElement.textContent = `(${countdownSeconds}s)`;
-                
-                if (countdownSeconds <= 0) {
-                    clearInterval(countdownTimer);
-                    countdownElement.textContent = '(Expired)';
-                }
-            }, 1000);
-        }
-
-        function resendCode() {
-            if (countdownSeconds > 0) return;
-            
-            showNotification('New verification code sent to your email');
-            startCountdown();
-        }
-
-        function resetPassword() {
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (newPassword !== confirmPassword) {
-                showNotification('Passwords do not match', 'error');
-                return;
-            }
-            
-            if (newPassword.length < 8) {
-                showNotification('Password must be at least 8 characters', 'error');
-                return;
-            }
-            
-            // Success
-            showNotification('Password reset successfully!');
-            setTimeout(() => {
-                showAuthTab('login');
-            }, 2000);
-        }
-
-        // ======================
-        // EDITOR
-        // ======================
-        let editorInstance = null;
-
+        // CKEditor initialization
         function initCKEditor() {
-            if (typeof CKEDITOR !== 'undefined' && !editorInstance) {
-                editorInstance = CKEDITOR.replace('ckeditor', {
+            if (typeof CKEDITOR !== 'undefined') {
+                CKEDITOR.replace('ckeditor', {
                     toolbar: [
                         { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike'] },
                         { name: 'paragraph', items: ['NumberedList', 'BulletedList'] },
@@ -785,176 +620,44 @@
                 });
             }
         }
-
-        function saveStory() {
-            const title = document.getElementById('storyTitle').value;
-            const status = document.getElementById('storyStatus').value;
-            const content = editorInstance ? editorInstance.getData() : '';
-            
-            if (!title.trim()) {
-                showNotification('Please enter a story title', 'error');
-                return;
-            }
-            
-            if (!content.trim()) {
-                showNotification('Please add some content to your story', 'error');
-                return;
-            }
-            
-            // Simulate save
-            showNotification(`"${title}" saved as ${status}`);
-        }
-
         
-        
-
-        // ======================
-        // PROFILE MANAGEMENT
-        // ======================
-        function updateProfile() {
-            const firstName = document.getElementById('profileFirstName').value;
-            const lastName = document.getElementById('profileLastName').value;
-            const email = document.getElementById('profileEmailInput').value;
-            
-            // Update profile display
-            document.getElementById('profileName').textContent = `${firstName} ${lastName}`;
-            document.getElementById('profileEmail').textContent = email;
-            
-            // Update avatar initials
-            const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-            document.getElementById('userInitials').textContent = initials;
-            document.getElementById('profileInitials').textContent = initials;
-            
-            showNotification('Profile updated successfully');
-        }
-
-        function changePassword() {
-            const current = document.getElementById('currentPassword').value;
-            const newPass = document.getElementById('newProfilePassword').value;
-            const confirm = document.getElementById('confirmProfilePassword').value;
-            
-            if (!current) {
-                showNotification('Please enter current password', 'error');
-                return;
-            }
-            
-            if (newPass !== confirm) {
-                showNotification('New passwords do not match', 'error');
-                return;
-            }
-            
-            if (newPass.length < 8) {
-                showNotification('Password must be at least 8 characters', 'error');
-                return;
-            }
-            
-            showNotification('Password changed successfully');
-            
-            // Clear form
-            document.getElementById('currentPassword').value = '';
-            document.getElementById('newProfilePassword').value = '';
-            document.getElementById('confirmProfilePassword').value = '';
-        }
-
-        function changeAvatar() {
-            showModal('avatarModal');
-        }
-
-        function uploadAvatar(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const avatarElement = document.getElementById('profileAvatar');
-                    avatarElement.style.backgroundImage = `url(${e.target.result})`;
-                    avatarElement.style.backgroundSize = 'cover';
-                    avatarElement.querySelector('#profileInitials').style.display = 'none';
-                    
-                    // Also update small avatar
-                    const smallAvatar = document.querySelector('.user-avatar');
-                    smallAvatar.style.backgroundImage = `url(${e.target.result})`;
-                    smallAvatar.style.backgroundSize = 'cover';
-                    smallAvatar.querySelector('#userInitials').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function saveAvatar() {
-            showNotification('Profile picture updated successfully');
-            closeModal('avatarModal');
-        }
-
-        // ======================
-        // SETTINGS
-        // ======================
-        function saveSettings() {
-            showNotification('Settings saved successfully');
-        }
-
-        // ======================
-        // UTILITIES
-        // ======================
-        
-
-        function showNotification(message, type = 'success') {
-            // Remove existing notification
-            const existing = document.querySelector('.notification');
-            if (existing) existing.remove();
-            
-            // Create new notification
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span>${type === 'success' ? '✓' : '⚠'}</span>
-                    <span>${message}</span>
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            // Auto-remove after 3 seconds
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.parentNode.removeChild(notification);
+        // Setup event listeners
+        function setupEventListeners() {
+            // Close modals when clicking outside
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    e.target.classList.add('hidden');
                 }
-            }, 3000);
-        }
-
-        function showModal(modalId) {
-            document.getElementById(modalId).classList.remove('hidden');
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-        }
-
-        function moveToNext(input) {
-            if (input.value.length === 1) {
-                const next = input.nextElementSibling;
-                if (next && next.tagName === 'INPUT') {
-                    next.focus();
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+B to toggle sidebar
+                if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                    e.preventDefault();
+                    toggleSidebar();
                 }
-            }
+                
+                // Ctrl+S to save
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    const saveBtn = document.querySelector('[onclick*="save"]');
+                    if (saveBtn) saveBtn.click();
+                }
+                
+                // Escape to close modals/alerts
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.classList.add('hidden');
+                    });
+                    if (Swal.isVisible()) {
+                        Swal.close();
+                    }
+                }
+            });
         }
-
-        // Close modals when clicking outside
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('modal')) {
-                e.target.classList.add('hidden');
-            }
-        });
-
-        // Close modals with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.classList.add('hidden');
-                });
-            }
-        });
+        
+        {% block extra_js %}{% endblock %}
     </script>
-</script>
 </body>
 </html>

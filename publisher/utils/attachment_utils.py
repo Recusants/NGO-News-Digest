@@ -1,11 +1,11 @@
 # utils/attachment_utils.py
 from django.contrib.contenttypes.models import ContentType
+from publisher.models import GenericAttachment
 
 def attach_file_to_object(obj, file):
     """
     Attach a single file to any Django model instance
     """
-    from .models import GenericAttachment
     
     content_type = ContentType.objects.get_for_model(obj.__class__)
     
@@ -45,7 +45,6 @@ def get_attachments_for_object(obj):
     """
     Get all attachments for any Django model instance
     """
-    from .models import GenericAttachment
     
     content_type = ContentType.objects.get_for_model(obj.__class__)
     return GenericAttachment.objects.filter(
@@ -57,7 +56,6 @@ def delete_attachment(attachment_id):
     """
     Delete a specific attachment
     """
-    from .models import GenericAttachment
     try:
         attachment = GenericAttachment.objects.get(id=attachment_id)
         attachment.delete()

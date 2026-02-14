@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     "subscriptions",
     "management",
 
+    "django.contrib.humanize",
+
     "ckeditor",
 
 ]
@@ -115,6 +117,8 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+SITE_URL = 'http://localhost:8000'
+
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -138,6 +142,6 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_HSTS_SECONDS = 0
 
 
-LOGIN_URL = '/login_page/'  # URL to redirect to when login is required
-LOGIN_REDIRECT_URL = 'management'  # Where to redirect after successful login
-LOGOUT_REDIRECT_URL = 'login_page'  # Where to redirect after logout
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login'

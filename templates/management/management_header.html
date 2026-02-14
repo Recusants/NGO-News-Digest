@@ -1,15 +1,63 @@
 <header class="header">
     <div class="flex align-center gap-2">
-        <button class="sidebar-toggle" onclick="toggleSidebar()">
-            ☰
+        <button class="sidebar-toggle" id="sidebarToggle" title="Toggle Sidebar (Ctrl+B)">
+            <i class="fas fa-bars"></i>
         </button>
-        <div class="logo">NGO Admin Dashboard</div>
+        <div class="logo">
+            <i class="fas fa-hands-helping"></i>
+            NGO Admin Dashboard
+        </div>
     </div>
     
     <div class="user-menu">
-        <div class="text-sm text-muted" id="currentTime"></div>
-        <div class="user-avatar" onclick="scrollToSection('profile')">
+        <div class="text-sm text-muted" id="currentTime">
+            <i class="fas fa-clock me-1"></i>
+            <span>Loading...</span>
+        </div>
+        {% if request.user.is_authenticated %}
+        <div class="user-avatar" onclick="window.location.href='{% url 'user_profile' %}'" title="{{ request.user.get_full_name|default:request.user.username }}">
+            <span id="userInitials">
+                {{ request.user.get_full_name|default:request.user.username|slice:":2"|upper }}
+            </span>
+        </div>
+        {% else %}
+        <div class="user-avatar" onclick="window.location.href='{% url 'login' %}'" title="Login">
             <span id="userInitials">AD</span>
         </div>
+        {% endif %}
     </div>
 </header>
+
+<script>
+    // Setup sidebar toggle event listener
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                if (window.toggleSidebar) {
+                    window.toggleSidebar();
+                }
+            });
+        }
+    });
+    
+    // Time display function
+    function updateCurrentTime() {
+        const now = new Date();
+        const timeElement = document.getElementById('currentTime');
+        if (timeElement) {
+            const timeString = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            timeElement.innerHTML = `<i class="fas fa-clock me-1"></i>${timeString}`;
+        }
+    }
+    
+    // Initialize time display
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 60000);
+    });
+</script>

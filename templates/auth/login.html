@@ -1,41 +1,842 @@
-{% extends 'partials/base.html' %}
-
-{% block title %}Login - NGO News Digest{% endblock %}
-
-{% block content %}
-<div style="max-width: 400px; margin: 0 auto; padding: var(--spacing-2xl) 0;">
-    <h1 style="margin-bottom: var(--spacing-xl);">Login</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - NGO Admin</title>
     
-    {% if messages %}
-    <div style="margin-bottom: var(--spacing-lg);">
-        {% for message in messages %}
-        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" 
-             style="padding: var(--spacing-md); border-radius: var(--radius-md); 
-                    {% if message.tags == 'error' %}background: rgba(209, 0, 0, 0.1); color: var(--primary-red);{% endif %}
-                    {% if message.tags == 'success' %}background: rgba(40, 167, 69, 0.1); color: #155724;{% endif %}">
-            {{ message }}
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #6b7280;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --light: #f8fafc;
+            --dark: #1f2937;
+            --border: #e1e5eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.15);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .gap-1 { gap: 10px; }
+        .mt-2 { margin-top: 20px; }
+        .mb-2 { margin-bottom: 16px; }
+        .mb-4 { margin-bottom: 24px; }
+        .w-100 { width: 100%; }
+        .text-muted { color: var(--secondary); }
+        .text-sm { font-size: 13px; }
+        
+        /* Login Container */
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+        
+        /* Tabs */
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 16px;
+            background: none;
+            border: none;
+            font-size: 14px;
+            color: var(--secondary);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .auth-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .auth-tab:hover:not(.active) {
+            background: var(--light);
+        }
+        
+        .auth-content {
+            padding: 2rem;
+        }
+        
+        /* Recovery Steps */
+        .recovery-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .recovery-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            height: 2px;
+            background: var(--border);
+            z-index: 1;
+        }
+        
+        .step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+            z-index: 2;
+            padding: 0 10px;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--border);
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin: 0 auto 8px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .step.active .step-number {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .step-text {
+            font-size: 12px;
+            color: var(--secondary);
+            white-space: nowrap;
+        }
+        
+        .step.active .step-text {
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        /* Verification Code */
+        .verification-code {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .code-input {
+            width: 45px;
+            height: 50px;
+            text-align: center;
+            font-size: 20px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            font-weight: 600;
+        }
+        
+        .code-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: var(--radius);
+            font-size: 14px;
+            transition: var(--transition);
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .password-input-container {
+            position: relative;
+        }
+        
+        .password-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--secondary);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 16px;
+        }
+        
+        .password-toggle-btn:hover {
+            color: var(--primary);
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .remember-me label {
+            margin: 0;
+            font-size: 14px;
+            color: #4b5563;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+        
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            transform: translateY(-1px);
+        }
+        
+        /* Admin Contact */
+        .admin-contact {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 16px;
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+        }
+        
+        .text-link {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .text-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 480px) {
+            .auth-content {
+                padding: 1.5rem;
+            }
+            
+            .verification-code {
+                gap: 8px;
+            }
+            
+            .code-input {
+                width: 40px;
+                height: 45px;
+                font-size: 18px;
+            }
+            
+            .step-text {
+                font-size: 11px;
+            }
+            
+            .step-number {
+                width: 36px;
+                height: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="showAuthTab('login')">Login</button>
+            <button class="auth-tab" onclick="showAuthTab('forgot')">Forgot Password</button>
+            <button class="auth-tab" onclick="showAuthTab('register')">Register</button>
         </div>
-        {% endfor %}
+        
+        <!-- LOGIN TAB -->
+        <div id="loginTab" class="auth-content">
+            <form method="post" id="loginForm">
+                {% csrf_token %}
+                <input type="hidden" name="tab" value="login">
+                
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" name="username" class="form-control" placeholder="Enter your username" required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="loginPassword" name="password" class="form-control" placeholder="••••••••" required>
+                        <button type="button" class="password-toggle-btn">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMe" name="remember_me">
+                    <label for="rememberMe">Remember me</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">
+                    Sign In
+                </button>
+            </form>
+        </div>
+        
+        <!-- FORGOT PASSWORD TAB -->
+        <div id="forgotTab" class="auth-content hidden">
+            <div class="recovery-steps">
+                <div class="step active">
+                    <div class="step-number">1</div>
+                    <div class="step-text">Enter Email</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">Verify Code</div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">New Password</div>
+                </div>
+            </div>
+            
+            <!-- Step 1: Enter Email -->
+            <div id="step1">
+                <p class="text-muted mb-4">Enter your email address to receive a verification code.</p>
+                <div class="form-group">
+                    <label for="recoveryEmail">Email Address</label>
+                    <input type="email" id="recoveryEmail" name="email" class="form-control" placeholder="your@email.com">
+                </div>
+                
+                <div class="flex gap-1 mt-2">
+                    <button type="button" class="btn btn-secondary" onclick="showAuthTab('login')">Back to Login</button>
+                    <button type="button" class="btn btn-primary" onclick="sendResetCode()">Send Code</button>
+                </div>
+            </div>
+            
+            <!-- Step 2: Verify Code -->
+            <div id="step2" class="hidden">
+                <p class="text-muted mb-4">Enter the 6-digit verification code sent to your email.</p>
+                <div class="verification-code">
+                    <input type="text" maxlength="1" class="code-input" oninput="moveToNext(this)">
+                    <input type="text" maxlength="1" class="code-input" oninput="moveToNext(this)">
+                    <input type="text" maxlength="1" class="code-input" oninput="moveToNext(this)">
+                    <input type="text" maxlength="1" class="code-input" oninput="moveToNext(this)">
+                    <input type="text" maxlength="1" class="code-input" oninput="moveToNext(this)">
+                    <input type="text" maxlength="1" class="code-input" oninput="moveToNext(this)">
+                </div>
+                
+                <p class="text-sm text-muted mb-4">
+                    Didn't receive the code? 
+                    <button type="button" class="text-link" onclick="resendCode()">Resend Code</button>
+                    <span id="countdown" class="text-muted">(60s)</span>
+                </p>
+                
+                <div class="flex gap-1 mt-2">
+                    <button type="button" class="btn btn-secondary" onclick="backToStep1()">Back</button>
+                    <button type="button" class="btn btn-primary" onclick="verifyResetCode()">Verify Code</button>
+                </div>
+            </div>
+            
+            <!-- Step 3: New Password -->
+            <div id="step3" class="hidden">
+                <p class="text-muted mb-4">Enter your new password.</p>
+                <form method="post" id="newPasswordForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="tab" value="password_reset">
+                    
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" name="new_password1" class="form-control" placeholder="••••••••" required>
+                        <small class="text-muted">Must be at least 8 characters with uppercase, lowercase, and numbers.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" name="new_password2" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    
+                    <div class="flex gap-1 mt-2">
+                        <button type="button" class="btn btn-secondary" onclick="backToStep2()">Back</button>
+                        <button type="submit" class="btn btn-primary">Reset Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- REGISTER TAB -->
+        <div id="registerTab" class="auth-content hidden">
+            <p class="text-muted mb-4">Contact your system administrator to create a new account.</p>
+            <div class="admin-contact">
+                <p class="text-sm mb-2"><strong>Email:</strong> admin@ngo.org</p>
+                <p class="text-sm mb-2"><strong>Phone:</strong> +1 (555) 123-4567</p>
+                <p class="text-sm"><strong>Office Hours:</strong> Mon-Fri, 9AM-5PM</p>
+            </div>
+            
+            <button type="button" class="btn btn-secondary w-100" onclick="showAuthTab('login')">
+                Back to Login
+            </button>
+        </div>
     </div>
-    {% endif %}
-    
-    <form method="post" style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
-        {% csrf_token %}
-        <div>
-            <label style="display: block; margin-bottom: var(--spacing-xs); font-weight: 600;">Username</label>
-            <input type="text" name="username" required 
-                   style="width: 100%; padding: var(--spacing-md); border: 2px solid var(--border-color); border-radius: var(--radius-md);">
-        </div>
-        <div>
-            <label style="display: block; margin-bottom: var(--spacing-xs); font-weight: 600;">Password</label>
-            <input type="password" name="password" required 
-                   style="width: 100%; padding: var(--spacing-md); border: 2px solid var(--border-color); border-radius: var(--radius-md);">
-        </div>
-        <button type="submit" class="btn" style="width: 100%;">Login</button>
-    </form>
-    
-    <p style="margin-top: var(--spacing-lg); text-align: center;">
-        Don't have an account? <a href="{% url 'register' %}" style="color: var(--primary-red);">Register here</a>
-    </p>
-</div>
-{% endblock %}
+
+    <script>
+        // Get CSRF token from cookie
+        function getCsrfToken() {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith('csrftoken=')) {
+                    return cookie.substring('csrftoken='.length);
+                }
+            }
+            return '';
+        }
+
+        const csrftoken = getCsrfToken();
+
+        // SweetAlert helpers
+        function showSweetAlert(title, text, icon = 'info') {
+            return Swal.fire({
+                title: title,
+                text: text,
+                icon: icon,
+                confirmButtonColor: '#2563eb',
+            });
+        }
+
+        function showLoadingAlert(title = 'Loading...') {
+            Swal.fire({
+                title: title,
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => { Swal.showLoading(); }
+            });
+        }
+
+        function closeLoadingAlert() {
+            Swal.close();
+        }
+
+        // Auth tab switching
+        function showAuthTab(tabName) {
+            // Update tabs
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Activate clicked tab
+            event.target.classList.add('active');
+            
+            // Show/hide content
+            document.getElementById('loginTab').classList.add('hidden');
+            document.getElementById('forgotTab').classList.add('hidden');
+            document.getElementById('registerTab').classList.add('hidden');
+            
+            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+            
+            // Reset recovery steps if showing forgot password
+            if (tabName === 'forgot') {
+                resetRecoverySteps();
+            }
+            
+            // Focus on first input field
+            setTimeout(() => {
+                const firstInput = document.querySelector(`#${tabName}Tab input`);
+                if (firstInput) firstInput.focus();
+            }, 100);
+        }
+
+        // Password recovery steps
+        let recoveryStep = 1;
+        let countdownTimer = null;
+        let countdownSeconds = 60;
+
+        function resetRecoverySteps() {
+            recoveryStep = 1;
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.querySelectorAll('.step')[0].classList.add('active');
+            
+            document.getElementById('step1').classList.remove('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+            }
+        }
+
+        function goToStep(step) {
+            recoveryStep = step;
+            
+            // Update step indicators
+            document.querySelectorAll('.step').forEach(s => {
+                s.classList.remove('active');
+            });
+            document.querySelectorAll('.step')[step - 1].classList.add('active');
+            
+            // Show/hide forms
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById(`step${step}`).classList.remove('hidden');
+            
+            // Start countdown for step 2
+            if (step === 2) {
+                startCountdown();
+            }
+            
+            // Focus on first input field
+            setTimeout(() => {
+                const firstInput = document.querySelector(`#step${step} input`);
+                if (firstInput) firstInput.focus();
+            }, 100);
+        }
+
+        function backToStep1() {
+            goToStep(1);
+        }
+
+        function backToStep2() {
+            goToStep(2);
+        }
+
+        function startCountdown() {
+            countdownSeconds = 60;
+            const countdownElement = document.getElementById('countdown');
+            
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+            }
+            
+            countdownTimer = setInterval(() => {
+                countdownSeconds--;
+                countdownElement.textContent = `(${countdownSeconds}s)`;
+                
+                if (countdownSeconds <= 0) {
+                    clearInterval(countdownTimer);
+                    countdownElement.textContent = '(Expired)';
+                }
+            }, 1000);
+        }
+
+        // Move to next input field for verification code
+        function moveToNext(input) {
+            if (input.value.length === 1) {
+                const next = input.nextElementSibling;
+                if (next && next.tagName === 'INPUT') {
+                    next.focus();
+                } else {
+                    // If this is the last input, auto-verify if all fields are filled
+                    const allFilled = Array.from(document.querySelectorAll('#step2 input')).every(inp => inp.value.length === 1);
+                    if (allFilled) {
+                        verifyResetCode();
+                    }
+                }
+            }
+        }
+
+        // ========== PASSWORD RESET FUNCTIONALITY ==========
+        async function sendResetCode() {
+            const email = document.getElementById('recoveryEmail').value.trim();
+            
+            if (!email) {
+                showSweetAlert('Email Required', 'Please enter your email address', 'warning');
+                return;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showSweetAlert('Invalid Email', 'Please enter a valid email address', 'warning');
+                return;
+            }
+            
+            // Show loading
+            showLoadingAlert('Sending verification code...');
+            
+            try {
+                const res = await fetch("{% url 'send_reset_code' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await res.json();
+                closeLoadingAlert();
+                
+                if (res.ok) {
+                    showSweetAlert('Code Sent!', data.message, 'success');
+                    goToStep(2);
+                } else {
+                    showSweetAlert('Failed to Send', data.message, 'error');
+                }
+            } catch (error) {
+                closeLoadingAlert();
+                showSweetAlert('Error', 'An error occurred while sending the reset code. Please try again.', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        async function verifyResetCode() {
+            const codeInputs = document.querySelectorAll('#step2 input');
+            const code = Array.from(codeInputs).map(input => input.value).join('');
+            
+            if (code.length !== 6) {
+                showSweetAlert('Invalid Code', 'Please enter the complete 6-digit code.', 'error');
+                return;
+            }
+            
+            // Show loading
+            showLoadingAlert('Verifying code...');
+            
+            try {
+                const res = await fetch("{% url 'verify_reset_code' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ code })
+                });
+
+                const data = await res.json();
+                closeLoadingAlert();
+                
+                if (res.ok) {
+                    showSweetAlert('Success!', data.message, 'success');
+                    goToStep(3);
+                } else {
+                    showSweetAlert('Verification Failed', data.message, 'error');
+                }
+            } catch (error) {
+                closeLoadingAlert();
+                showSweetAlert('Error', 'An error occurred while verifying the code. Please try again.', 'error');
+                console.error('Error:', error);
+            }
+        }
+
+        // Resend code
+        async function resendCode() {
+            if (countdownSeconds > 0) {
+                showSweetAlert('Please wait', `Please wait ${countdownSeconds} seconds before requesting a new code.`, 'warning');
+                return;
+            }
+            
+            const email = document.getElementById('recoveryEmail').value;
+            if (!email) {
+                showSweetAlert('Email Required', 'Please enter your email address first.', 'warning');
+                return;
+            }
+            
+            await sendResetCode();
+        }
+
+        // Password toggle for login form
+        function setupPasswordToggle() {
+            const passwordField = document.getElementById('loginPassword');
+            if (passwordField) {
+                const toggleBtn = passwordField.parentNode.querySelector('.password-toggle-btn');
+                
+                toggleBtn.addEventListener('click', function() {
+                    const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordField.setAttribute('type', type);
+                    this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+                });
+            }
+        }
+
+        // Remember me functionality
+        function setupRememberMe() {
+            const rememberCheckbox = document.getElementById('rememberMe');
+            const usernameField = document.getElementById('loginUsername');
+            
+            if (rememberCheckbox && usernameField) {
+                // Load remembered username from localStorage
+                const rememberedUsername = localStorage.getItem('rememberedUsername');
+                if (rememberedUsername) {
+                    usernameField.value = rememberedUsername;
+                    rememberCheckbox.checked = true;
+                }
+                
+                // Save username when checkbox is checked and user types
+                usernameField.addEventListener('input', function() {
+                    if (rememberCheckbox.checked) {
+                        localStorage.setItem('rememberedUsername', this.value);
+                    }
+                });
+                
+                rememberCheckbox.addEventListener('change', function() {
+                    if (this.checked && usernameField.value) {
+                        localStorage.setItem('rememberedUsername', usernameField.value);
+                    } else {
+                        localStorage.removeItem('rememberedUsername');
+                    }
+                });
+            }
+        }
+
+        // Password strength validation for step 3
+        function setupPasswordValidation() {
+            const newPasswordForm = document.getElementById('newPasswordForm');
+            if (newPasswordForm) {
+                newPasswordForm.addEventListener('submit', function(e) {
+                    const newPassword = document.getElementById('newPassword').value;
+                    const confirmPassword = document.getElementById('confirmPassword').value;
+                    
+                    if (newPassword !== confirmPassword) {
+                        e.preventDefault();
+                        showSweetAlert('Passwords do not match', 'Please make sure both passwords are the same.', 'error');
+                        return;
+                    }
+                    
+                    // Basic password strength validation
+                    if (newPassword.length < 8) {
+                        e.preventDefault();
+                        showSweetAlert('Weak Password', 'Password must be at least 8 characters long.', 'error');
+                        return;
+                    }
+                    
+                    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+                        e.preventDefault();
+                        showSweetAlert('Weak Password', 'Password must contain uppercase, lowercase letters, and numbers.', 'error');
+                        return;
+                    }
+                    
+                    showLoadingAlert('Resetting password...');
+                });
+            }
+        }
+
+        // Handle login form errors
+        function setupLoginForm() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    const username = document.getElementById('loginUsername').value.trim();
+                    const password = document.getElementById('loginPassword').value.trim();
+                    
+                    if (!username || !password) {
+                        e.preventDefault();
+                        showSweetAlert('Missing Information', 'Please enter both username and password', 'warning');
+                        return;
+                    }
+                    
+                    showLoadingAlert('Logging in...');
+                });
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            setupPasswordToggle();
+            setupRememberMe();
+            setupPasswordValidation();
+            setupLoginForm();
+            
+            // Focus on username field by default
+            const usernameField = document.getElementById('loginUsername');
+            if (usernameField) {
+                usernameField.focus();
+            }
+        });
+    </script>
+</body>
+</html>

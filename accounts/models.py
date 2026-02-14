@@ -7,23 +7,84 @@ from django.utils.timezone import localdate
 import uuid
 
 
-'''
-CLASSES HERE:
-    User
-    Subscriber
-'''
+from datetime import timedelta
+import secrets
+
+class PasswordResetCode(models.Model):
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    
+    def save(self, *args, **kwargs):
+        if not self.code:
+            # Generate a 6-digit code
+            self.code = str(secrets.randbelow(1000000)).zfill(6)
+        if not self.expires_at:
+            # Expire in 10 minutes
+            self.expires_at = timezone.now() + timedelta(minutes=10)
+        super().save(*args, **kwargs)
+    
+    def is_valid(self):
+        return not self.is_used and timezone.now() < self.expires_at
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.code} ({'used' if self.is_used else 'active'})"
+
+
+
 class User(AbstractUser):
-    ROLES = {
-        ('auther','auther'),
-    }
-    phone_number = models.CharField(max_length=30)
-    address = models.TextField(max_length=255)
-    roles = models.CharField(max_length=1000)
-    created_by = models.ForeignKey('User', on_delete=models.DO_NOTHING, null=True)
+    email = models.EmailField(unique=True)
+    
+    ROLES = [
+        ('author', 'Author'),
+        ('admin', 'Admin'),
+        ('editor', 'Editor'),
+    ]
+    
+    phone_number = models.CharField(max_length=30, blank=True)
+    address = models.TextField(max_length=255, blank=True)
+    roles = models.CharField(max_length=20, choices=ROLES, default='viewer')
+    created_by = models.ForeignKey('self', on_delete=models.DO_NOTHING, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return self.username
+
+class TeamMember(models.Model):
+    """Team member profiles using User model"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='team_profile')
+    prefix = models.CharField(max_length=10, blank=True)
+    position = models.CharField(max_length=30)
+    department = models.CharField(max_length=30)
+    location = models.CharField(max_length=30)
+    bio = models.TextField(blank=True)
+    head_shot = models.ImageField(upload_to='team_head_shots/', null=True, blank=True)
+    
+    # Social links
+    twitter_url = models.URLField(blank=True)
+    linkedin_url = models.URLField(blank=True)
+    facebook_url = models.URLField(blank=True)
+    
+    # Display order
+    display_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
 
 
+    class Meta:
+        ordering = ['display_order', 'user__first_name']
+
+    def get_head_shot_url(self):
+        if self.head_shot:
+            return self.head_shot.url
+        
+        return '/static/default-head-shot.png'
+    
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.position}"
 
 
 
@@ -156,35 +217,3 @@ class SiteInfo(models.Model):
         return [p.strip() for p in self.partners.split(',')]
 
 
-
-class TeamMember(models.Model):
-    """Team member profiles using User model"""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='team_profile')
-    prefix = models.CharField(max_length=10)
-    position = models.CharField(max_length=30)
-    department = models.CharField(max_length=30)
-    location = models.CharField(max_length=30)
-    bio = models.TextField(blank=True)
-    head_shot = models.ImageField(upload_to='team_head_shots/', null=True, blank=True)
-    
-    # Social links
-    twitter_url = models.URLField(blank=True)
-    linkedin_url = models.URLField(blank=True)
-    facebook_url = models.URLField(blank=True)
-    
-    # Display order
-    display_order = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
-    
-
-    class Meta:
-        ordering = ['display_order', 'user__first_name']
-
-    def get_head_shot_url(self):
-        if self.head_shot:
-            return self.head_shot.url
-        
-        return '/static/default-head-shot.png'
-    
-    def __str__(self):
-        return f"{self.user.get_full_name()} - {self.position}"

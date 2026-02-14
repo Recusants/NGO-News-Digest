@@ -1,314 +1,926 @@
 {% extends 'management/management_base.html' %}
-{% comment %} templates/management/notice_form.html {% endcomment %}
 {% load static %}
 
-{% block title %}{% if notice %}Edit Notice{% else %}Create Notice{% endif %}{% endblock %}
+{% block title %}
+    {% if notice %}Edit Notice: {{ notice.headline }}{% else %}Create New Notice{% endif %}
+{% endblock %}
 
 {% block content %}
-    {% include 'management/management_header.html' %}
-    {% include 'management/management_side_bar.html' %}
+<div class="notice-form-container">
+    <!-- Form Header -->
+    <div class="form-header">
+        <div class="header-content">
+            <div>
+                <h1 class="form-title">
+                    {% if notice %}
+                        <i class="fas fa-edit me-2"></i> Edit Notice: {{ notice.headline }}
+                    {% else %}
+                        <i class="fas fa-bullhorn me-2"></i> Create New Notice
+                    {% endif %}
+                </h1>
+            </div>
+            <div class="header-actions">
+                <a href="{% if notice %}{% url 'notice_detail' notice.pk %}{% else %}{% url 'notice_list' %}{% endif %}" 
+                   class="cancel-btn">
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </div>
     
-    <main class="main-content" id="mainContent">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title mb-0">
-                                {% if notice %}
-                                    <i class="fas fa-edit"></i> Edit Notice: {{ notice.headline }}
-                                {% else %}
-                                    <i class="fas fa-bullhorn"></i> Create New Notice
-                                {% endif %}
-                            </h2>
+    <!-- Main Form -->
+    <form method="POST" enctype="multipart/form-data" id="noticeForm" class="notice-form">
+        {% csrf_token %}
+        {{ form.media }}  {# Required for CKEditor #}
+        
+        {% if form.non_field_errors %}
+        <div class="form-errors">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+        
+        <div class="form-layout">
+            <!-- Left Column: Main Content -->
+            <div class="form-main">
+                <!-- Notice Details -->
+                <div class="form-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-info-circle me-2"></i>Notice Details
+                    </h2>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.headline.id_for_label }}" class="form-label">
+                            Headline <span class="required">*</span>
+                        </label>
+                        <input type="text" 
+                               name="{{ form.headline.html_name }}"
+                               id="{{ form.headline.id_for_label }}"
+                               class="form-control"
+                               value="{{ form.headline.value|default:'' }}"
+                               placeholder="Enter notice headline"
+                               required>
+                        {% if form.headline.errors %}
+                        <div class="error-message">
+                            {{ form.headline.errors }}
                         </div>
-                        <div class="card-body">
-                            <form method="POST" enctype="multipart/form-data" id="noticeForm">
-                                {% csrf_token %}
-                                
-                                {{ form.media }}  {# Required for CKEditor #}
-                                
-                                {% if form.non_field_errors %}
-                                <div class="alert alert-danger">
-                                    {{ form.non_field_errors }}
-                                </div>
-                                {% endif %}
-                                
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <!-- Notice Details -->
-                                        <div class="form-section mb-4">
-                                            <h5 class="form-section-title">Notice Details</h5>
-                                            <div class="row">
-                                                <div class="col-12 mb-3">
-                                                    <label for="{{ form.headline.id_for_label }}" class="form-label">
-                                                        Headline *
-                                                    </label>
-                                                    {{ form.headline }}
-                                                    {% if form.headline.errors %}
-                                                    <div class="invalid-feedback d-block">
-                                                        {{ form.headline.errors }}
-                                                    </div>
-                                                    {% endif %}
-                                                </div>
-                                                
-                                                <div class="col-12 mb-3">
-                                                    <label for="{{ form.overview.id_for_label }}" class="form-label">
-                                                        Overview *
-                                                    </label>
-                                                    {{ form.overview }}
-                                                    {% if form.overview.errors %}
-                                                    <div class="invalid-feedback d-block">
-                                                        {{ form.overview.errors }}
-                                                    </div>
-                                                    {% endif %}
-                                                    <small class="form-text text-muted">
-                                                        Brief summary (max 500 characters)
-                                                    </small>
-                                                </div>
-                                                
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="{{ form.organization.id_for_label }}" class="form-label">
-                                                        Organization *
-                                                    </label>
-                                                    {{ form.organization }}
-                                                    {% if form.organization.errors %}
-                                                    <div class="invalid-feedback d-block">
-                                                        {{ form.organization.errors }}
-                                                    </div>
-                                                    {% endif %}
-                                                </div>
-                                                
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="{{ form.category.id_for_label }}" class="form-label">
-                                                        Category *
-                                                    </label>
-                                                    {{ form.category }}
-                                                    {% if form.category.errors %}
-                                                    <div class="invalid-feedback d-block">
-                                                        {{ form.category.errors }}
-                                                    </div>
-                                                    {% endif %}
-                                                </div>
-                                                
-                                                <div class="col-12 mb-3">
-                                                    <label for="{{ form.description.id_for_label }}" class="form-label">
-                                                        Description *
-                                                    </label>
-                                                    {{ form.description }}
-                                                    {% if form.description.errors %}
-                                                    <div class="invalid-feedback d-block">
-                                                        {{ form.description.errors }}
-                                                    </div>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="col-md-4">
-                                        <!-- Dates -->
-                                        <div class="form-section mb-4">
-                                            <h5 class="form-section-title">Dates</h5>
-                                            <div class="mb-3">
-                                                <label for="{{ form.publish_date.id_for_label }}" class="form-label">
-                                                    Publish Date *
-                                                </label>
-                                                {{ form.publish_date }}
-                                                {% if form.publish_date.errors %}
-                                                <div class="invalid-feedback d-block">
-                                                    {{ form.publish_date.errors }}
-                                                </div>
-                                                {% endif %}
-                                            </div>
-                                            
-                                            <div class="mb-3">
-                                                <label for="{{ form.expiration_date.id_for_label }}" class="form-label">
-                                                    Expiration Date
-                                                </label>
-                                                {{ form.expiration_date }}
-                                                {% if form.expiration_date.errors %}
-                                                <div class="invalid-feedback d-block">
-                                                    {{ form.expiration_date.errors }}
-                                                </div>
-                                                {% endif %}
-                                                <small class="form-text text-muted">
-                                                    When notice should be deactivated
-                                                </small>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Status -->
-                                        <div class="form-section mb-4">
-                                            <h5 class="form-section-title">Status</h5>
-                                            <div class="mb-3">
-                                                <div class="form-check form-switch">
-                                                    {{ form.is_active }}
-                                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
-                                                        Active
-                                                    </label>
-                                                </div>
-                                                {% if form.is_active.errors %}
-                                                <div class="invalid-feedback d-block">
-                                                    {{ form.is_active.errors }}
-                                                </div>
-                                                {% endif %}
-                                            </div>
-                                            
-                                            <div class="mb-3">
-                                                <div class="form-check form-switch">
-                                                    {{ form.is_important }}
-                                                    <label class="form-check-label" for="{{ form.is_important.id_for_label }}">
-                                                        Important
-                                                    </label>
-                                                </div>
-                                                {% if form.is_important.errors %}
-                                                <div class="invalid-feedback d-block">
-                                                    {{ form.is_important.errors }}
-                                                </div>
-                                                {% endif %}
-                                                <small class="form-text text-muted">
-                                                    Important notices are highlighted
-                                                </small>
-                                            </div>
-                                            
-                                            {% if notice %}
-                                            <div class="mb-3">
-                                                <label class="form-label">Created Date</label>
-                                                <input type="text" class="form-control" 
-                                                       value="{{ notice.created_at|date:'Y-m-d H:i' }}" 
-                                                       readonly>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                        
-                                        <!-- File Attachments -->
-                                        <div class="form-section mb-4">
-                                            <h5 class="form-section-title">File Attachments</h5>
-                                            <div class="mb-3">
-                                                <label for="{{ form.attachments.id_for_label }}" class="form-label">
-                                                    Add Files
-                                                </label>
-                                                {{ form.attachments }}
-                                                {% if form.attachments.errors %}
-                                                <div class="invalid-feedback d-block">
-                                                    {{ form.attachments.errors }}
-                                                </div>
-                                                {% endif %}
-                                                <small class="form-text text-muted">
-                                                    Hold Ctrl/Cmd to select multiple files.
-                                                </small>
-                                            </div>
-                                            
-                                            <!-- Existing Attachments -->
-                                            {% if notice and notice.attachments %}
-                                            <div class="existing-attachments">
-                                                <h6 class="mt-3 mb-2">Existing Files:</h6>
-                                                <div class="list-group">
-                                                    {% for attachment in notice.attachments %}
-                                                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                                                        <div>
-                                                            <i class="fas fa-file me-2"></i>
-                                                            <a href="{{ attachment.file.url }}" 
-                                                               target="_blank" 
-                                                               class="text-decoration-none">
-                                                                {{ attachment.file_name }}
-                                                            </a>
-                                                            <small class="text-muted d-block">
-                                                                {{ attachment.get_file_size_display }}
-                                                            </small>
-                                                        </div>
-                                                        <div class="form-check">
-                                                            <input type="checkbox" 
-                                                                   name="delete_attachments" 
-                                                                   value="{{ attachment.id }}"
-                                                                   class="form-check-input"
-                                                                   id="delete_attachment_{{ attachment.id }}">
-                                                            <label class="form-check-label" 
-                                                                   for="delete_attachment_{{ attachment.id }}"
-                                                                   title="Delete">
-                                                                <i class="fas fa-trash text-danger"></i>
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                    {% endfor %}
-                                                </div>
-                                            </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Form Actions -->
-                                <div class="form-actions mt-4 pt-3 border-top">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="fas fa-save"></i> Save Notice
-                                            </button>
-                                            <a href="{% if notice %}{% url 'notice_detail' notice.pk %}{% else %}{% url 'notice_list' %}{% endif %}" 
-                                               class="btn btn-outline-secondary ms-2">
-                                                Cancel
-                                            </a>
-                                        </div>
-                                        
-                                        {% if notice and notice.is_active %}
-                                        <a href="{% url 'notice_detail' notice.pk %}" 
-                                           class="btn btn-info" target="_blank">
-                                            <i class="fas fa-eye"></i> Preview
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </form>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.overview.id_for_label }}" class="form-label">
+                            Overview <span class="required">*</span>
+                        </label>
+                        <textarea name="{{ form.overview.html_name }}"
+                                  id="{{ form.overview.id_for_label }}"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Brief summary (max 500 characters)">{{ form.overview.value|default:'' }}</textarea>
+                        {% if form.overview.errors %}
+                        <div class="error-message">
+                            {{ form.overview.errors }}
                         </div>
+                        {% endif %}
+                        <div class="form-help">
+                            Brief summary displayed in notice lists (max 500 characters)
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group form-half">
+                            <label for="{{ form.organization.id_for_label }}" class="form-label">
+                                Organization <span class="required">*</span>
+                            </label>
+                            <select name="{{ form.organization.html_name }}"
+                                    id="{{ form.organization.id_for_label }}"
+                                    class="form-control"
+                                    required>
+                                <option value="">Select organization</option>
+                                {% for choice in form.organization.field.choices %}
+                                <option value="{{ choice.0 }}" 
+                                        {% if form.organization.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.organization.errors %}
+                            <div class="error-message">
+                                {{ form.organization.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group form-half">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">
+                                Category <span class="required">*</span>
+                            </label>
+                            <select name="{{ form.category.html_name }}"
+                                    id="{{ form.category.id_for_label }}"
+                                    class="form-control"
+                                    required>
+                                <option value="">Select category</option>
+                                {% for choice in form.category.field.choices %}
+                                <option value="{{ choice.0 }}" 
+                                        {% if form.category.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.category.errors %}
+                            <div class="error-message">
+                                {{ form.category.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            Description <span class="required">*</span>
+                        </label>
+                        <textarea name="{{ form.description.html_name }}"
+                                  id="{{ form.description.id_for_label }}"
+                                  class="form-control ckeditor"
+                                  rows="10">{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}
+                        <div class="error-message">
+                            {{ form.description.errors }}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
+            
+            <!-- Right Column: Sidebar -->
+            <div class="form-sidebar">
+                <!-- Dates -->
+                <div class="form-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-calendar-alt me-2"></i>Dates
+                    </h2>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.publish_date.id_for_label }}" class="form-label">
+                            Publish Date <span class="required">*</span>
+                        </label>
+                        <input type="datetime-local" 
+                               name="{{ form.publish_date.html_name }}"
+                               id="{{ form.publish_date.id_for_label }}"
+                               class="form-control"
+                               value="{{ form.publish_date.value|default:'' }}"
+                               required>
+                        {% if form.publish_date.errors %}
+                        <div class="error-message">
+                            {{ form.publish_date.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.expiration_date.id_for_label }}" class="form-label">
+                            Expiration Date
+                        </label>
+                        <input type="datetime-local" 
+                               name="{{ form.expiration_date.html_name }}"
+                               id="{{ form.expiration_date.id_for_label }}"
+                               class="form-control"
+                               value="{{ form.expiration_date.value|default:'' }}">
+                        {% if form.expiration_date.errors %}
+                        <div class="error-message">
+                            {{ form.expiration_date.errors }}
+                        </div>
+                        {% endif %}
+                        <div class="form-help">
+                            When notice should be deactivated
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status & Settings -->
+                <div class="form-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-cog me-2"></i>Status & Settings
+                    </h2>
+                    
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                {{ form.is_active }}
+                                <span>Active</span>
+                            </label>
+                            {% if form.is_active.errors %}
+                            <div class="error-message">
+                                {{ form.is_active.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                {{ form.is_important }}
+                                <span>Important</span>
+                            </label>
+                            {% if form.is_important.errors %}
+                            <div class="error-message">
+                                {{ form.is_important.errors }}
+                            </div>
+                            {% endif %}
+                            <div class="form-help">
+                                Important notices are highlighted
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if notice and notice.created_at %}
+                    <div class="form-group">
+                        <label class="form-label">Created Date</label>
+                        <div class="readonly-field">
+                            {{ notice.created_at|date:'Y-m-d H:i' }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- File Attachments -->
+                <div class="form-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-paperclip me-2"></i>File Attachments
+                    </h2>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.attachments.id_for_label }}" class="form-label">
+                            Add Files
+                        </label>
+                        <div class="file-upload">
+                            <input type="file" 
+                                   name="{{ form.attachments.html_name }}"
+                                   id="{{ form.attachments.id_for_label }}"
+                                   class="file-input"
+                                   multiple
+                                   onchange="updateAttachmentCount(this)">
+                            <label for="{{ form.attachments.id_for_label }}" class="file-label">
+                                <i class="fas fa-cloud-upload-alt me-2"></i>
+                                <span>Choose files</span>
+                            </label>
+                        </div>
+                        {% if form.attachments.errors %}
+                        <div class="error-message">
+                            {{ form.attachments.errors }}
+                        </div>
+                        {% endif %}
+                        <div class="form-help">
+                            Hold Ctrl/Cmd to select multiple files. Max size: 10MB per file.
+                        </div>
+                        <div id="attachmentCount" class="file-count" style="display: none;">
+                            <span id="selectedCount">0</span> files selected
+                        </div>
+                    </div>
+                    
+                    <!-- Existing Attachments -->
+                    {% if notice and notice.attachments %}
+                    <div class="existing-attachments">
+                        <h6 class="attachment-title">Existing Files:</h6>
+                        <div class="attachment-list">
+                            {% for attachment in notice.attachments %}
+                            <div class="attachment-item">
+                                <div class="attachment-info">
+                                    <i class="fas fa-file attachment-icon"></i>
+                                    <div class="attachment-details">
+                                        <a href="{{ attachment.file.url }}" 
+                                           target="_blank" 
+                                           class="attachment-name">
+                                            {{ attachment.file_name }}
+                                        </a>
+                                        <div class="attachment-meta">
+                                            {{ attachment.get_file_size_display }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <label class="checkbox-label small">
+                                    <input type="checkbox" 
+                                           name="delete_attachments" 
+                                           value="{{ attachment.id }}"
+                                           class="delete-checkbox">
+                                    <span>Delete</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-    </main>
+        
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <div class="action-buttons">
+                <div class="left-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save me-2"></i> 
+                        {% if notice %}Update Notice{% else %}Create Notice{% endif %}
+                    </button>
+                    
+                    <a href="{% if notice %}{% url 'notice_detail' notice.pk %}{% else %}{% url 'notice_list' %}{% endif %}" 
+                       class="btn-secondary">
+                        Cancel
+                    </a>
+                </div>
+                
+                <div class="right-actions">
+                    {% if notice and notice.is_active %}
+                    <a href="{% url 'notice_detail' notice.pk %}" 
+                       class="btn-info" target="_blank">
+                        <i class="fas fa-eye me-2"></i> Preview
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Notice Form Container */
+    .notice-form-container {
+        padding: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
     
-    <style>
+    /* Form Header */
+    .form-header {
+        margin-bottom: 2rem;
+    }
+    
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .form-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0;
+    }
+    
+    .cancel-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--secondary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: var(--transition);
+    }
+    
+    .cancel-btn:hover {
+        background: var(--light);
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+    
+    /* Form Layout */
+    .form-layout {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 2rem;
+    }
+    
+    @media (max-width: 1024px) {
+        .form-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Form Sections */
+    .form-section {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow);
+    }
+    
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0 0 1.5rem 0;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--primary);
+        display: flex;
+        align-items: center;
+    }
+    
+    /* Form Elements */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-half {
+        flex: 1;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--dark);
+        font-size: 0.875rem;
+    }
+    
+    .required {
+        color: #ef4444;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-family: inherit;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        background: white;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1.25rem;
+        padding-right: 2.5rem;
+    }
+    
+    input[type="datetime-local"].form-control {
+        font-family: monospace;
+    }
+    
+    /* Checkbox Groups */
+    .checkbox-group {
+        margin-bottom: 1rem;
+    }
+    
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        color: var(--dark);
+        font-weight: 500;
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+        width: 1rem;
+        height: 1rem;
+        cursor: pointer;
+    }
+    
+    .checkbox-label.small {
+        font-size: 0.75rem;
+        color: var(--secondary);
+    }
+    
+    /* File Upload */
+    .file-upload {
+        position: relative;
+    }
+    
+    .file-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+    }
+    
+    .file-label {
+        display: block;
+        padding: 0.75rem;
+        border: 2px dashed var(--border);
+        border-radius: var(--radius);
+        text-align: center;
+        color: var(--secondary);
+        cursor: pointer;
+        transition: var(--transition);
+        font-weight: 500;
+    }
+    
+    .file-label:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--light);
+    }
+    
+    .file-count {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: var(--light);
+        border-radius: var(--radius);
+        text-align: center;
+        font-size: 0.875rem;
+        color: var(--secondary);
+    }
+    
+    /* Readonly Field */
+    .readonly-field {
+        padding: 0.75rem;
+        background: var(--light);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--secondary);
+        font-size: 0.875rem;
+    }
+    
+    /* Attachments */
+    .existing-attachments {
+        margin-top: 1rem;
+    }
+    
+    .attachment-title {
+        font-weight: 600;
+        color: var(--dark);
+        margin: 0 0 0.75rem 0;
+        font-size: 0.875rem;
+    }
+    
+    .attachment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .attachment-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: white;
+        transition: var(--transition);
+    }
+    
+    .attachment-item:hover {
+        border-color: var(--primary);
+        background: var(--light);
+    }
+    
+    .attachment-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 1;
+    }
+    
+    .attachment-icon {
+        color: var(--primary);
+        font-size: 1.25rem;
+    }
+    
+    .attachment-details {
+        flex: 1;
+    }
+    
+    .attachment-name {
+        display: block;
+        color: var(--dark);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .attachment-name:hover {
+        color: var(--primary);
+        text-decoration: underline;
+    }
+    
+    .attachment-meta {
+        font-size: 0.75rem;
+        color: var(--secondary);
+    }
+    
+    .delete-checkbox {
+        width: 1rem;
+        height: 1rem;
+    }
+    
+    /* Form Help Text */
+    .form-help {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--secondary);
+    }
+    
+    /* Error Messages */
+    .form-errors {
+        padding: 1rem;
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        border-radius: var(--radius);
+        color: #991b1b;
+        margin-bottom: 1.5rem;
+    }
+    
+    .error-message {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: #ef4444;
+    }
+    
+    /* Form Actions */
+    .form-actions {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+    
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .left-actions, .right-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+        padding: 0.75rem 1.5rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius);
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        color: white;
+    }
+    
+    .btn-secondary {
+        padding: 0.75rem 1.5rem;
+        background: white;
+        color: var(--secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--light);
+        color: var(--primary);
+        border-color: var(--primary);
+        transform: translateY(-1px);
+    }
+    
+    .btn-info {
+        padding: 0.75rem 1.5rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: var(--radius);
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        transition: var(--transition);
+    }
+    
+    .btn-info:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        color: white;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .notice-form-container {
+            padding: 1rem;
+        }
+        
+        .form-row {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .form-half {
+            width: 100%;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .left-actions, .right-actions {
+            width: 100%;
+        }
+        
+        .btn-primary, .btn-secondary, .btn-info {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .cancel-btn {
+            align-self: stretch;
+            text-align: center;
+        }
+        
         .form-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
+            padding: 1rem;
         }
-        .form-section-title {
-            color: #495057;
-            border-bottom: 2px solid #ffc107;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-    </style>
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     // Initialize CKEditor
     if (typeof CKEDITOR !== 'undefined') {
-        CKEDITOR.replace('id_description', {
-            toolbar: 'Basic',
-            height: 300
+        CKEDITOR.replace('{{ form.description.id_for_label }}', {
+            toolbar: [
+                { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike'] },
+                { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Blockquote'] },
+                { name: 'links', items: ['Link', 'Unlink'] },
+                { name: 'insert', items: ['Image', 'Table'] },
+                { name: 'styles', items: ['Format'] },
+                { name: 'tools', items: ['Maximize'] }
+            ],
+            height: 300,
+            removePlugins: 'elementspath',
+            resize_enabled: false
         });
+    }
+    
+    // Attachment count
+    function updateAttachmentCount(input) {
+        const count = input.files.length;
+        const countElement = document.getElementById('selectedCount');
+        const container = document.getElementById('attachmentCount');
+        
+        if (count > 0) {
+            countElement.textContent = count;
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+        }
     }
     
     // Date validation
     document.getElementById('noticeForm').addEventListener('submit', function(e) {
-        const publishDate = document.getElementById('id_publish_date').value;
-        const expirationDate = document.getElementById('id_expiration_date').value;
+        const publishDateInput = document.getElementById('{{ form.publish_date.id_for_label }}');
+        const expirationDateInput = document.getElementById('{{ form.expiration_date.id_for_label }}');
         
-        if (publishDate && expirationDate) {
-            const publish = new Date(publishDate);
-            const expiration = new Date(expirationDate);
+        if (publishDateInput && expirationDateInput && publishDateInput.value && expirationDateInput.value) {
+            const publishDate = new Date(publishDateInput.value);
+            const expirationDate = new Date(expirationDateInput.value);
             
-            if (expiration < publish) {
+            if (expirationDate < publishDate) {
                 e.preventDefault();
-                alert('Expiration date cannot be before publish date.');
+                showErrorAlert('Expiration date cannot be before publish date.');
+                return false;
+            }
+        }
+        
+        // Check for empty content if CKEditor is used
+        if (typeof CKEDITOR !== 'undefined') {
+            const editor = CKEDITOR.instances['{{ form.description.id_for_label }}'];
+            if (editor && editor.getData().trim().length === 0) {
+                e.preventDefault();
+                showErrorAlert('Notice description cannot be empty.');
                 return false;
             }
         }
     });
+    
+    // Character counters
+    document.addEventListener('DOMContentLoaded', function() {
+        const headlineField = document.getElementById('{{ form.headline.id_for_label }}');
+        const overviewField = document.getElementById('{{ form.overview.id_for_label }}');
+        
+        // Set default datetime for publish date if empty
+        const publishDateField = document.getElementById('{{ form.publish_date.id_for_label }}');
+        if (publishDateField && !publishDateField.value) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            publishDateField.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+        
+        if (headlineField) {
+            headlineField.addEventListener('input', function() {
+                const length = this.value.length;
+                updateCounter('headlineCounter', length, 5, 200);
+            });
+            
+            // Create counter for headline
+            const headlineCounter = document.createElement('div');
+            headlineCounter.id = 'headlineCounter';
+            headlineCounter.className = 'form-help';
+            headlineField.parentNode.appendChild(headlineCounter);
+            updateCounter('headlineCounter', headlineField.value.length, 5, 200);
+        }
+        
+        if (overviewField) {
+            overviewField.addEventListener('input', function() {
+                const length = this.value.length;
+                updateCounter('overviewCounter', length, 10, 500);
+            });
+            
+            // Create counter for overview
+            const overviewCounter = document.createElement('div');
+            overviewCounter.id = 'overviewCounter';
+            overviewCounter.className = 'form-help';
+            overviewField.parentNode.appendChild(overviewCounter);
+            updateCounter('overviewCounter', overviewField.value.length, 10, 500);
+        }
+    });
+    
+    function updateCounter(elementId, current, min, max) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            let message = `${current} characters`;
+            let color = 'var(--secondary)';
+            
+            if (current < min && current > 0) {
+                message += ` (Minimum ${min} characters required)`;
+                color = '#ef4444';
+            } else if (current > max) {
+                message += ` (Maximum ${max} characters exceeded)`;
+                color = '#ef4444';
+            }
+            
+            element.textContent = message;
+            element.style.color = color;
+        }
+    }
+    
+    function showErrorAlert(message) {
+        alert(message);
+    }
 </script>
 {% endblock %}

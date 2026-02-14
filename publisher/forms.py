@@ -73,24 +73,30 @@ class AttachmentForm(forms.ModelForm):
 
 class StoryForm(forms.ModelForm):
     """Form for creating/editing Stories"""
+
     attachments = MultipleFileField(
         required=False,
         label='Add Files',
         help_text='Hold Ctrl/Cmd to select multiple files. Max size: 10MB per file.'
     )
-    
-    # For existing attachments management
+
     delete_attachments = forms.MultipleChoiceField(
         required=False,
         widget=forms.CheckboxSelectMultiple,
         label='Delete existing files'
     )
-    
+
     class Meta:
         model = Story
         fields = [
-            'headline', 'snippet', 'content', 'read_time', 
-            'status', 'thumbnail', 'category', 'attachments'
+            'headline',
+            'snippet',
+            'content',
+            'read_time',
+            'status',
+            'thumbnail',
+            'category',
+            'attachments',
         ]
         widgets = {
             'headline': forms.TextInput(attrs={
@@ -117,94 +123,92 @@ class StoryForm(forms.ModelForm):
             'read_time': 'Estimated reading time (e.g., "5 min read")',
             'thumbnail': 'Main image for the story. Recommended size: 1200x630px',
         }
-    
+
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
-        self.instance = kwargs.get('instance', None)
         super().__init__(*args, **kwargs)
-        
-        # Populate delete_attachments choices for existing instance
+
+        # Existing attachments (safe access)
         if self.instance and self.instance.pk:
-            attachments = self.instance.attachments
-            choices = [(str(att.id), att.file_name) for att in attachments]
-            self.fields['delete_attachments'].choices = choices
-            # Hide if no attachments
-            if not attachments:
+            attachments = getattr(self.instance, 'attachments', [])
+            if attachments:
+                self.fields['delete_attachments'].choices = [
+                    (str(att.id), att.file_name) for att in attachments
+                ]
+            else:
                 self.fields['delete_attachments'].widget = forms.HiddenInput()
         else:
-            # Hide delete field for new stories
             self.fields['delete_attachments'].widget = forms.HiddenInput()
-        
-        # Make author field read-only for non-superusers
-        if self.user and not self.user.is_superuser:
-            if 'author' in self.fields:
-                self.fields['author'].widget.attrs['readonly'] = True
-                self.fields['author'].widget.attrs['disabled'] = True
-    
+
+    # --------------------
+    # FIELD VALIDATIONS
+    # --------------------
+
     def clean_headline(self):
-        headline = self.cleaned_data.get('headline')
+        headline = self.cleaned_data.get('headline', '').strip()
         if len(headline) < 5:
             raise ValidationError('Headline must be at least 5 characters long.')
         return headline
-    
+
     def clean_snippet(self):
-        snippet = self.cleaned_data.get('snippet')
+        snippet = self.cleaned_data.get('snippet', '').strip()
         if len(snippet) < 10:
             raise ValidationError('Snippet must be at least 10 characters long.')
         if len(snippet) > 500:
             raise ValidationError('Snippet cannot exceed 500 characters.')
         return snippet
-    
+
     def clean_content(self):
-        content = self.cleaned_data.get('content')
-        # Strip HTML tags for length validation
+        content = self.cleaned_data.get('content', '')
         plain_text = strip_tags(content)
         if len(plain_text) < 50:
             raise ValidationError('Content must be at least 50 characters long.')
         return content
-    
+
     def clean_read_time(self):
-        read_time = self.cleaned_data.get('read_time')
-        # Validate read_time format (e.g., "5 min read", "10 minutes")
-        if not re.match(r'^\d+\s*(min|minute|minutes)?\s*(read)?$', read_time, re.IGNORECASE):
-            raise ValidationError('Enter a valid read time format (e.g., "5 min read")')
+        read_time = self.cleaned_data.get('read_time', '').strip()
+        if not re.match(
+            r'^\d+\s*(min|minute|minutes)?\s*(read)?$',
+            read_time,
+            re.IGNORECASE
+        ):
+            raise ValidationError(
+                'Enter a valid read time format (e.g., "5 min read").'
+            )
         return read_time
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        
-        # Validate that published stories have published_at date
-        status = cleaned_data.get('status')
-        published_at = cleaned_data.get('published_at')
-        
-        if status == 'PUBLISHED' and not published_at and self.instance:
-            # Auto-set published_at if not set
-            cleaned_data['published_at'] = timezone.now()
-        
-        return cleaned_data
-    
+
+    # --------------------
+    # SAVE (NO AUTHOR LOGIC)
+    # --------------------
+
     def save(self, commit=True):
+        """
+        IMPORTANT:
+        - This form NEVER sets `author`
+        - This form NEVER sets `published_at`
+        - Those belong in the VIEW
+        """
         story = super().save(commit=False)
-        
-        # Set author if not set (for new stories)
-        if not story.author and self.user:
-            story.author = self.user
-        
+
         if commit:
             story.save()
-            
-            # Handle file attachments
+
+            # Handle attachments
             files = self.cleaned_data.get('attachments', [])
             if files:
                 from .utils.attachment_utils import attach_multiple_files_to_object
                 attach_multiple_files_to_object(story, files)
-            
-            # Handle deletion of existing attachments
+
+            # Handle deletion of attachments
             delete_ids = self.cleaned_data.get('delete_attachments', [])
             if delete_ids:
-                GenericAttachment.objects.filter(id__in=delete_ids).delete()
-        
+                GenericAttachment.objects.filter(
+                    id__in=delete_ids,
+                    object_id=story.id
+                ).delete()
+
         return story
+
 
 
 class VacancyForm(forms.ModelForm):

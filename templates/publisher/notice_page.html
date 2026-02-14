@@ -40,9 +40,9 @@
                                     <div class="card mb-1" style="padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
                                         <div>
                                             <i class="fas fa-file-pdf mr-2" style="color: #e53935;"></i>
-                                            <span>Full Guidelines Document</span>
+                                            <span>{{ file.file_name }}</span>
                                         </div>
-                                        <a href="#" style="color: var(--primary);">Download</a>
+                                        <a href="{{ file.file }}" style="color: var(--primary);">Download</a>
                                     </div>
                                 {% endfor %}
                             </div>

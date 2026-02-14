@@ -1,0 +1,383 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Edit User - NGO Admin{% else %}Create User - NGO Admin{% endif %}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                <i class="fas fa-user me-2"></i>
+                {% if is_edit %}Edit User{% else %}Create New User{% endif %}
+            </h1>
+            <p class="page-subtitle">
+                {% if is_edit %}Update user information{% else %}Add a new user to the system{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'user_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+    
+    <!-- Form Section -->
+    <div class="section">
+        <div class="section-body">
+            <form method="post" class="user-form">
+                {% csrf_token %}
+                
+                <div class="form-grid">
+                    <!-- Basic Information -->
+                    <div class="form-column">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-id-card me-2"></i>Basic Information
+                        </h3>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.username.id_for_label }}">
+                                Username *
+                            </label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                            <div class="form-error">{{ form.username.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="{{ form.first_name.id_for_label }}">
+                                    First Name
+                                </label>
+                                {{ form.first_name }}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ form.last_name.id_for_label }}">
+                                    Last Name
+                                </label>
+                                {{ form.last_name }}
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}">
+                                Email Address *
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="form-error">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Security & Permissions -->
+                    <div class="form-column">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-shield-alt me-2"></i>Security & Permissions
+                        </h3>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.password.id_for_label }}">
+                                Password {% if not is_edit %}*{% else %}{% endif %}
+                            </label>
+                            {{ form.password }}
+                            {% if form.password.help_text %}
+                            <div class="form-help">{{ form.password.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.confirm_password.id_for_label }}">
+                                Confirm Password {% if not is_edit %}*{% else %}{% endif %}
+                            </label>
+                            {{ form.confirm_password }}
+                            {% if form.confirm_password.errors %}
+                            <div class="form-error">{{ form.confirm_password.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.roles.id_for_label }}">
+                                Role *
+                            </label>
+                            {{ form.roles }}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                {{ form.is_active }}
+                                <span class="checkmark"></span>
+                                Active Account
+                            </label>
+                            <div class="form-help">Inactive users cannot log in</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <h3 class="form-section-title mt-2">
+                    <i class="fas fa-address-book me-2"></i>Contact Information
+                </h3>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="{{ form.phone_number.id_for_label }}">
+                            Phone Number
+                        </label>
+                        {{ form.phone_number }}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.address.id_for_label }}">
+                            Address
+                        </label>
+                        {{ form.address }}
+                    </div>
+                </div>
+                
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>
+                        {% if is_edit %}Update User{% else %}Create User{% endif %}
+                    </button>
+                    <a href="{% url 'user_list' %}" class="btn btn-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        padding: 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .user-form {
+        max-width: 100%;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    
+    .form-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .form-section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--light);
+    }
+    
+    .form-group {
+        margin-bottom: 0;
+    }
+    
+    .form-group label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--dark);
+        margin-bottom: 0.375rem;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-family: inherit;
+        font-size: 0.875rem;
+        transition: var(--transition);
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    
+    textarea.form-control {
+        min-height: 80px;
+        resize: vertical;
+    }
+    
+    .form-error {
+        color: #dc2626;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+    
+    .form-help {
+        color: var(--secondary);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+    
+    /* Checkbox Styling */
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        position: relative;
+        padding-left: 2rem;
+        user-select: none;
+        font-weight: normal;
+    }
+    
+    .checkbox-label input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+    }
+    
+    .checkmark {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 1.25rem;
+        width: 1.25rem;
+        background-color: white;
+        border: 2px solid #d1d5db;
+        border-radius: 4px;
+        transition: var(--transition);
+    }
+    
+    .checkbox-label:hover input ~ .checkmark {
+        border-color: var(--primary);
+    }
+    
+    .checkbox-label input:checked ~ .checkmark {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+    
+    .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+    }
+    
+    .checkbox-label input:checked ~ .checkmark:after {
+        display: block;
+        left: 0.375rem;
+        top: 0.125rem;
+        width: 0.375rem;
+        height: 0.75rem;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+    
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        padding-top: 2rem;
+        margin-top: 2rem;
+        border-top: 1px solid var(--border);
+    }
+    
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 1rem;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .form-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add form validation
+        const form = document.querySelector('.user-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const password = document.getElementById('{{ form.password.id_for_label }}');
+                const confirmPassword = document.getElementById('{{ form.confirm_password.id_for_label }}');
+                
+                if (password && confirmPassword && password.value && password.value !== confirmPassword.value) {
+                    e.preventDefault();
+                    showErrorAlert('Passwords do not match. Please check and try again.');
+                    confirmPassword.focus();
+                    return false;
+                }
+                
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+                }
+            });
+        }
+        
+        // Password strength indicator
+        const passwordField = document.getElementById('{{ form.password.id_for_label }}');
+        if (passwordField) {
+            passwordField.addEventListener('input', function() {
+                const strength = checkPasswordStrength(this.value);
+                updatePasswordStrength(strength);
+            });
+        }
+    });
+    
+    function checkPasswordStrength(password) {
+        if (!password) return 0;
+        
+        let strength = 0;
+        if (password.length >= 8) strength += 1;
+        if (/[A-Z]/.test(password)) strength += 1;
+        if (/[0-9]/.test(password)) strength += 1;
+        if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+        
+        return strength;
+    }
+    
+    function updatePasswordStrength(strength) {
+        // Optional: Add password strength indicator
+    }
+</script>
+{% endblock %}

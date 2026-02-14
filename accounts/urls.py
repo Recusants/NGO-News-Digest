@@ -1,21 +1,25 @@
 from django.urls import path
-from .import views
-
+from . import views
 
 urlpatterns = [
-    # Authentication URLs
+    path('login/', views.LoginView.as_view(), name='login'),
+    path('logout/', views.logout_view, name='logout'),
 
-    # User Profile URLs
-    path('profile/', views.profile_view, name='profile'),
-    path('saved-stories/', views.saved_stories_view, name='saved_stories'),
-    path('save-story/<int:story_id>/', views.save_story_view, name='save_story'),
-    
+    # AJAX
+    path('send-reset-code/', views.send_reset_code, name='send_reset_code'),
+    path('verify-reset-code/', views.verify_reset_code, name='verify_reset_code'),
 
+
+
+    # User Management (Admin only)
+    path('users/', views.user_list, name='user_list'),
+    path('users/create/', views.user_create, name='user_create'),
+    path('users/<int:pk>/edit/', views.user_edit, name='user_edit'),
+    path('users/<int:pk>/toggle-active/', views.user_toggle_active, name='user_toggle_active'),
+    path('users/<int:pk>/delete/', views.user_delete, name='user_delete'),
     
-    # Management (staff only)
-    path('admin/site-info/', views.manage_site_info, name='manage_site_info'),
-    path('admin/team/', views.manage_team, name='manage_team'),
-    path('admin/team/add/', views.add_team_member, name='add_team_member'),
-    path('admin/team/<int:user_id>/edit/', views.edit_team_member, name='edit_team_member'),
-    path('admin/team/<int:user_id>/delete/', views.delete_team_member, name='delete_team_member'),
+    # Profile (All authenticated users)
+    path('profile/', views.user_profile, name='user_profile'),
+    path('profile/team/', views.team_profile_edit, name='team_profile_edit'),
+
 ]

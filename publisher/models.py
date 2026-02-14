@@ -6,6 +6,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 import re
+from accounts.models import User
 
 
 class GenericAttachment(models.Model):
@@ -100,6 +101,7 @@ class Story(models.Model):
     STATUS_CHOICES = [
         ('DRAFT', 'Draft'),
         ('PUBLISHED', 'Published'),
+        ('ARCHIVED', 'Archived'),
     ]
     
     headline = models.CharField(max_length=200)
@@ -107,7 +109,7 @@ class Story(models.Model):
     content = RichTextField(blank=True, null=True)
     read_time = models.CharField(max_length=20)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='DRAFT')
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     published_at = models.DateTimeField(null=True, blank=True)
     
@@ -181,6 +183,7 @@ class Vacancy(models.Model):
     expiration_date = models.DateField(null=True, blank=True)
     
     # Auto fields
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -234,6 +237,7 @@ class Notice(models.Model):
     is_important = models.BooleanField(default=False)  # Instead of pinned
     
     # Auto fields
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     
     # Property to get all attachments for this notice

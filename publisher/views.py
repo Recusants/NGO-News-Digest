@@ -15,7 +15,7 @@ import json
 from datetime import datetime
 
 from .models import Story, Vacancy, Notice, Category
-from .forms import StoryForm, VacancyForm, NoticeForm
+
 from accounts.models import Subscriber, SiteInfo, TeamMember
 
 from django.shortcuts import render, redirect
@@ -152,17 +152,27 @@ def download_privacy_terms(request):
 
 # ==================== EMAIL UTILITIES ====================
 
+
+import threading
+import time
+from django.db import connection
+
 class EmailThread(threading.Thread):
-    """Background thread for sending emails"""
+    """Background thread for sending emails with better error handling"""
     def __init__(self, subject, plain_message, html_message, recipient_list):
         super().__init__(daemon=True)
         self.subject = subject
         self.plain_message = plain_message
         self.html_message = html_message
         self.recipient_list = recipient_list
+        self.sent_count = 0
+        self.failed_count = 0
 
     def run(self):
         """Send emails in background thread"""
+        # Close any old database connections before starting thread
+        connection.close()
+        
         for recipient in self.recipient_list:
             try:
                 email = EmailMultiAlternatives(
@@ -174,15 +184,24 @@ class EmailThread(threading.Thread):
                 if self.html_message:
                     email.attach_alternative(self.html_message, "text/html")
                 email.send()
+                self.sent_count += 1
+                print(f"✅ Email sent to {recipient}")
             except Exception as e:
-                print(f"Failed to send email to {recipient}: {e}")
+                self.failed_count += 1
+                print(f"❌ Failed to send email to {recipient}: {e}")
+        
+        print(f"📧 Email summary: {self.sent_count} sent, {self.failed_count} failed")
+        
+        # Close database connection when done
+        connection.close()
 
 
 def send_email_in_background(subject, plain_message, html_message, recipient_list):
     """Start email sending in background thread"""
     if recipient_list:
         EmailThread(subject, plain_message, html_message, recipient_list).start()
-
+        return True
+    return False
 
 # ==================== BLOG POST VIEWS ====================
 
@@ -286,43 +305,12 @@ def get_editors_pick_stories(request):
     return JsonResponse({"stories": editors_pick_stories_list})
 
 
-@login_required
-def upload_blog_post(request):
-    """Upload and publish blog post"""
-    if request.method == 'POST':
-        form = StoryForm(request.POST, request.FILES)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.status = 'PUBLISHED'
-            post.published_at = timezone.now()
-            post.save()
-            
-            # Notify subscribers
-            notify_subscribers(post.id)
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Post uploaded and published successfully!',
-                'post_id': post.id,
-                'title': post.title,
-                'status': post.status
-            })
-        
-        return JsonResponse({
-            'success': False,
-            'errors': form.errors
-        })
-    
-    form = StoryForm()
-    return render(request, 'blog/upload.html', {'form': form})
-
 
 def notify_subscribers(post_id):
     """Notify subscribers about new post"""
     try:
         post = Story.objects.get(id=post_id)
-        site_url = settings.SITE_URL or 'http://localhost:8000'
+        site_url = settings.SITE_URL
         
         # Get active verified subscribers
         subscribers = Subscriber.objects.filter(
@@ -331,33 +319,36 @@ def notify_subscribers(post_id):
         ).values_list('email', flat=True)
         
         if not subscribers.exists():
+            print("ℹ️ No subscribers to notify")
             return
         
-        # Create email content
-        subject = f"📰 New Story: {post.title}"
+        # Create email content - FIXED: using post.headline instead of post.title
+        subject = f"📰 New Story: {post.headline}"
         html_message = render_to_string('emails/new_story.html', {
             'post': post,
             'site_url': site_url,
         })
         
         plain_message = f"""
-        📰 New Story: {post.title}
+        📰 New Story: {post.headline}
         
-        {strip_tags(post.content)[:200]}...
+        {post.snippet}
         
-        Read the full story: {site_url}/publisher/story/{post.id}/
+        Read the full story: {site_url}/publisher/story_page/{post.id}/
         
         Best regards,
         NGO News Digest Team
         """
         
         # Send in background
+        print(f"📨 Starting email thread for {subscribers.count()} subscribers...")
         send_email_in_background(subject, plain_message, html_message, list(subscribers))
+        print(f"✅ Email thread started for story: {post.headline}")
         
     except Story.DoesNotExist:
-        print(f"Post {post_id} not found")
+        print(f"❌ Post {post_id} not found")
     except Exception as e:
-        print(f"Error in notify_subscribers: {e}")
+        print(f"❌ Error in notify_subscribers: {e}")
 
 
 def success_page(request):
@@ -490,40 +481,8 @@ def get_vacancies(request):
     })
 
 
-@login_required
-def upload_vacancy(request):
-    """Upload new vacancy"""
-    if request.method == 'POST':
-        form = VacancyForm(request.POST)
-        if form.is_valid():
-            vacancy = form.save()
-            messages.success(request, 'Vacancy posted successfully!')
-            return redirect('vacancy_detail', pk=vacancy.id)
-    
-    form = VacancyForm()
-    return render(request, 'vacancies/upload.html', {'form': form})
 
 
-@login_required
-def ajax_upload_vacancy(request):
-    """AJAX endpoint for vacancy upload"""
-    if request.method == 'POST':
-        form = VacancyForm(request.POST)
-        if form.is_valid():
-            vacancy = form.save()
-            return JsonResponse({
-                'success': True,
-                'message': 'Vacancy posted successfully!',
-                'id': vacancy.id,
-                'title': vacancy.title,
-                'url': f'/vacancies/{vacancy.id}/'
-            })
-        return JsonResponse({
-            'success': False,
-            'errors': form.errors
-        })
-    
-    return JsonResponse({'success': False, 'error': 'Method not allowed'})
 
 
 # ==================== NOTICE VIEWS ====================
@@ -615,40 +574,9 @@ def get_notices(request):
     })
 
 
-@login_required
-def upload_notice(request):
-    """Upload new notice"""
-    if request.method == 'POST':
-        form = NoticeForm(request.POST, request.FILES)
-        if form.is_valid():
-            notice = form.save()
-            messages.success(request, 'Notice posted successfully!')
-            return redirect('notice_detail', pk=notice.id)
-    
-    form = NoticeForm()
-    return render(request, 'notices/upload.html', {'form': form})
 
 
-@login_required
-def ajax_upload_notice(request):
-    """AJAX endpoint for notice upload"""
-    if request.method == 'POST':
-        form = NoticeForm(request.POST, request.FILES)
-        if form.is_valid():
-            notice = form.save()
-            return JsonResponse({
-                'success': True,
-                'message': 'Notice posted successfully!',
-                'id': notice.id,
-                'title': notice.title,
-                'url': f'/notices/{notice.id}/'
-            })
-        return JsonResponse({
-            'success': False,
-            'errors': form.errors
-        })
-    
-    return JsonResponse({'success': False, 'error': 'Method not allowed'})
+
 
 
 # ==================== SUBSCRIBER MANAGEMENT ====================

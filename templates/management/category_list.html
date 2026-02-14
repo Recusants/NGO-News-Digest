@@ -1,215 +1,939 @@
 {% extends 'management/management_base.html' %}
-{% comment %} templates/management/category_list.html {% endcomment %}
 {% load static %}
 
-{% block title %}Manage Categories{% endblock %}
+{% block title %}Categories{% endblock %}
 
-{% block content %}
-    {% include 'management/management_header.html' %}
-    {% include 'management/management_side_bar.html' %}
-    
-    <main class="main-content" id="mainContent">
-        <div class="container-fluid">
-            <!-- Header with Actions -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h2 class="mb-0">
-                            <i class="fas fa-folder"></i> Categories
-                        </h2>
-                        <div>
-                            <a href="{% url 'category_create' %}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Create New Category
-                            </a>
-                        </div>
-                    </div>
-                    <nav aria-label="breadcrumb" class="mt-3">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Categories</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
+{% block extra_css %}
+<style>
+    /* Categories Container */
+    .categories-container {
+        padding: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
 
-            <!-- Categories Table -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">All Categories</h5>
-                        </div>
-                        <div class="card-body">
-                            {% if categories %}
-                            <div class="table-responsive">
-                                <table class="table table-hover" id="categoriesTable">
-                                    <thead>
-                                        <tr>
-                                            <th width="80">ID</th>
-                                            <th>Name</th>
-                                            <th>Story Count</th>
-                                            <th>Usage</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for category in categories %}
-                                        <tr>
-                                            <td>
-                                                <span class="badge bg-secondary">CAT-{{ category.id|stringformat:"03d" }}</span>
-                                            </td>
-                                            <td>
-                                                <strong>{{ category.name }}</strong>
-                                            </td>
-                                            <td>
-                                                {% with category.story_set.count as story_count %}
-                                                {% if story_count > 0 %}
-                                                <span class="badge bg-primary">
-                                                    <i class="fas fa-newspaper"></i> {{ story_count }}
-                                                </span>
-                                                {% else %}
-                                                <span class="badge bg-light text-dark">
-                                                    <i class="fas fa-newspaper"></i> 0
-                                                </span>
-                                                {% endif %}
-                                                {% endwith %}
-                                            </td>
-                                            <td>
-                                                {% with category.story_set.count as story_count %}
-                                                {% if story_count > 0 %}
-                                                <span class="text-success">
-                                                    <i class="fas fa-check-circle"></i> In Use
-                                                </span>
-                                                {% else %}
-                                                <span class="text-muted">
-                                                    <i class="fas fa-times-circle"></i> Not Used
-                                                </span>
-                                                {% endif %}
-                                                {% endwith %}
-                                            </td>
-                                            <td class="text-end">
-                                                <div class="btn-group" role="group">
-                                                    {% comment %} View stories link - optional {% endcomment %}
-                                                    {% comment %}
-                                                    <a href="#" class="btn btn-sm btn-outline-info" 
-                                                       title="View Stories" data-bs-toggle="tooltip">
-                                                        <i class="fas fa-list"></i>
-                                                    </a>
-                                                    {% endcomment %}
-                                                    
-                                                    <a href="{% url 'category_edit' category.pk %}" 
-                                                       class="btn btn-sm btn-outline-secondary" 
-                                                       title="Edit" data-bs-toggle="tooltip">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    
-                                                    <button type="button" 
-                                                            class="btn btn-sm btn-outline-danger {% if category.story_set.count > 0 %}disabled{% endif %}" 
-                                                            data-bs-toggle="modal" 
-                                                            data-bs-target="#deleteCategoryModal{{ category.id }}"
-                                                            title="Delete"
-                                                            {% if category.story_set.count > 0 %}disabled{% endif %}>
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                                
-                                                <!-- Delete Modal -->
-                                                <div class="modal fade" id="deleteCategoryModal{{ category.id }}" tabindex="-1">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title">Confirm Delete</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                Are you sure you want to delete "<strong>{{ category.name }}</strong>"?
-                                                                
-                                                                {% if category.story_set.count > 0 %}
-                                                                <div class="alert alert-danger mt-3">
-                                                                    <i class="fas fa-exclamation-triangle"></i> 
-                                                                    <strong>Warning:</strong> This category has {{ category.story_set.count }} story/stories associated with it.
-                                                                    Deleting it will remove this category from those stories.
-                                                                </div>
-                                                                {% else %}
-                                                                <div class="alert alert-warning mt-3">
-                                                                    <i class="fas fa-exclamation-triangle"></i> 
-                                                                    This action cannot be undone.
-                                                                </div>
-                                                                {% endif %}
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                                <form method="POST" action="{% url 'category_delete' category.pk %}" class="d-inline">
-                                                                    {% csrf_token %}
-                                                                    <button type="submit" class="btn btn-danger" 
-                                                                            {% if category.story_set.count > 0 %}disabled{% endif %}>
-                                                                        Delete Category
-                                                                    </button>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% else %}
-                            <div class="text-center py-5">
-                                <i class="fas fa-folder fa-4x text-muted mb-3"></i>
-                                <h4>No Categories Found</h4>
-                                <p class="text-muted">Get started by creating your first category.</p>
-                                <a href="{% url 'category_create' %}" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Create Your First Category
-                                </a>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+    /* Header */
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .header-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .header-subtitle {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    .create-btn {
+        padding: 0.75rem 1.5rem;
+        background: #2563eb;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        border: 2px solid #2563eb;
+        white-space: nowrap;
+    }
+
+    .create-btn:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        border-color: #1d4ed8;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        border-radius: 8px;
+        padding: 1.5rem;
+        color: white;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:nth-child(2) {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .stat-card:nth-child(3) {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .stat-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        opacity: 0.2;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.9;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    /* Messages */
+    .messages-container {
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .message-alert {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: slideInDown 0.3s ease;
+        border-left: 4px solid;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .message-success {
+        background: #d1fae5;
+        color: #065f46;
+        border-left-color: #10b981;
+    }
+
+    .message-error {
+        background: #fee2e2;
+        color: #991b1b;
+        border-left-color: #ef4444;
+    }
+
+    .message-warning {
+        background: #fef3c7;
+        color: #92400e;
+        border-left-color: #f59e0b;
+    }
+
+    .message-info {
+        background: #dbeafe;
+        color: #1e40af;
+        border-left-color: #3b82f6;
+    }
+
+    .message-content {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        gap: 0.5rem;
+    }
+
+    .message-close {
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        padding: 0.25rem;
+        margin-left: 0.5rem;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        border-radius: 4px;
+    }
+
+    .message-close:hover {
+        opacity: 1;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Categories Table Section */
+    .categories-section {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e1e5eb;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .categories-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e1e5eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .search-box {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #f8fafc;
+        border: 1px solid #e1e5eb;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        min-width: 250px;
+    }
+
+    .search-input {
+        border: none;
+        background: none;
+        outline: none;
+        width: 100%;
+        font-size: 0.875rem;
+        color: #1f2937;
+    }
+
+    .search-input::placeholder {
+        color: #9ca3af;
+    }
+
+    .search-icon {
+        color: #9ca3af;
+    }
+
+    .categories-body {
+        padding: 1.5rem;
+    }
+
+    /* Categories Table */
+    .table-container {
+        overflow-x: auto;
+        border-radius: 8px;
+        border: 1px solid #e1e5eb;
+        background: white;
+        margin-bottom: 1.5rem;
+    }
+
+    .categories-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 800px;
+    }
+
+    .categories-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #1f2937;
+        border-bottom: 2px solid #e1e5eb;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: #f8fafc;
+        white-space: nowrap;
+    }
+
+    .categories-table td {
+        padding: 1rem;
+        color: #555;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+    }
+
+    .categories-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .categories-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    /* Category Badge */
+    .category-id-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: #3b82f6;
+        color: white;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        font-family: 'Monaco', 'Consolas', monospace;
+    }
+
+    /* Story Count Badge */
+    .story-count-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .story-count-active {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .story-count-empty {
+        background: #f8fafc;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+    }
+
+    /* Usage Status */
+    .usage-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-in-use {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+    }
+
+    .status-not-used {
+        background: #f8fafc;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: inline-flex;
+        gap: 0.375rem;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+        font-size: 0.875rem;
+        cursor: pointer;
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-edit {
+        background: #f3e8ff;
+        color: #7c3aed;
+        border-color: #f3e8ff;
+    }
+
+    .btn-edit:hover {
+        background: #7c3aed;
+        color: white;
+    }
+
+    .btn-delete {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fee2e2;
+    }
+
+    .btn-delete:hover {
+        background: #991b1b;
+        color: white;
+    }
+
+    .btn-delete.disabled {
+        background: #f3f4f6;
+        color: #9ca3af;
+        border-color: #f3f4f6;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .btn-delete.disabled:hover {
+        background: #f3f4f6;
+        color: #9ca3af;
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+
+    .empty-title {
+        color: #1f2937;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+    }
+
+    .empty-description {
+        color: #6b7280;
+        margin: 0 0 1.5rem 0;
+        font-size: 0.875rem;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .loading-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .loading-spinner {
+        color: #2563eb;
+        margin-bottom: 1rem;
+    }
+
+    .loading-text {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    /* Animations */
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideOutUp {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .categories-container {
+            padding: 1rem;
+        }
+
+        .header-content {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .create-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .categories-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-box {
+            width: 100%;
+            min-width: unset;
+        }
+
+        .categories-body {
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .action-buttons {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            width: 28px;
+            height: 28px;
+            font-size: 0.75rem;
+        }
+    }
+</style>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    });
+{% block content %}
+{% csrf_token %}
+<div class="categories-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <div>
+                <h1 class="header-title">
+                    <i class="fas fa-folder"></i> Categories
+                </h1>
+                <p class="header-subtitle">
+                    Organize your stories into categories
+                </p>
+            </div>
+            <a href="{% url 'category_create' %}" class="create-btn">
+                <i class="fas fa-plus"></i> Create New Category
+            </a>
+        </div>
+    </div>
     
-    // If you want to add search functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add search input if needed
-        const searchInput = document.createElement('input');
-        searchInput.type = 'text';
-        searchInput.className = 'form-control form-control-sm mb-3';
-        searchInput.placeholder = 'Search categories...';
-        searchInput.style.maxWidth = '300px';
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-content">
+                <div>
+                    <h6 class="stat-label">Total Categories</h6>
+                    <h3 class="stat-value">{{ categories|length }}</h3>
+                </div>
+                <i class="fas fa-folder stat-icon"></i>
+            </div>
+        </div>
         
-        searchInput.addEventListener('keyup', function() {
-            const searchTerm = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#categoriesTable tbody tr');
+        <div class="stat-card">
+            <div class="stat-content">
+                <div>
+                    <h6 class="stat-label">Categories in Use</h6>
+                    <h3 class="stat-value">
+                        {% with used_categories=categories|length|add:"0" %}
+                        {% for category in categories %}
+                            {% if category.story_set.count > 0 %}
+                                {% with used_categories=used_categories|add:"1" %}
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ used_categories }}
+                        {% endwith %}
+                    </h3>
+                </div>
+                <i class="fas fa-check-circle stat-icon"></i>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-content">
+                <div>
+                    <h6 class="stat-label">Total Stories</h6>
+                    <h3 class="stat-value">
+                        {% with total_stories=0 %}
+                        {% for category in categories %}
+                            {% with total_stories=total_stories|add:category.story_set.count %}
+                            {% endwith %}
+                        {% endfor %}
+                        {{ total_stories }}
+                        {% endwith %}
+                    </h3>
+                </div>
+                <i class="fas fa-file-alt stat-icon"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="message-alert {% if 'success' in message.tags %}message-success
+            {% elif 'error' in message.tags %}message-error
+            {% elif 'warning' in message.tags %}message-warning
+            {% else %}message-info{% endif %}">
+            <div class="message-content">
+                <i class="fas 
+                    {% if 'success' in message.tags %}fa-check-circle 
+                    {% elif 'error' in message.tags %}fa-exclamation-circle 
+                    {% elif 'warning' in message.tags %}fa-exclamation-triangle 
+                    {% else %}fa-info-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+            <button onclick="closeMessage(this)" class="message-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Categories Section -->
+    <div class="categories-section">
+        <div class="categories-header">
+            <h3 class="section-title">
+                <i class="fas fa-list"></i> All Categories
+            </h3>
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" 
+                       id="categorySearch" 
+                       class="search-input" 
+                       placeholder="Search categories...">
+            </div>
+        </div>
+        
+        <div class="categories-body">
+            {% if categories %}
+            <div class="table-container">
+                <table class="categories-table" id="categoriesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Story Count</th>
+                            <th>Usage</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categories-table-body">
+                        {% for category in categories %}
+                        <tr id="category-row-{{ category.pk }}" data-category-name="{{ category.name|lower }}">
+                            <td>
+                                <span class="category-id-badge">CAT-{{ category.id|stringformat:"03d" }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ category.name }}</strong>
+                            </td>
+                            <td>
+                                {% with story_count=category.story_set.count %}
+                                <span class="story-count-badge {% if story_count > 0 %}story-count-active{% else %}story-count-empty{% endif %}">
+                                    <i class="fas fa-newspaper"></i>
+                                    {{ story_count }}
+                                </span>
+                                {% endwith %}
+                            </td>
+                            <td>
+                                {% with story_count=category.story_set.count %}
+                                <span class="usage-status {% if story_count > 0 %}status-in-use{% else %}status-not-used{% endif %}">
+                                    <i class="fas {% if story_count > 0 %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+                                    {% if story_count > 0 %}In Use{% else %}Not Used{% endif %}
+                                </span>
+                                {% endwith %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <!-- Edit Button -->
+                                    <a href="{% url 'category_edit' category.pk %}" 
+                                       class="action-btn btn-edit" 
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    <!-- Delete Button -->
+                                    <button class="action-btn btn-delete {% if category.story_set.count > 0 %}disabled{% endif %} delete-btn" 
+                                            title="Delete"
+                                            data-category-id="{{ category.pk }}"
+                                            data-category-name="{{ category.name|escapejs }}"
+                                            data-stories-count="{{ category.story_set.count }}"
+                                            {% if category.story_set.count > 0 %}disabled{% endif %}>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             
-            rows.forEach(row => {
-                const name = row.cells[1].textContent.toLowerCase();
-                if (name.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-        
-        // Insert search input after the table header
-        const cardHeader = document.querySelector('.card-header');
-        if (cardHeader) {
-            cardHeader.appendChild(searchInput);
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-folder empty-icon"></i>
+                <h4 class="empty-title">No Categories Found</h4>
+                <p class="empty-description">
+                    Get started by creating your first category.
+                </p>
+                <a href="{% url 'category_create' %}" class="create-btn">
+                    <i class="fas fa-plus"></i> Create Your First Category
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <i class="fas fa-spinner fa-spin fa-3x loading-spinner"></i>
+        <p class="loading-text">Processing...</p>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Function to show loading overlay
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+// Function to hide loading overlay
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Function to close message
+function closeMessage(button) {
+    const message = button.closest('.message-alert');
+    if (message) {
+        message.style.opacity = '0';
+        message.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            if (message.parentNode) {
+                message.remove();
+            }
+        }, 300);
+    }
+}
+
+// Function to search categories
+function searchCategories() {
+    const searchTerm = document.getElementById('categorySearch').value.toLowerCase();
+    const rows = document.querySelectorAll('#categories-table-body tr');
+    
+    rows.forEach(row => {
+        const categoryName = row.dataset.categoryName;
+        if (categoryName.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
         }
     });
+}
+
+// Function to show confirmation alert
+function showConfirmAlert(title, text, confirmText, icon = 'warning') {
+    return Swal.fire({
+        title: title,
+        text: text,
+        icon: icon,
+        showCancelButton: true,
+        confirmButtonColor: icon === 'error' ? '#ef4444' : (icon === 'warning' ? '#f59e0b' : '#10b981'),
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        customClass: {
+            confirmButton: 'swal-confirm-btn',
+            cancelButton: 'swal-cancel-btn'
+        }
+    });
+}
+
+// Function to handle delete action
+function handleDelete(categoryId, categoryName, storiesCount, button) {
+    const deleteUrl = `/management/categories/${categoryId}/delete/`;
+    
+    let alertTitle = 'Delete Category';
+    let alertText = `Are you sure you want to delete "${categoryName}"?`;
+    let alertIcon = 'warning';
+    
+    if (storiesCount > 0) {
+        alertTitle = 'Category Has Stories';
+        alertText = `Cannot delete "${categoryName}" because it has ${storiesCount} story/stories associated with it. Please reassign or remove these stories first.`;
+        alertIcon = 'error';
+    } else {
+        alertText += ' This action cannot be undone.';
+    }
+    
+    showConfirmAlert(alertTitle, alertText, 'Delete', alertIcon).then((result) => {
+        if (result.isConfirmed && storiesCount === 0) {
+            showLoading();
+            
+            $.ajax({
+                url: deleteUrl,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                success: function(response) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: response.message || `Category "${categoryName}" deleted successfully.`,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    
+                    // Remove row with animation
+                    const row = document.getElementById(`category-row-${categoryId}`);
+                    if (row) {
+                        row.style.animation = 'slideOutUp 0.3s ease';
+                        setTimeout(() => {
+                            row.remove();
+                            
+                            // Update stats
+                            const categoryCount = document.querySelectorAll('#categories-table-body tr').length;
+                            const usedCount = Array.from(document.querySelectorAll('#categories-table-body tr')).filter(row => {
+                                const status = row.querySelector('.status-in-use');
+                                return status !== null;
+                            }).length;
+                            
+                            const storyCounts = Array.from(document.querySelectorAll('.story-count-badge')).map(badge => {
+                                return parseInt(badge.textContent.trim().match(/\d+/)[0]);
+                            });
+                            const totalStories = storyCounts.reduce((sum, count) => sum + count, 0);
+                            
+                            // Update stat cards if they exist
+                            const statValues = document.querySelectorAll('.stat-value');
+                            if (statValues.length >= 3) {
+                                statValues[0].textContent = categoryCount;
+                                statValues[1].textContent = usedCount;
+                                statValues[2].textContent = totalStories;
+                            }
+                        }, 300);
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: xhr.responseJSON?.message || 'Failed to delete category.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                },
+                complete: function() {
+                    hideLoading();
+                }
+            });
+        }
+    });
+}
+
+// Initialize event listeners
+function initializeEventListeners() {
+    // Auto-hide messages after 5 seconds
+    setTimeout(() => {
+        document.querySelectorAll('.message-alert').forEach(message => {
+            message.style.opacity = '0';
+            message.style.transform = 'translateY(-10px)';
+            setTimeout(() => message.remove(), 300);
+        });
+    }, 5000);
+    
+    // Add search functionality
+    const searchInput = document.getElementById('categorySearch');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', searchCategories);
+    }
+    
+    // Add hover effects to table rows
+    document.querySelectorAll('#categories-table-body tr').forEach(row => {
+        row.addEventListener('mouseenter', () => {
+            row.style.backgroundColor = '#f8fafc';
+        });
+        
+        row.addEventListener('mouseleave', () => {
+            row.style.backgroundColor = '';
+        });
+    });
+    
+    // Delete button listeners
+    document.querySelectorAll('.delete-btn:not(.disabled)').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const categoryId = this.dataset.categoryId;
+            const categoryName = this.dataset.categoryName;
+            const storiesCount = parseInt(this.dataset.storiesCount);
+            handleDelete(categoryId, categoryName, storiesCount, this);
+        });
+    });
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeEventListeners);
 </script>
 {% endblock %}

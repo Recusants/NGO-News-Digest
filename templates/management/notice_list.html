@@ -1,416 +1,1895 @@
 {% extends 'management/management_base.html' %}
-{% comment %} templates/management/notice_list.html {% endcomment %}
 {% load static %}
 
-{% block title %}Manage Notices{% endblock %}
+{% block title %}Notices{% endblock %}
 
-{% block content %}
-    {% include 'management/management_header.html' %}
-    {% include 'management/management_side_bar.html' %}
-    
-    <main class="main-content" id="mainContent">
-        <div class="container-fluid">
-            <!-- Header with Actions -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h2 class="mb-0">
-                            <i class="fas fa-bullhorn"></i> Notices
-                        </h2>
-                        <div>
-                            <a href="{% url 'notice_create' %}" class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Create New Notice
-                            </a>
-                            <div class="btn-group ms-2">
-                                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                                    <i class="fas fa-filter"></i> Filter
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="?status=all">All Notices</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="?status=active">Active</a></li>
-                                    <li><a class="dropdown-item" href="?status=expired">Expired</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="?category=EVENT">Events</a></li>
-                                    <li><a class="dropdown-item" href="?category=TENDER">Tenders</a></li>
-                                    <li><a class="dropdown-item" href="?category=ANNOUNCEMENT">Announcements</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <nav aria-label="breadcrumb" class="mt-3">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Notices</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-
-            <!-- Stats Cards -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="text-uppercase mb-0">Total</h6>
-                                    <h2 class="mb-0">{{ total_count }}</h2>
-                                </div>
-                                <i class="fas fa-bullhorn fa-2x opacity-50"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-success text-white">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="text-uppercase mb-0">Active</h6>
-                                    <h2 class="mb-0">{{ active_count }}</h2>
-                                </div>
-                                <i class="fas fa-check-circle fa-2x opacity-50"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-warning text-white">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="text-uppercase mb-0">Important</h6>
-                                    <h2 class="mb-0">{{ important_count }}</h2>
-                                </div>
-                                <i class="fas fa-exclamation-circle fa-2x opacity-50"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-info text-white">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="text-uppercase mb-0">Attachments</h6>
-                                    <h2 class="mb-0">{{ attachment_count }}</h2>
-                                </div>
-                                <i class="fas fa-paperclip fa-2x opacity-50"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Notices Table -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">All Notices</h5>
-                        </div>
-                        <div class="card-body">
-                            {% if notices %}
-                            <div class="table-responsive">
-                                <table class="table table-hover" id="noticesTable">
-                                    <thead>
-                                        <tr>
-                                            <th width="50">
-                                                <input type="checkbox" id="selectAll" class="form-check-input">
-                                            </th>
-                                            <th>Headline</th>
-                                            <th>Category</th>
-                                            <th>Organization</th>
-                                            <th>Publish Date</th>
-                                            <th>Expiration</th>
-                                            <th>Status</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for notice in notices %}
-                                        <tr class="{% if notice.is_expired %}table-secondary{% endif %}">
-                                            <td>
-                                                <input type="checkbox" name="selected_notices" 
-                                                       value="{{ notice.id }}" class="form-check-input notice-checkbox">
-                                            </td>
-                                            <td>
-                                                <div>
-                                                    {% if notice.is_important %}
-                                                    <span class="badge bg-danger me-1">
-                                                        <i class="fas fa-exclamation"></i>
-                                                    </span>
-                                                    {% endif %}
-                                                    <strong>{{ notice.headline|truncatechars:50 }}</strong>
-                                                    <div class="text-muted small mt-1">
-                                                        {{ notice.overview|truncatechars:70 }}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-{{ notice.get_category_color }}">
-                                                    <i class="fas fa-tag"></i> {{ notice.get_category_display }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <strong>{{ notice.organization|truncatechars:30 }}</strong>
-                                            </td>
-                                            <td>
-                                                <div>{{ notice.publish_date|date:"M d, Y" }}</div>
-                                                <small class="text-muted">
-                                                    {% if notice.publish_date > now %}
-                                                    <span class="text-info">Scheduled</span>
-                                                    {% else %}
-                                                    {{ notice.publish_date|timesince }} ago
-                                                    {% endif %}
-                                                </small>
-                                            </td>
-                                            <td>
-                                                {% if notice.expiration_date %}
-                                                <div>{{ notice.expiration_date|date:"M d, Y" }}</div>
-                                                <small class="{% if notice.is_expired %}text-danger{% else %}text-success{% endif %}">
-                                                    {% if notice.is_expired %}
-                                                    Expired
-                                                    {% else %}
-                                                    {{ notice.expiration_date|timeuntil }} left
-                                                    {% endif %}
-                                                </small>
-                                                {% else %}
-                                                <span class="text-muted">No expiration</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if notice.is_active %}
-                                                <span class="badge bg-success">
-                                                    <i class="fas fa-check-circle"></i> Active
-                                                </span>
-                                                {% else %}
-                                                <span class="badge bg-secondary">
-                                                    <i class="fas fa-times-circle"></i> Inactive
-                                                </span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="text-end">
-                                                <div class="btn-group" role="group">
-                                                    <a href="{% url 'notice_detail' notice.pk %}" 
-                                                       class="btn btn-sm btn-outline-primary" 
-                                                       title="View" data-bs-toggle="tooltip">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <a href="{% url 'notice_edit' notice.pk %}" 
-                                                       class="btn btn-sm btn-outline-secondary" 
-                                                       title="Edit" data-bs-toggle="tooltip">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    {% if notice.is_active %}
-                                                    <a href="{% url 'notice_deactivate' notice.pk %}" 
-                                                       class="btn btn-sm btn-outline-warning" 
-                                                       title="Deactivate" data-bs-toggle="tooltip">
-                                                        <i class="fas fa-eye-slash"></i>
-                                                    </a>
-                                                    {% else %}
-                                                    <a href="{% url 'notice_activate' notice.pk %}" 
-                                                       class="btn btn-sm btn-outline-success" 
-                                                       title="Activate" data-bs-toggle="tooltip">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    {% endif %}
-                                                    {% if notice.is_important %}
-                                                    <a href="{% url 'notice_unmark_important' notice.pk %}" 
-                                                       class="btn btn-sm btn-outline-danger" 
-                                                       title="Remove Important" data-bs-toggle="tooltip">
-                                                        <i class="fas fa-star"></i>
-                                                    </a>
-                                                    {% else %}
-                                                    <a href="{% url 'notice_mark_important' notice.pk %}" 
-                                                       class="btn btn-sm btn-outline-warning" 
-                                                       title="Mark Important" data-bs-toggle="tooltip">
-                                                        <i class="fas fa-star"></i>
-                                                    </a>
-                                                    {% endif %}
-                                                    <button type="button" 
-                                                            class="btn btn-sm btn-outline-danger" 
-                                                            data-bs-toggle="modal" 
-                                                            data-bs-target="#deleteNoticeModal{{ notice.id }}"
-                                                            title="Delete">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                                
-                                                <!-- Delete Modal -->
-                                                <div class="modal fade" id="deleteNoticeModal{{ notice.id }}" tabindex="-1">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title">Confirm Delete</h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                Are you sure you want to delete "<strong>{{ notice.headline }}</strong>"?
-                                                                <div class="alert alert-warning mt-3">
-                                                                    <i class="fas fa-exclamation-triangle"></i> 
-                                                                    This action cannot be undone.
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                                                <form method="POST" action="{% url 'notice_delete' notice.pk %}" class="d-inline">
-                                                                    {% csrf_token %}
-                                                                    <button type="submit" class="btn btn-danger">Delete Notice</button>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            
-                            <!-- Bulk Actions -->
-                            <div class="row mt-3">
-                                <div class="col-md-6">
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
-                                                data-bs-toggle="dropdown" id="bulkActionsBtn" disabled>
-                                            Bulk Actions
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <a class="dropdown-item" href="#" id="bulkActivate">
-                                                    <i class="fas fa-eye text-success me-2"></i> Activate Selected
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="#" id="bulkDeactivate">
-                                                    <i class="fas fa-eye-slash text-warning me-2"></i> Deactivate Selected
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="#" id="bulkMarkImportant">
-                                                    <i class="fas fa-exclamation-circle text-danger me-2"></i> Mark Important
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="#" id="bulkRemoveImportant">
-                                                    <i class="fas fa-exclamation-circle text-secondary me-2"></i> Remove Important
-                                                </a>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <a class="dropdown-item text-danger" href="#" id="bulkDelete">
-                                                    <i class="fas fa-trash me-2"></i> Delete Selected
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <span class="ms-2 text-muted" id="selectedCount">0 notices selected</span>
-                                </div>
-                                
-                                <!-- Pagination -->
-                                {% if is_paginated %}
-                                <div class="col-md-6">
-                                    <nav aria-label="Page navigation" class="float-end">
-                                        <ul class="pagination pagination-sm mb-0">
-                                            {% if page_obj.has_previous %}
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" aria-label="Previous">
-                                                    <span aria-hidden="true">&laquo;</span>
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                            
-                                            {% for num in page_obj.paginator.page_range %}
-                                                {% if page_obj.number == num %}
-                                                <li class="page-item active">
-                                                    <span class="page-link">{{ num }}</span>
-                                                </li>
-                                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                                                <li class="page-item">
-                                                    <a class="page-link" href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">{{ num }}</a>
-                                                </li>
-                                                {% endif %}
-                                            {% endfor %}
-                                            
-                                            {% if page_obj.has_next %}
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" aria-label="Next">
-                                                    <span aria-hidden="true">&raquo;</span>
-                                                </a>
-                                            </li>
-                                            {% endif %}
-                                        </ul>
-                                    </nav>
-                                </div>
-                                {% endif %}
-                            </div>
-                            
-                            {% else %}
-                            <div class="text-center py-5">
-                                <i class="fas fa-bullhorn fa-4x text-muted mb-3"></i>
-                                <h4>No Notices Found</h4>
-                                <p class="text-muted">Get started by creating your first notice.</p>
-                                <a href="{% url 'notice_create' %}" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Create Your First Notice
-                                </a>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Bulk selection for notices
-    document.getElementById('selectAll').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.notice-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = this.checked;
-        });
-        updateSelectedCount();
-    });
-
-    function updateSelectedCount() {
-        const checkboxes = document.querySelectorAll('.notice-checkbox:checked');
-        const count = checkboxes.length;
-        document.getElementById('selectedCount').textContent = count + ' notice(s) selected';
-        document.getElementById('bulkActionsBtn').disabled = count === 0;
-    }
-
-    document.querySelectorAll('.notice-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', updateSelectedCount);
-    });
-
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl)
-    });
-</script>
-
+{% block extra_css %}
 <style>
-    .badge.bg-success {
-        background-color: #198754 !important;
+    /* Main Container */
+    .notices-container {
+        padding: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
     }
-    .badge.bg-warning {
-        background-color: #ffc107 !important;
-        color: #000;
+
+    /* Header */
+    .page-header {
+        margin-bottom: 2rem;
     }
-    .badge.bg-info {
-        background-color: #0dcaf0 !important;
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
     }
-    .badge.bg-danger {
-        background-color: #dc3545 !important;
+
+    .header-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
-    .table-hover tbody tr:hover {
-        background-color: rgba(0, 0, 0, 0.04);
+
+    .header-subtitle {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    .create-btn {
+        padding: 0.75rem 1.5rem;
+        background: #2563eb;
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        border: 2px solid #2563eb;
+        white-space: nowrap;
+    }
+
+    .create-btn:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        border-color: #1d4ed8;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        border-radius: 8px;
+        padding: 1.5rem;
+        color: white;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:nth-child(2) {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .stat-card:nth-child(3) {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .stat-card:nth-child(4) {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+
+    .stat-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        opacity: 0.2;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.9;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    /* Messages */
+    .messages-container {
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .message-alert {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: slideInDown 0.3s ease;
+        border-left: 4px solid;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .message-success {
+        background: #d1fae5;
+        color: #065f46;
+        border-left-color: #10b981;
+    }
+
+    .message-error {
+        background: #fee2e2;
+        color: #991b1b;
+        border-left-color: #ef4444;
+    }
+
+    .message-warning {
+        background: #fef3c7;
+        color: #92400e;
+        border-left-color: #f59e0b;
+    }
+
+    .message-info {
+        background: #dbeafe;
+        color: #1e40af;
+        border-left-color: #3b82f6;
+    }
+
+    .message-content {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        gap: 0.5rem;
+    }
+
+    .message-close {
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        padding: 0.25rem;
+        margin-left: 0.5rem;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        border-radius: 4px;
+    }
+
+    .message-close:hover {
+        opacity: 1;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    /* Filters Section */
+    .filters-section {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e1e5eb;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .filters-header {
+        padding: 1.5rem 1.5rem 0 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .filters-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filters-body {
+        padding: 0 1.5rem 1.5rem 1.5rem;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .filter-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .filter-control {
+        width: 100%;
+        padding: 0.625rem;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        background: white;
+        color: #1f2937;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+
+    .filter-control:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .filter-control:hover {
+        border-color: #2563eb;
+    }
+
+    .date-range-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .date-input {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.75rem;
+    }
+
+    .checkbox-label {
+        font-size: 0.875rem;
+        color: #4b5563;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .filter-buttons {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn {
+        padding: 0.625rem 1rem;
+        border-radius: 6px;
+        border: none;
+        font-weight: 500;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-secondary {
+        background: white;
+        color: #6b7280;
+        border: 1px solid #d1d5db;
+    }
+
+    .btn-secondary:hover {
+        background: #f8fafc;
+        border-color: #9ca3af;
+    }
+
+    /* Active Filters */
+    .active-filters {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .active-filters-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .filter-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .filter-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .filter-tag-status {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .filter-tag-category {
+        background: #f3e8ff;
+        color: #7c3aed;
+    }
+
+    .filter-tag-organization {
+        background: #f0f9ff;
+        color: #0c4a6e;
+    }
+
+    .filter-tag-date {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .filter-tag-important {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .tag-remove {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        font-size: 0.625rem;
+        color: inherit;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+
+    .tag-remove:hover {
+        opacity: 1;
+    }
+
+    /* Notices Table */
+    .notices-section {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e1e5eb;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .notices-body {
+        padding: 2rem;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        border-radius: 8px;
+        border: 1px solid #e1e5eb;
+        background: white;
+        margin-bottom: 1.5rem;
+    }
+
+    .notices-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 900px;
+    }
+
+    .notices-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #1f2937;
+        border-bottom: 2px solid #e1e5eb;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: #f8fafc;
+        white-space: nowrap;
+    }
+
+    .notices-table td {
+        padding: 1rem;
+        color: #555;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+    }
+
+    .notices-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .notices-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    .notice-link {
+        color: #1f2937;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    .notice-link:hover {
+        color: #2563eb;
+    }
+
+    .category-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .category-event {
+        background: #10b981;
+        color: white;
+    }
+
+    .category-tender {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .category-announcement {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .status-active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-inactive {
+        background: #f3e8ff;
+        color: #7c3aed;
+    }
+
+    .status-expired {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .important-badge {
+        background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.625rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 0.5rem;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: inline-flex;
+        gap: 0.375rem;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-view {
+        background: #dbeafe;
+        color: #1e40af;
+        border-color: #dbeafe;
+    }
+
+    .btn-view:hover {
+        background: #1e40af;
+        color: white;
+    }
+
+    .btn-edit {
+        background: #f3e8ff;
+        color: #7c3aed;
+        border-color: #f3e8ff;
+    }
+
+    .btn-edit:hover {
+        background: #7c3aed;
+        color: white;
+    }
+
+    .btn-activate {
+        background: #d1fae5;
+        color: #065f46;
+        border-color: #d1fae5;
+    }
+
+    .btn-activate:hover {
+        background: #065f46;
+        color: white;
+    }
+
+    .btn-deactivate {
+        background: #fef3c7;
+        color: #92400e;
+        border-color: #fef3c7;
+    }
+
+    .btn-deactivate:hover {
+        background: #92400e;
+        color: white;
+    }
+
+    .btn-mark-important {
+        background: #fee2e2;
+        color: #dc2626;
+        border-color: #fee2e2;
+    }
+
+    .btn-mark-important:hover {
+        background: #dc2626;
+        color: white;
+    }
+
+    .btn-remove-important {
+        background: #fef3c7;
+        color: #d97706;
+        border-color: #fef3c7;
+    }
+
+    .btn-remove-important:hover {
+        background: #d97706;
+        color: white;
+    }
+
+    .btn-delete {
+        background: #fee2e2;
+        color: #991b1b;
+        border-color: #fee2e2;
+    }
+
+    .btn-delete:hover {
+        background: #991b1b;
+        color: white;
+    }
+
+    /* Expiration Status */
+    .expiration-status {
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: block;
+        margin-top: 0.25rem;
+    }
+
+    .expiration-soon {
+        color: #d97706;
+    }
+
+    .expiration-expired {
+        color: #dc2626;
+    }
+
+    .expiration-safe {
+        color: #059669;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+
+    .empty-title {
+        color: #1f2937;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+    }
+
+    .empty-description {
+        color: #6b7280;
+        margin: 0 0 1.5rem 0;
+        font-size: 0.875rem;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e1e5eb;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .pagination-info {
+        color: #6b7280;
+        font-size: 0.875rem;
+        white-space: nowrap;
+    }
+
+    .pagination-numbers {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .page-link,
+    .page-current {
+        padding: 0.5rem 0.875rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        min-width: 2.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 1px solid #e1e5eb;
+    }
+
+    .page-link {
+        background: white;
+        color: #6b7280;
+    }
+
+    .page-link:hover {
+        background: #f8fafc;
+        border-color: #2563eb;
+        color: #2563eb;
+    }
+
+    .page-current {
+        background: #2563eb;
+        color: white;
+        border-color: #2563eb;
+        font-weight: 600;
+    }
+
+    .page-ellipsis {
+        padding: 0.5rem;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .pagination-size {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+
+    .size-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    .size-select {
+        padding: 0.5rem;
+        border-radius: 6px;
+        border: 1px solid #e1e5eb;
+        background: white;
+        color: #1f2937;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .size-select:hover {
+        border-color: #2563eb;
+    }
+
+    .size-select:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .loading-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .loading-spinner {
+        color: #2563eb;
+        margin-bottom: 1rem;
+    }
+
+    .loading-text {
+        color: #6b7280;
+        margin: 0;
+    }
+
+    /* Animations */
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideOutUp {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .notices-container {
+            padding: 1rem;
+        }
+
+        .header-content {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .create-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-buttons {
+            justify-content: stretch;
+        }
+
+        .btn {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .notices-body {
+            padding: 1rem;
+        }
+
+        .pagination-container {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+        }
+
+        .pagination-info {
+            text-align: center;
+        }
+
+        .pagination-numbers {
+            justify-content: center;
+        }
+
+        .pagination-size {
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .date-range-group {
+            flex-direction: column;
+        }
     }
 </style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="notices-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <div>
+                <h1 class="header-title">
+                    <i class="fas fa-bullhorn"></i>Notices
+                </h1>
+                <p class="header-subtitle">
+                    Manage announcements, events, and tenders
+                </p>
+            </div>
+            <a href="{% url 'notice_create' %}" class="create-btn">
+                <i class="fas fa-plus"></i> Create New Notice
+            </a>
+        </div>
+    </div>
+    
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-content">
+                <div>
+                    <h6 class="stat-label">Total Notices</h6>
+                    <h3 class="stat-value">{{ total_count }}</h3>
+                </div>
+                <i class="fas fa-bullhorn stat-icon"></i>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-content">
+                <div>
+                    <h6 class="stat-label">Active</h6>
+                    <h3 class="stat-value">{{ active_count }}</h3>
+                </div>
+                <i class="fas fa-check-circle stat-icon"></i>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-content">
+                <div>
+                    <h6 class="stat-label">Important</h6>
+                    <h3 class="stat-value">{{ important_count }}</h3>
+                </div>
+                <i class="fas fa-exclamation-circle stat-icon"></i>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-content">
+                <div>
+                    <h6 class="stat-label">Attachments</h6>
+                    <h3 class="stat-value">{{ attachment_count }}</h3>
+                </div>
+                <i class="fas fa-paperclip stat-icon"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="message-alert {% if 'success' in message.tags %}message-success
+            {% elif 'error' in message.tags %}message-error
+            {% elif 'warning' in message.tags %}message-warning
+            {% else %}message-info{% endif %}">
+            <div class="message-content">
+                <i class="fas 
+                    {% if 'success' in message.tags %}fa-check-circle 
+                    {% elif 'error' in message.tags %}fa-exclamation-circle 
+                    {% elif 'warning' in message.tags %}fa-exclamation-triangle 
+                    {% else %}fa-info-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+            <button onclick="closeMessage(this)" class="message-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Filters Section -->
+    <div class="filters-section">
+        <div class="filters-header">
+            <h3 class="filters-title">
+                <i class="fas fa-filter"></i>Filters
+            </h3>
+        </div>
+        
+        <div class="filters-body">
+            <form method="GET" action="" id="filterForm" class="filters-grid">
+                <!-- Status Filter -->
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select name="status" class="filter-control">
+                        <option value="">All Status</option>
+                        <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        <option value="expired" {% if current_status == 'expired' %}selected{% endif %}>Expired</option>
+                    </select>
+                </div>
+                
+                <!-- Organization Filter -->
+                <div class="filter-group">
+                    <label class="filter-label">Organization</label>
+                    <input type="text" name="organization" value="{{ current_organization }}" 
+                           placeholder="Search by organization..." class="filter-control">
+                </div>
+                
+                <!-- Category Filter -->
+                <div class="filter-group">
+                    <label class="filter-label">Category</label>
+                    <select name="category" class="filter-control">
+                        <option value="">All Categories</option>
+                        <option value="EVENT" {% if current_category == 'EVENT' %}selected{% endif %}>Event</option>
+                        <option value="TENDER" {% if current_category == 'TENDER' %}selected{% endif %}>Tender</option>
+                        <option value="ANNOUNCEMENT" {% if current_category == 'ANNOUNCEMENT' %}selected{% endif %}>Announcement</option>
+                    </select>
+                </div>
+                
+                <!-- Date Range Filter -->
+                <div class="filter-group">
+                    <label class="filter-label">Publish Date Range</label>
+                    <div class="date-range-group">
+                        <input type="date" name="publish_from" value="{{ current_publish_from }}" 
+                               class="filter-control date-input" placeholder="From">
+                        <input type="date" name="publish_to" value="{{ current_publish_to }}"
+                               class="filter-control date-input" placeholder="To">
+                    </div>
+                </div>
+                
+                <!-- Important Filter -->
+                <div class="filter-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="important" id="importantCheckbox" value="true" 
+                               {% if current_important == 'true' %}checked{% endif %}>
+                        <label for="importantCheckbox" class="checkbox-label">
+                            Show important only
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Filter Buttons -->
+                <div class="filter-buttons">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Apply Filters
+                    </button>
+                    <button type="button" onclick="resetFilters()" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Active Filters Display -->
+            {% if current_status or current_organization or current_category or current_publish_from or current_publish_to or current_important %}
+            <div class="active-filters">
+                <div class="active-filters-label">Active filters:</div>
+                <div class="filter-tags">
+                    {% if current_status %}
+                    <span class="filter-tag filter-tag-status">
+                        Status: {{ current_status|title }}
+                        <button onclick="removeFilter('status')" class="tag-remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </span>
+                    {% endif %}
+                    
+                    {% if current_organization %}
+                    <span class="filter-tag filter-tag-organization">
+                        Organization: {{ current_organization }}
+                        <button onclick="removeFilter('organization')" class="tag-remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </span>
+                    {% endif %}
+                    
+                    {% if current_category %}
+                    <span class="filter-tag filter-tag-category">
+                        Category: 
+                        {% if current_category == 'EVENT' %}Event
+                        {% elif current_category == 'TENDER' %}Tender
+                        {% else %}Announcement{% endif %}
+                        <button onclick="removeFilter('category')" class="tag-remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </span>
+                    {% endif %}
+                    
+                    {% if current_publish_from or current_publish_to %}
+                    <span class="filter-tag filter-tag-date">
+                        Publish Date: {{ current_publish_from|default:"Any" }} to {{ current_publish_to|default:"Any" }}
+                        <button onclick="removeDateFilters()" class="tag-remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </span>
+                    {% endif %}
+                    
+                    {% if current_important == 'true' %}
+                    <span class="filter-tag filter-tag-important">
+                        Important Only
+                        <button onclick="removeFilter('important')" class="tag-remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Notices Table -->
+    <div class="notices-section">
+        <div class="notices-body">
+            {% if notices %}
+            <div class="table-container">
+                <table class="notices-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Headline</th>
+                            <th>Category</th>
+                            <th>Organization</th>
+                            <th>Publish Date</th>
+                            <th>Expiration</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notices-table-body">
+                        {% for notice in notices %}
+                        <tr id="notice-row-{{ notice.pk }}" class="{% if notice.is_expired %}table-row-expired{% endif %}">
+                            <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                            <td>
+                                <a href="{% url 'notice_detail' notice.pk %}" class="notice-link">
+                                    {{ notice.headline|truncatechars:60 }}
+                                </a>
+                                {% if notice.is_important %}
+                                <span class="important-badge">IMPORTANT</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="category-badge 
+                                    {% if notice.category == 'EVENT' %}category-event
+                                    {% elif notice.category == 'TENDER' %}category-tender
+                                    {% else %}category-announcement{% endif %}">
+                                    {{ notice.get_category_display }}
+                                </span>
+                            </td>
+                            <td>{{ notice.organization|truncatechars:30 }}</td>
+                            <td>
+                            <div>{{ notice.publish_date|date:"M d, Y" }}</div>
+                                {% with current_date=now|date:"Y-m-d" publish_date_str=notice.publish_date|date:"Y-m-d" %}
+                                    <small class="text-muted">
+                                        {% if publish_date_str > current_date %}
+                                            <span class="text-info">Scheduled</span>
+                                        {% else %}
+                                            {{ notice.publish_date|timesince }} ago
+                                        {% endif %}
+                                    </small>
+                                {% endwith %}
+                            </td>
+                            <td>
+                                {% if notice.expiration_date %}
+                                    <div>{{ notice.expiration_date|date:"M d, Y" }}</div>
+                                    {% with current_date=now|date:"Y-m-d" expiration_date_str=notice.expiration_date|date:"Y-m-d" %}
+                                        <small class="expiration-status 
+                                            {% if expiration_date_str < current_date %}expiration-expired
+                                            {% elif notice.expiration_date|timeuntil:now < '3 days' %}expiration-soon
+                                            {% else %}expiration-safe{% endif %}">
+                                            {% if expiration_date_str < current_date %}
+                                                Expired
+                                            {% else %}
+                                                {{ notice.expiration_date|timeuntil:now }} left
+                                            {% endif %}
+                                        </small>
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="text-muted">No expiration</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span id="status-badge-{{ notice.pk }}" 
+                                      class="status-badge 
+                                        {% if notice.is_active %}status-active
+                                        {% else %}status-inactive{% endif %}
+                                        {% if notice.is_expired %}status-expired{% endif %}">
+                                    {% if notice.is_expired %}
+                                        Expired
+                                    {% else %}
+                                        {{ notice.is_active|yesno:"Active,Inactive" }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <!-- View Button -->
+                                    <a href="{% url 'notice_detail' notice.pk %}" 
+                                       class="action-btn btn-view" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    {% if request.user.is_superuser or notice.author == request.user %}
+                                    <!-- Edit Button -->
+                                    <a href="{% url 'notice_edit' notice.pk %}" 
+                                       class="action-btn btn-edit" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    <!-- Activate/Deactivate Button -->
+                                    {% if notice.is_active %}
+                                    <button class="action-btn btn-deactivate deactivate-btn" 
+                                            title="Deactivate"
+                                            data-notice-id="{{ notice.pk }}"
+                                            data-notice-headline="{{ notice.headline|escapejs }}">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="action-btn btn-activate activate-btn" 
+                                            title="Activate"
+                                            data-notice-id="{{ notice.pk }}"
+                                            data-notice-headline="{{ notice.headline|escapejs }}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <!-- Mark Important/Remove Important Button -->
+                                    {% if notice.is_important %}
+                                    <button class="action-btn btn-remove-important remove-important-btn" 
+                                            title="Remove Important"
+                                            data-notice-id="{{ notice.pk }}"
+                                            data-notice-headline="{{ notice.headline|escapejs }}">
+                                        <i class="fas fa-star"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="action-btn btn-mark-important mark-important-btn" 
+                                            title="Mark as Important"
+                                            data-notice-id="{{ notice.pk }}"
+                                            data-notice-headline="{{ notice.headline|escapejs }}">
+                                        <i class="fas fa-star"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <!-- Delete Button -->
+                                    <button class="action-btn btn-delete delete-btn" 
+                                            title="Delete"
+                                            data-notice-id="{{ notice.pk }}"
+                                            data-notice-headline="{{ notice.headline|escapejs }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="pagination-container">
+                <!-- Page Info -->
+                <div class="pagination-info">
+                    Showing <strong>{{ page_obj.start_index }}</strong> to 
+                    <strong>{{ page_obj.end_index }}</strong> of 
+                    <strong>{{ page_obj.paginator.count }}</strong> notices
+                </div>
+                
+                <!-- Page Numbers -->
+                <div class="pagination-numbers">
+                    {% if page_obj.has_previous %}
+                    <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="page-link">
+                        <i class="fas fa-angle-double-left"></i> First
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="page-link">
+                        <i class="fas fa-angle-left"></i> Prev
+                    </a>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <span class="page-current">{{ num }}</span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                           class="page-link">
+                            {{ num }}
+                        </a>
+                        {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                        <span class="page-ellipsis">...</span>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="page-link">
+                        Next <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                       class="page-link">
+                        Last <i class="fas fa-angle-double-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Page Size Selector -->
+                <div class="pagination-size">
+                    <span class="size-label">Show:</span>
+                    <select onchange="changePageSize(this)" class="size-select">
+                        <option value="10" {% if request.GET.per_page == "10" %}selected{% endif %}>10</option>
+                        <option value="20" {% if request.GET.per_page == "20" or not request.GET.per_page %}selected{% endif %}>20</option>
+                        <option value="50" {% if request.GET.per_page == "50" %}selected{% endif %}>50</option>
+                        <option value="100" {% if request.GET.per_page == "100" %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-bullhorn empty-icon"></i>
+                <h4 class="empty-title">No notices found</h4>
+                <p class="empty-description">
+                    {% if current_status or current_organization or current_category or current_publish_from or current_publish_to or current_important %}
+                    Try changing your filters
+                    {% else %}
+                    Create your first notice to get started
+                    {% endif %}
+                </p>
+                {% if current_status or current_organization or current_category or current_publish_from or current_publish_to or current_important %}
+                <button onclick="resetFilters()" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Clear Filters
+                </button>
+                {% else %}
+                <a href="{% url 'notice_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create Notice
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <i class="fas fa-spinner fa-spin fa-3x loading-spinner"></i>
+        <p class="loading-text">Processing...</p>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Function to show loading overlay
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+// Function to hide loading overlay
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Function to close message
+function closeMessage(button) {
+    const message = button.closest('.message-alert');
+    if (message) {
+        message.style.opacity = '0';
+        message.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            if (message.parentNode) {
+                message.remove();
+            }
+        }, 300);
+    }
+}
+
+// Function to reset all filters
+function resetFilters() {
+    window.location.href = '{% url "notice_list" %}';
+}
+
+// Function to remove a specific filter
+function removeFilter(filterName) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(filterName);
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+
+// Function to remove date filters
+function removeDateFilters() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('publish_from');
+    url.searchParams.delete('publish_to');
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+
+// Function to change page size
+function changePageSize(select) {
+    const perPage = select.value;
+    const url = new URL(window.location.href);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+
+// Function to show confirmation alert
+function showConfirmAlert(title, text, confirmText, icon = 'warning') {
+    return Swal.fire({
+        title: title,
+        text: text,
+        icon: icon,
+        showCancelButton: true,
+        confirmButtonColor: icon === 'error' ? '#ef4444' : (icon === 'warning' ? '#f59e0b' : '#10b981'),
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        customClass: {
+            confirmButton: 'swal-confirm-btn',
+            cancelButton: 'swal-cancel-btn'
+        }
+    });
+}
+
+// Function to handle activate action
+function handleActivate(noticeId, headline, button) {
+    const activateUrl = `/management/notices/${noticeId}/activate/`;
+    
+    showConfirmAlert(
+        'Activate Notice',
+        `Are you sure you want to activate "${headline}"?`,
+        'Activate Now',
+        'success'
+    ).then((result) => {
+        if (result.isConfirmed) {
+            showLoading();
+            
+            $.ajax({
+                url: activateUrl,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                success: function(response) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: response.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    
+                    // Update status badge
+                    const statusBadge = document.getElementById(`status-badge-${noticeId}`);
+                    if (statusBadge) {
+                        statusBadge.textContent = 'Active';
+                        statusBadge.className = 'status-badge status-active';
+                    }
+                    
+                    // Update button
+                    if (button) {
+                        button.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                        button.title = 'Deactivate';
+                        button.className = 'action-btn btn-deactivate deactivate-btn';
+                        
+                        // Update event listener
+                        button.replaceWith(button.cloneNode(true));
+                        const newButton = document.querySelector(`[data-notice-id="${noticeId}"].deactivate-btn`);
+                        if (newButton) {
+                            newButton.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeactivate(noticeId, headline, this);
+                            });
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: xhr.responseJSON?.message || 'Failed to activate notice.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                },
+                complete: function() {
+                    hideLoading();
+                }
+            });
+        }
+    });
+}
+
+// Function to handle deactivate action
+function handleDeactivate(noticeId, headline, button) {
+    const deactivateUrl = `/management/notices/${noticeId}/deactivate/`;
+    
+    showConfirmAlert(
+        'Deactivate Notice',
+        `Are you sure you want to deactivate "${headline}"?`,
+        'Deactivate',
+        'warning'
+    ).then((result) => {
+        if (result.isConfirmed) {
+            showLoading();
+            
+            $.ajax({
+                url: deactivateUrl,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                success: function(response) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: response.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    
+                    // Update status badge
+                    const statusBadge = document.getElementById(`status-badge-${noticeId}`);
+                    if (statusBadge) {
+                        statusBadge.textContent = 'Inactive';
+                        statusBadge.className = 'status-badge status-inactive';
+                    }
+                    
+                    // Update button
+                    if (button) {
+                        button.innerHTML = '<i class="fas fa-eye"></i>';
+                        button.title = 'Activate';
+                        button.className = 'action-btn btn-activate activate-btn';
+                        
+                        // Update event listener
+                        button.replaceWith(button.cloneNode(true));
+                        const newButton = document.querySelector(`[data-notice-id="${noticeId}"].activate-btn`);
+                        if (newButton) {
+                            newButton.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleActivate(noticeId, headline, this);
+                            });
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: xhr.responseJSON?.message || 'Failed to deactivate notice.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                },
+                complete: function() {
+                    hideLoading();
+                }
+            });
+        }
+    });
+}
+
+// Function to handle mark important action
+function handleMarkImportant(noticeId, headline, button) {
+    const markImportantUrl = `/management/notices/${noticeId}/mark-important/`;
+    
+    showConfirmAlert(
+        'Mark as Important',
+        `Are you sure you want to mark "${headline}" as important?`,
+        'Mark Important',
+        'success'
+    ).then((result) => {
+        if (result.isConfirmed) {
+            showLoading();
+            
+            $.ajax({
+                url: markImportantUrl,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                success: function(response) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: response.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    
+                    // Add important badge
+                    const row = document.getElementById(`notice-row-${noticeId}`);
+                    const headlineCell = row.querySelector('.notice-link').parentElement;
+                    
+                    // Remove existing important badge if any
+                    const existingBadge = headlineCell.querySelector('.important-badge');
+                    if (existingBadge) {
+                        existingBadge.remove();
+                    }
+                    
+                    // Add important badge
+                    const importantBadge = document.createElement('span');
+                    importantBadge.className = 'important-badge';
+                    importantBadge.textContent = 'IMPORTANT';
+                    headlineCell.appendChild(importantBadge);
+                    
+                    // Update button
+                    if (button) {
+                        button.innerHTML = '<i class="fas fa-star"></i>';
+                        button.title = 'Remove Important';
+                        button.className = 'action-btn btn-remove-important remove-important-btn';
+                        
+                        // Update event listener
+                        button.replaceWith(button.cloneNode(true));
+                        const newButton = document.querySelector(`[data-notice-id="${noticeId}"].remove-important-btn`);
+                        if (newButton) {
+                            newButton.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleRemoveImportant(noticeId, headline, this);
+                            });
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: xhr.responseJSON?.message || 'Failed to mark notice as important.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                },
+                complete: function() {
+                    hideLoading();
+                }
+            });
+        }
+    });
+}
+
+// Function to handle remove important action
+function handleRemoveImportant(noticeId, headline, button) {
+    const removeImportantUrl = `/management/notices/${noticeId}/remove-important/`;
+    
+    showConfirmAlert(
+        'Remove Important',
+        `Are you sure you want to remove "${headline}" from important notices?`,
+        'Remove Important',
+        'warning'
+    ).then((result) => {
+        if (result.isConfirmed) {
+            showLoading();
+            
+            $.ajax({
+                url: removeImportantUrl,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                success: function(response) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: response.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    
+                    // Remove important badge
+                    const row = document.getElementById(`notice-row-${noticeId}`);
+                    const headlineCell = row.querySelector('.notice-link').parentElement;
+                    const importantBadge = headlineCell.querySelector('.important-badge');
+                    if (importantBadge) {
+                        importantBadge.remove();
+                    }
+                    
+                    // Update button
+                    if (button) {
+                        button.innerHTML = '<i class="fas fa-star"></i>';
+                        button.title = 'Mark as Important';
+                        button.className = 'action-btn btn-mark-important mark-important-btn';
+                        
+                        // Update event listener
+                        button.replaceWith(button.cloneNode(true));
+                        const newButton = document.querySelector(`[data-notice-id="${noticeId}"].mark-important-btn`);
+                        if (newButton) {
+                            newButton.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleMarkImportant(noticeId, headline, this);
+                            });
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: xhr.responseJSON?.message || 'Failed to remove important status.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                },
+                complete: function() {
+                    hideLoading();
+                }
+            });
+        }
+    });
+}
+
+// Function to handle delete action
+function handleDelete(noticeId, headline, button) {
+    const deleteUrl = `/management/notices/${noticeId}/delete/`;
+    
+    showConfirmAlert(
+        'Delete Notice',
+        `Are you sure you want to delete "${headline}"? This action cannot be undone.`,
+        'Delete',
+        'error'
+    ).then((result) => {
+        if (result.isConfirmed) {
+            showLoading();
+            
+            $.ajax({
+                url: deleteUrl,
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                success: function(response) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: response.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    
+                    // Remove row with animation
+                    const row = document.getElementById(`notice-row-${noticeId}`);
+                    if (row) {
+                        row.style.animation = 'slideOutUp 0.3s ease';
+                        setTimeout(() => {
+                            row.remove();
+                            
+                            // Update stats if provided
+                            if (response.new_counts) {
+                                document.querySelectorAll('.stat-value').forEach((el, index) => {
+                                    if (index === 0) el.textContent = response.new_counts.total;
+                                    else if (index === 1) el.textContent = response.new_counts.active;
+                                    else if (index === 2) el.textContent = response.new_counts.important;
+                                    else if (index === 3) el.textContent = response.new_counts.attachments;
+                                });
+                            }
+                        }, 300);
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: xhr.responseJSON?.message || 'Failed to delete notice.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                },
+                complete: function() {
+                    hideLoading();
+                }
+            });
+        }
+    });
+}
+
+// Initialize event listeners
+function initializeEventListeners() {
+    // Auto-hide messages after 5 seconds
+    setTimeout(() => {
+        document.querySelectorAll('.message-alert').forEach(message => {
+            message.style.opacity = '0';
+            message.style.transform = 'translateY(-10px)';
+            setTimeout(() => message.remove(), 300);
+        });
+    }, 5000);
+    
+    // Add hover effects to table rows
+    document.querySelectorAll('#notices-table-body tr').forEach(row => {
+        row.addEventListener('mouseenter', () => {
+            row.style.backgroundColor = '#f8fafc';
+        });
+        
+        row.addEventListener('mouseleave', () => {
+            row.style.backgroundColor = '';
+        });
+    });
+    
+    // Activate button listeners
+    document.querySelectorAll('.activate-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const noticeId = this.dataset.noticeId;
+            const headline = this.dataset.noticeHeadline;
+            handleActivate(noticeId, headline, this);
+        });
+    });
+    
+    // Deactivate button listeners
+    document.querySelectorAll('.deactivate-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const noticeId = this.dataset.noticeId;
+            const headline = this.dataset.noticeHeadline;
+            handleDeactivate(noticeId, headline, this);
+        });
+    });
+    
+    // Mark important button listeners
+    document.querySelectorAll('.mark-important-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const noticeId = this.dataset.noticeId;
+            const headline = this.dataset.noticeHeadline;
+            handleMarkImportant(noticeId, headline, this);
+        });
+    });
+    
+    // Remove important button listeners
+    document.querySelectorAll('.remove-important-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const noticeId = this.dataset.noticeId;
+            const headline = this.dataset.noticeHeadline;
+            handleRemoveImportant(noticeId, headline, this);
+        });
+    });
+    
+    // Delete button listeners
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const noticeId = this.dataset.noticeId;
+            const headline = this.dataset.noticeHeadline;
+            handleDelete(noticeId, headline, this);
+        });
+    });
+    
+    // Filter form submission
+    document.getElementById('filterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const params = new URLSearchParams();
+        
+        // Add all form data
+        for (let [key, value] of formData.entries()) {
+            if (value) {
+                params.set(key, value);
+            }
+        }
+        
+        // Add current per_page if not in form
+        if (!formData.has('per_page') && '{{ current_per_page }}') {
+            params.set('per_page', '{{ current_per_page }}');
+        }
+        
+        // Reset to page 1
+        params.set('page', '1');
+        
+        window.location.href = '?' + params.toString();
+    });
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeEventListeners);
+</script>
 {% endblock %}

@@ -1,265 +1,430 @@
-from django.shortcuts import render, get_object_or_404, redirect
+import json
+import secrets
+from datetime import timedelta
+
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
+from django.views import View
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.admin.views.decorators import staff_member_required
-from django.utils.text import Truncator
-
-from .models import SiteInfo, TeamMember, User
-
 from django.contrib import messages
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
+
+from .forms import CustomAuthenticationForm, CustomPasswordChangeForm, UserProfileForm, TeamMemberProfileForm
+from .models import User, TeamMember, PasswordResetCode
 
 
+# ---------------------------------------------------------
+# views.py
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.db.models import Q
+from .models import User, TeamMember
+from .forms import UserForm, UserProfileForm, TeamMemberForm
 
+def is_admin(user):
+    """Check if user has admin role"""
+    return user.is_authenticated and user.roles == 'admin'
 
-# views.py - Add these functions
-
-
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-
-
-
-
-# Profile View
 @login_required
-def profile_view(request):
-    return render(request, 'auth/profile.html', {'user': request.user})
-
-# Saved Stories View
-@login_required
-def saved_stories_view(request):
-    # Assuming you have a 'saved_by' field in your Story model
-    # or a separate SavedStory model
-    saved_stories = Story.objects.filter(saved_by=request.user).order_by('-created_at')
-    # OR if you have a ManyToMany relationship
-    # saved_stories = request.user.saved_stories.all()
+@user_passes_test(is_admin)
+def user_list(request):
+    """List all users (admin only)"""
+    search_query = request.GET.get('search', '')
+    role_filter = request.GET.get('role', '')
     
-    return render(request, 'auth/saved_stories.html', {'saved_stories': saved_stories})
+    users = User.objects.all()
+    
+    if search_query:
+        users = users.filter(
+            Q(username__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+    
+    if role_filter:
+        users = users.filter(roles=role_filter)
+    
+    # Sort by creation date (newest first)
+    users = users.order_by('-created_at')
+    
+    context = {
+        'users': users,
+        'search_query': search_query,
+        'role_filter': role_filter,
+        'user_roles': dict(User.ROLES),
+    }
+    return render(request, 'auth/user_list.html', context)
 
-# Save Story Action
 @login_required
-def save_story_view(request, story_id):
+@user_passes_test(is_admin)
+def user_create(request):
+    """Create new user (admin only)"""
     if request.method == 'POST':
-        try:
-            story = Story.objects.get(id=story_id)
-            # Toggle save status
-            if request.user in story.saved_by.all():
-                story.saved_by.remove(request.user)
-                saved = False
-            else:
-                story.saved_by.add(request.user)
-                saved = True
-            
-            return JsonResponse({'success': True, 'saved': saved})
-        except Story.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Story not found'})
+        form = UserForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.created_by = request.user
+            user.save()
+            messages.success(request, f'User {user.username} created successfully!')
+            return redirect('user_list')
+    else:
+        form = UserForm()
     
-    return JsonResponse({'success': False, 'error': 'Invalid request'})
+    context = {'form': form}
+    return render(request, 'auth/user_form.html', context)
 
-
-
-def about_page(request):
-    """About us page"""
-    site_info = get_object_or_404(SiteInfo, id=1)
-    
-    # Get active team members (max 5)
-    team_members = TeamMember.objects.filter(
-        is_active=True,
-        user__is_active=True
-    ).order_by('display_order')[:5]
-    
-    return render(request, 'about/about.html', {
-        'site_info': site_info,
-        'team_members': team_members,
-    })
-
-
-@staff_member_required
-def edit_about(request):
-    """Edit about page (staff only)"""
-    site_info = get_object_or_404(SiteInfo, id=1)
+@login_required
+@user_passes_test(is_admin)
+def user_edit(request, pk):
+    """Edit user (admin only)"""
+    user = get_object_or_404(User, pk=pk)
     
     if request.method == 'POST':
-        site_info.about_us = request.POST.get('about_us', '')
-        site_info.mission = request.POST.get('mission', '')
-        site_info.vision = request.POST.get('vision', '')
-        site_info.contact_email = request.POST.get('contact_email', '')
-        site_info.contact_phone = request.POST.get('contact_phone', '')
-        site_info.address = request.POST.get('address', '')
-        site_info.facebook_url = request.POST.get('facebook_url', '')
-        site_info.twitter_url = request.POST.get('twitter_url', '')
-        site_info.linkedin_url = request.POST.get('linkedin_url', '')
-        site_info.save()
+        form = UserForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'User {user.username} updated successfully!')
+            return redirect('user_list')
+    else:
+        form = UserForm(instance=user)
+    
+    context = {
+        'form': form,
+        'user': user,
+        'is_edit': True,
+    }
+    return render(request, 'auth/user_form.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def user_toggle_active(request, pk):
+    """Enable/disable user (admin only)"""
+    user = get_object_or_404(User, pk=pk)
+    
+    if user == request.user:
+        messages.error(request, 'You cannot disable your own account!')
+        return redirect('user_list')
+    
+    user.is_active = not user.is_active
+    user.save()
+    
+    action = 'enabled' if user.is_active else 'disabled'
+    messages.success(request, f'User {user.username} has been {action}.')
+    return redirect('user_list')
+
+@login_required
+@user_passes_test(is_admin)
+def user_delete(request, pk):
+    """Delete user (admin only)"""
+    user = get_object_or_404(User, pk=pk)
+    
+    if user == request.user:
+        messages.error(request, 'You cannot delete your own account!')
+        return redirect('user_list')
+    
+    if request.method == 'POST':
+        username = user.username
+        user.delete()
+        messages.success(request, f'User {username} has been deleted.')
+        return redirect('user_list')
+    
+    context = {'user': user}
+    return render(request, 'management/users/user_confirm_delete.html', context)
+
+@login_required
+def user_profile(request):
+    """User profile view (accessible by all logged-in users)"""
+    user = request.user
+    
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('user_profile')
+    else:
+        form = UserProfileForm(instance=user)
+    
+    try:
+        team_profile = user.team_profile
+    except TeamMember.DoesNotExist:
+        team_profile = None
+    
+    context = {
+        'form': form,
+        'team_profile': team_profile,
+        'user': user,
+    }
+    return render(request, 'auth/profile.html', context)
+
+@login_required
+def team_profile_edit(request):
+    """Edit team profile (if exists)"""
+    user = request.user
+    
+    try:
+        team_profile = user.team_profile
+    except TeamMember.DoesNotExist:
+        team_profile = None
+    
+    if request.method == 'POST':
+        if team_profile:
+            form = TeamMemberForm(request.POST, request.FILES, instance=team_profile)
+        else:
+            form = TeamMemberForm(request.POST, request.FILES)
         
+        if form.is_valid():
+            team_profile = form.save(commit=False)
+            team_profile.user = user
+            team_profile.save()
+            messages.success(request, 'Team profile updated successfully!')
+            return redirect('user_profile')
+    else:
+        if team_profile:
+            form = TeamMemberForm(instance=team_profile)
+        else:
+            form = TeamMemberForm()
+    
+    context = {
+        'form': form,
+        'team_profile': team_profile,
+    }
+    return render(request, 'management/users/team_profile_form.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class LoginView(View):
+    template_name = 'auth/login.html'
+
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('user_profile')
+        return render(request, self.template_name, {
+            'form': CustomAuthenticationForm()
+        })
+
+    def post(self, request):
+        tab = request.POST.get('tab', 'login')
+
+        if tab == 'login':
+            return self.handle_login(request)
+
+        if tab == 'password_reset':
+            return self.handle_password_reset(request)
+
+        return redirect('login')
+
+    def handle_login(self, request):
+        form = CustomAuthenticationForm(request, data=request.POST)
+
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+
+            if not request.POST.get('remember_me'):
+                request.session.set_expiry(0)
+
+            messages.success(request, f'Welcome back, {user.username}!')
+            return redirect(request.POST.get('next', 'user_profile'))
+
+        messages.error(request, 'Invalid username or password.')
+        return render(request, self.template_name, {'form': form})
+
+    def handle_password_reset(self, request):
+        if not request.session.get('reset_verified'):
+            messages.error(request, 'Password reset not verified.')
+            return redirect('login')
+
+        user_id = request.session.get('reset_user_id')
+        if not user_id:
+            messages.error(request, 'Reset session expired.')
+            return redirect('login')
+
+        password1 = request.POST.get('new_password1')
+        password2 = request.POST.get('new_password2')
+
+        if password1 != password2:
+            messages.error(request, 'Passwords do not match.')
+            return redirect('login')
+
+        if len(password1) < 8:
+            messages.error(request, 'Password must be at least 8 characters.')
+            return redirect('login')
+
+        user = User.objects.get(id=user_id)
+        user.set_password(password1)
+        user.save()
+
+        request.session.flush()
+        messages.success(request, 'Password reset successful. Please log in.')
+        return redirect('login')
+
+
+# ============================
+# AJAX PASSWORD RESET ENDPOINTS
+# ============================
+
+def send_reset_code(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request'})
+
+    data = json.loads(request.body)
+    email = data.get('email')
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'No user with that email.'})
+
+    code = str(secrets.randbelow(1000000)).zfill(6)
+
+    PasswordResetCode.objects.create(
+        user=user,
+        code=code,
+        expires_at=timezone.now() + timedelta(minutes=10)
+    )
+
+    request.session['reset_user_id'] = user.id
+    request.session['reset_verified'] = False
+
+    try:
+        send_mail(
+            'Password Reset Code',
+            f'Your password reset code is: {code}',
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False
+        )
+    except Exception:
+        # DEV fallback
         return JsonResponse({
             'success': True,
-            'message': 'About page updated successfully!'
+            'message': 'Email not configured.',
+            'code': code
         })
-    
-    return render(request, 'about/edit.html', {
-        'site_info': site_info,
-    })
+
+    return JsonResponse({'success': True, 'message': 'Code sent successfully.'})
 
 
-@staff_member_required
-def edit_team_member(request, user_id):
-    """Edit team member profile (staff only)"""
-    team_member = get_object_or_404(TeamMember, user_id=user_id)
-    
-    if request.method == 'POST':
-        team_member.position = request.POST.get('position', '')
-        team_member.bio = request.POST.get('bio', '')
-        team_member.twitter_url = request.POST.get('twitter_url', '')
-        team_member.linkedin_url = request.POST.get('linkedin_url', '')
-        team_member.display_order = request.POST.get('display_order', 0)
-        team_member.is_active = request.POST.get('is_active') == 'true'
-        team_member.save()
-        
-        return JsonResponse({
-            'success': True,
-            'message': 'Team member updated successfully!'
-        })
-    
-    return JsonResponse({
-        'success': False,
-        'error': 'Method not allowed'
-    })
+def verify_reset_code(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False})
+
+    data = json.loads(request.body)
+    code = data.get('code')
+    user_id = request.session.get('reset_user_id')
+
+    if not code or not user_id:
+        return JsonResponse({'success': False, 'message': 'Invalid session.'})
+
+    reset_code = PasswordResetCode.objects.filter(
+        user_id=user_id,
+        code=code,
+        is_used=False,
+        expires_at__gt=timezone.now()
+    ).first()
+
+    if not reset_code:
+        return JsonResponse({'success': False, 'message': 'Invalid or expired code.'})
+
+    reset_code.is_used = True
+    reset_code.save()
+    request.session['reset_verified'] = True
+
+    return JsonResponse({'success': True, 'message': 'Code verified.'})
 
 
-def team_member_detail(request, username):
-    """View team member profile"""
-    user = get_object_or_404(User, username=username, is_active=True)
-    team_member = get_object_or_404(TeamMember, user=user, is_active=True)
-    
-    return render(request, 'about/team_member.html', {
-        'team_member': team_member,
-    })
-
+@login_required
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'Logged out successfully.')
+    return redirect('login')
 
 
 
-# ==================== SITE INFO ====================
-
-@staff_member_required
-def manage_site_info(request):
-    """Manage site information (About, Contact, etc.)"""
-    # Get or create site info
-    site_info, created = SiteInfo.objects.get_or_create(id=1)
-    
-    if request.method == 'POST':
-        # Update site info
-        site_info.about_us = request.POST.get('about_us', '')
-        site_info.mission = request.POST.get('mission', '')
-        site_info.vision = request.POST.get('vision', '')
-        
-        # Contact info
-        site_info.contact_email = request.POST.get('contact_email', '')
-        site_info.contact_phone = request.POST.get('contact_phone', '')
-        site_info.address = request.POST.get('address', '')
-        
-        # Social media
-        site_info.facebook_url = request.POST.get('facebook_url', '')
-        site_info.twitter_url = request.POST.get('twitter_url', '')
-        site_info.linkedin_url = request.POST.get('linkedin_url', '')
-        
-        site_info.save()
-        
-        messages.success(request, 'Site information updated successfully!')
-        return redirect('manage_site_info')
-    
-    return render(request, 'about/manage_site.html', {
-        'site_info': site_info,
-    })
-
-
-# ==================== TEAM MEMBERS ====================
-
-@staff_member_required
-def manage_team(request):
-    """Manage team members"""
-    # Get active team members (max 5)
-    team_members = TeamMember.objects.all().order_by('display_order')
-    
-    # Get staff users who don't have team profiles yet
-    staff_users = User.objects.filter(
-        is_staff=True,
-        is_active=True
-    ).exclude(team_profile__isnull=False)
-    
-    return render(request, 'about/manage_team.html', {
-        'team_members': team_members,
-        'staff_users': staff_users,
-    })
-
-
-@staff_member_required
-def add_team_member(request):
-    """Add new team member"""
-    if request.method == 'POST':
-        user_id = request.POST.get('user_id')
-        position = request.POST.get('position', '')
-        
-        if not user_id or not position:
-            messages.error(request, 'Please select a user and enter a position')
-            return redirect('manage_team')
-        
-        try:
-            user = User.objects.get(id=user_id, is_staff=True, is_active=True)
-            
-            # Check if already a team member
-            if hasattr(user, 'team_profile'):
-                messages.error(request, f'{user.get_full_name()} is already a team member')
-                return redirect('manage_team')
-            
-            # Create team member
-            team_member = TeamMember.objects.create(
-                user=user,
-                position=position,
-                bio=request.POST.get('bio', ''),
-                twitter_url=request.POST.get('twitter_url', ''),
-                linkedin_url=request.POST.get('linkedin_url', ''),
-                display_order=request.POST.get('display_order', 0) or 0,
-                is_active=request.POST.get('is_active') == 'on'
-            )
-            
-            messages.success(request, f'{user.get_full_name()} added to team successfully!')
-            return redirect('manage_team')
-            
-        except User.DoesNotExist:
-            messages.error(request, 'Selected user not found')
-            return redirect('manage_team')
-    
-    return redirect('manage_team')
-
-
-@staff_member_required
-def edit_team_member(request, user_id):
-    """Edit team member"""
-    team_member = get_object_or_404(TeamMember, user_id=user_id)
-    
-    if request.method == 'POST':
-        team_member.position = request.POST.get('position', '')
-        team_member.bio = request.POST.get('bio', '')
-        team_member.twitter_url = request.POST.get('twitter_url', '')
-        team_member.linkedin_url = request.POST.get('linkedin_url', '')
-        team_member.display_order = request.POST.get('display_order', 0) or 0
-        team_member.is_active = request.POST.get('is_active') == 'on'
-        team_member.save()
-        
-        messages.success(request, 'Team member updated successfully!')
-        return redirect('manage_team')
-    
-    return render(request, 'about/edit_team.html', {
-        'team_member': team_member,
-    })
-
-
-@staff_member_required
-def delete_team_member(request, user_id):
-    """Delete team member"""
-    team_member = get_object_or_404(TeamMember, user_id=user_id)
-    user_name = team_member.user.get_full_name()
-    team_member.delete()
-    
-    messages.success(request, f'{user_name} removed from team successfully!')
-    return redirect('manage_team')
