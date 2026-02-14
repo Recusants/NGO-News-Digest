@@ -1,0 +1,22 @@
+name: Deploy to cPanel
+
+on:
+  push:
+    branches: [ "main" ]  # Only deploy from main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test  # Uncomment if you want to require tests first
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🚀 Deploy to cPanel via FTP/SFTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_HOST }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        server-dir: ${{ secrets.FTP_DIR }}
