@@ -1,0 +1,23 @@
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/ngodigest/public_html/
+    - export REPOPATH=/home/ngodigest/repositories/NGO-News-Digest/
+    
+    # Copy Django files (excluding unnecessary ones)
+    - /bin/cp -R $REPOPATH/* $DEPLOYPATH
+    - /bin/cp $REPOPATH/.env $DEPLOYPATH 2>/dev/null || :
+    
+    # Install/update dependencies
+    - cd $DEPLOYPATH
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+    
+    # Run Django commands
+    - python manage.py migrate --noinput
+    - python manage.py collectstatic --noinput
+    
+    # Set proper permissions
+    - chmod -R 755 $DEPLOYPATH
+    - chmod -R 775 $DEPLOYPATH/media
+    - chmod -R 775 $DEPLOYPATH/staticfiles
