@@ -1,110 +1,105 @@
 """
-Production settings for Railway deployment
+Production settings for cPanel deployment with MySQL
 """
 from .base import *
 import os
+import pymysql  # Add this
 
-from dotenv import load_dotenv
-load_dotenv()
-# Override base settings for production
+# Install pymysql if you don't have it: pip install pymysql
+
+# Tell Django to use pymysql as MySQLdb
+pymysql.install_as_MySQLdb()
+
+# ==============================================================================
+# CRITICAL: These MUST be set in cPanel Environment Variables
+# ==============================================================================
+
+# Security - MUST be set in cPanel
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("❌ SECRET_KEY environment variable not set in cPanel!")
+
+# Debug must be False in production
 DEBUG = False
 
-# CRITICAL: Railway domain settings
-# Get domain from environment or use wildcards
-RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')
-RAILWAY_STATIC_URL = os.environ.get('RAILWAY_STATIC_URL', '')
+# Allowed hosts - MUST be set in cPanel (comma-separated)
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
+    raise ValueError("❌ ALLOWED_HOSTS environment variable not set in cPanel!")
 
-# Build ALLOWED_HOSTS dynamically
-ALLOWED_HOSTS = []
+# ==============================================================================
+# Database - MySQL for cPanel
+# ==============================================================================
 
-# Add Railway domains
-if RAILWAY_PUBLIC_DOMAIN:
-    ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
-    # Also add without port if present
-    if ':' in RAILWAY_PUBLIC_DOMAIN:
-        ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN.split(':')[0])
-
-if RAILWAY_STATIC_URL:
-    ALLOWED_HOSTS.append(RAILWAY_STATIC_URL)
-
-# Add common Railway patterns
-ALLOWED_HOSTS.extend([
-    'https://*.up.railway.app',
-    'https://your-app-name.up.railway.app',
-    'https://localhost',
-    'https://127.0.0.1',
-])
-
-
-
-# Remove duplicates and empty strings
-ALLOWED_HOSTS = list(set([h for h in ALLOWED_HOSTS if h]))
-
-# CRITICAL: CSRF settings for Railway
-CSRF_TRUSTED_ORIGINS = []
-
-# Add HTTPS versions of all allowed hosts
-for host in ALLOWED_HOSTS:
-    if host not in ['localhost', '127.0.0.1']:
-        CSRF_TRUSTED_ORIGINS.append(f'https://{host}')
-    CSRF_TRUSTED_ORIGINS.append(f'https://*.{host}')
-
-# Add common patterns
-CSRF_TRUSTED_ORIGINS.extend([
-    'https://*.railway.app',
-    'https://*.up.railway.app',
-])
-
-# Remove duplicates
-CSRF_TRUSTED_ORIGINS = list(set(CSRF_TRUSTED_ORIGINS))
-
-# CRITICAL: Trust Railway's proxy
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-# Security settings - DISABLE TEMPORARILY for testing
-SECURE_SSL_REDIRECT = True  # Set to True after testing
-SESSION_COOKIE_SECURE = True  # Set to True after testing
-CSRF_COOKIE_SECURE = True  # Set to True after testing
-SECURE_HSTS_SECONDS = 0  # Set to 31536000 after testing
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-# Set default values for the environment variables if they’re not already set
-# os.environ.setdefault("PG_DATABASE", "liftoff_dev")
-# os.environ.setdefault("PG_USER", "username")
-# os.environ.setdefault("PG_PASSWORD", "")
-# os.environ.setdefault("PG_HOST", "localhost")
-# os.environ.setdefault("PG_PORT", "5432")
-
-
-    # DB_NAME=railway
-    # DB_USER=postgres
-    # DB_PASSWORD=EUXNpjaqSdRQUllBCEslWUlpOtZnGkMi
-    # DB_HOST=postgres.railway.internal
-    # DB_PORT=5432
-
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("PGDATABASE"),
-        'USER': os.getenv("PGUSER"),
-        'PASSWORD': os.getenv("PGPASSWORD"),
-        'HOST': os.getenv("PGHOST"),
-        'PORT': os.getenv("PGPORT"),
+# Check if using DATABASE_URL or individual variables
+if os.environ.get('DATABASE_URL'):
+    # For MySQL URLs like: mysql://user:pass@host:3306/dbname
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            engine='django.db.backends.mysql'  # Force MySQL backend
+        )
     }
-}
+else:
+    # Standard MySQL connection (most common in cPanel)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASSWORD'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'charset': 'utf8mb4',
+                'autocommit': True,
+            },
+        }
+    }
 
-# Static files
+# Validate database settings
+if not DATABASES['default'].get('NAME'):
+    raise ValueError("❌ Database NAME not configured! Set DB_NAME in cPanel.")
+
+# ==============================================================================
+# Email - Optional, but needed for your app
+# ==============================================================================
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# ==============================================================================
+# Security Settings for cPanel
+# ==============================================================================
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# CSRF Trust - Add your domain
+CSRF_TRUSTED_ORIGINS = [f'https://{host}' for host in ALLOWED_HOSTS if host]
+
+# ==============================================================================
+# Static Files
+# ==============================================================================
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
-# Add debug logging to see values
-print("="*60)
-print("PRODUCTION SETTINGS LOADED")
-print(f"DEBUG: {DEBUG}")
-print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
-print(f"CSRF_TRUSTED_ORIGINS: {CSRF_TRUSTED_ORIGINS}")
-print("="*60)
+# ==============================================================================
+# MySQL-specific settings
+# ==============================================================================
+# If you're using MySQL 5.7+ with JSON support, you can use JSONField
+# Otherwise, Django will use TextField for JSON
+if 'django.contrib.postgres' in INSTALLED_APPS:
+    INSTALLED_APPS.remove('django.contrib.postgres')

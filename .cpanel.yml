@@ -1,23 +1,56 @@
+---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home/ngodigest/public_html/
+    # ==========================================================================
+    # IMPORTANT: REPLACE 'ngodigest' WITH YOUR ACTUAL cPanel USERNAME
+    # ==========================================================================
+    - export DEPLOYPATH=/home/ngodigest/public_html/NGO-News-Digest/
     - export REPOPATH=/home/ngodigest/repositories/NGO-News-Digest/
     
-    # Copy Django files (excluding unnecessary ones)
-    - /bin/cp -R $REPOPATH/* $DEPLOYPATH
-    - /bin/cp $REPOPATH/.env $DEPLOYPATH 2>/dev/null || :
+    # ==========================================================================
+    # Copy files to deployment directory
+    # ==========================================================================
+    - /bin/cp -r $REPOPATH/* $DEPLOYPATH/
+    - /bin/cp $REPOPATH/.htaccess $DEPLOYPATH/ 2>/dev/null || :
     
-    # Install/update dependencies
+    # ==========================================================================
+    # Set up Python virtual environment
+    # ==========================================================================
     - cd $DEPLOYPATH
-    - python3 -m venv venv
+    - python3 --version
+    
+    # Create/update virtual environment
+    - if [ ! -d "venv" ]; then python3 -m venv venv; fi
     - source venv/bin/activate
+    
+    # ==========================================================================
+    # Install dependencies
+    # ==========================================================================
+    - pip install --upgrade pip
     - pip install -r requirements.txt
     
-    # Run Django commands
+    # ==========================================================================
+    # Run Django commands (environment variables come from cPanel)
+    # ==========================================================================
     - python manage.py migrate --noinput
     - python manage.py collectstatic --noinput
     
+    # ==========================================================================
     # Set proper permissions
-    - chmod -R 755 $DEPLOYPATH
+    # ==========================================================================
+    - find $DEPLOYPATH -type d -exec chmod 755 {} \;
+    - find $DEPLOYPATH -type f -exec chmod 644 {} \;
     - chmod -R 775 $DEPLOYPATH/media
     - chmod -R 775 $DEPLOYPATH/staticfiles
+    
+    # ==========================================================================
+    # Create .htaccess for Passenger if it doesn't exist
+    # ==========================================================================
+    - |
+      if [ ! -f "$DEPLOYPATH/.htaccess" ]; then
+        echo 'Options +ExecCGI
+      AddHandler wsgi-script .py
+      RewriteEngine On
+      RewriteCond %{REQUEST_FILENAME} !-f
+      RewriteRule ^(.*)$ /home/ngodigest/public_html/NGO-News-Digest/passenger_wsgi.py/$1 [QSA,L]' > $DEPLOYPATH/.htaccess
+      fi

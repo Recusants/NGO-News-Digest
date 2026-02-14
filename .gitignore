@@ -1,3 +1,30 @@
+# Environment
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+
+# Database
+*.sqlite3
+*.db
+
+# Static files
+staticfiles/
+media/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+
+
 # Django
 *.log
 *.pot
