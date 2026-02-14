@@ -1,7 +1,7 @@
 asgiref==3.11.0
 certifi==2026.1.4
 charset-normalizer==3.4.4
-dj-database-url==3.1.0
+dj-database-url
 Django==5.2.10
 django-ckeditor==6.7.3
 django-debug-toolbar==6.2.0
