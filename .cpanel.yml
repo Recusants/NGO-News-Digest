@@ -2,80 +2,28 @@
 deployment:
   tasks:
     # ==========================================================================
-    # REPLACE 'ngodiges' WITH YOUR ACTUAL cPanel USERNAME
-    # Example: if your cPanel login is "john123", use /home/john123/
+    # IMPORTANT: REPLACE 'ngodiges' WITH YOUR ACTUAL cPanel USERNAME
     # ==========================================================================
     - export DEPLOYPATH=/home/ngodiges/public_html/NGO-News-Digest/
-    - export REPOPATH=/home/ngodiges/repositories/NGO-News-Digest/
-    
     
     # ==========================================================================
-    # Create deployment directory if it doesn't exist
+    # Copy all files from the git repository to the deployment directory
     # ==========================================================================
-    - mkdir -p $DEPLOYPATH
+    - /bin/cp -r * $DEPLOYPATH
+    - /bin/cp -r .[!.]* $DEPLOYPATH 2>/dev/null || :
     
     # ==========================================================================
-    # Copy ALL files (including hidden ones) to public_html
-    # ==========================================================================
-    - /bin/cp -r $REPOPATH/* $DEPLOYPATH/
-    - /bin/cp -r $REPOPATH/.[!.]* $DEPLOYPATH/ 2>/dev/null || :
-    
-    # ==========================================================================
-    # Set up Python environment in the deployment location
+    # Set up Python environment
     # ==========================================================================
     - cd $DEPLOYPATH
-    
-    # Create/update virtual environment
-    - if [ ! -d "venv" ]; then python3 -m venv venv; fi
+    - python3 -m venv venv
     - source venv/bin/activate
-    
-    # Install/update dependencies
-    - pip install --upgrade pip
     - pip install -r requirements.txt
-    
-    # ==========================================================================
-    # Run Django commands
-    # ==========================================================================
     - python manage.py migrate --noinput
     - python manage.py collectstatic --noinput
     
     # ==========================================================================
-    # Set proper permissions
+    # Fix permissions
     # ==========================================================================
-    - find $DEPLOYPATH -type d -exec chmod 755 {} \;
-    - find $DEPLOYPATH -type f -exec chmod 644 {} \;
-    - chmod -R 775 $DEPLOYPATH/media
-    - chmod -R 775 $DEPLOYPATH/staticfiles
-    
-    # ==========================================================================
-    # Create .htaccess file
-    # ==========================================================================
-    - |
-      cat > $DEPLOYPATH/.htaccess << 'EOF'
-      PassengerEnabled On
-      PassengerAppRoot /home/ngodiges/public_html/NGO-News-Digest
-      SetEnv DJANGO_SETTINGS_MODULE newsletter.settings.production
-      
-      RewriteEngine On
-      RewriteCond %{REQUEST_FILENAME} !-f
-      RewriteRule ^(.*)$ /passenger_wsgi.py/$1 [QSA,L]
-      EOF
-    
-    # ==========================================================================
-    # Create passenger_wsgi.py file
-    # ==========================================================================
-    - |
-      cat > $DEPLOYPATH/passenger_wsgi.py << 'EOF'
-      import os
-      import sys
-
-      project_path = '/home/ngodiges/public_html/NGO-News-Digest'
-
-      if project_path not in sys.path:
-          sys.path.insert(0, project_path)
-
-      os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'newsletter.settings.production')
-
-      from django.core.wsgi import get_wsgi_application
-      application = get_wsgi_application()
-      EOF
+    - chmod 755 $DEPLOYPATH
+    - chmod 644 $DEPLOYPATH/passenger_wsgi.py
