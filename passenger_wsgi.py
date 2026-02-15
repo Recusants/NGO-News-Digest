@@ -7,11 +7,11 @@ with open('/home/ngodiges/debug_import.log', 'w') as f:
     f.write(f"Current directory: {os.getcwd()}\n")
     f.write(f"Python executable: {sys.executable}\n")
     f.write(f"Python version: {sys.version}\n")
-    f.write(f"Python path: {sys.path}\n\n")
-    
-    # Check what's in site-packages
-    site_packages = [p for p in sys.path if 'site-packages' in p]
-    f.write(f"Site packages: {site_packages}\n\n")
+        # f.write(f"Python path: {sys.path}\n\n")
+        
+        # # Check what's in site-packages
+        # site_packages = [p for p in sys.path if 'site-packages' in p]
+        # f.write(f"Site packages: {site_packages}\n\n")
     
     # Try to find where pymysql might be imported
     f.write("Attempting to trace imports...\n")
