@@ -3,12 +3,7 @@ Production settings for cPanel deployment with MySQL
 """
 from .base import *
 import os
-import PyMySQL as pymysql
 
-# Install pymysql if you don't have it: pip install pymysql
-
-# Tell Django to use pymysql as MySQLdb
-pymysql.install_as_MySQLdb()
 
 # ==============================================================================
 # CRITICAL: These MUST be set in cPanel Environment Variables
@@ -46,16 +41,16 @@ else:
     # Standard MySQL connection (most common in cPanel)
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
+            'ENGINE': 'mysql.connector.django',  # 👈 THIS IS KEY - uses official connector
             'NAME': os.environ.get('DB_NAME'),
             'USER': os.environ.get('DB_USER'),
             'PASSWORD': os.environ.get('DB_PASSWORD'),
             'HOST': os.environ.get('DB_HOST', 'localhost'),
             'PORT': os.environ.get('DB_PORT', '3306'),
             'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-                'charset': 'utf8mb4',
                 'autocommit': True,
+                'charset': 'utf8mb4',
+                'use_pure': True,  # Use pure Python implementation
             },
         }
     }

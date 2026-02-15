@@ -2,6 +2,22 @@
 import os
 import sys
 
+
+# Write debug info
+with open('/home/ngodiges/debug.log', 'w') as f:
+    f.write(f"Python executable: {sys.executable}\n")
+    f.write(f"Python path: {sys.path}\n")
+    
+    # Test PyMySQL import
+    try:
+        import pymysql
+        f.write("pymysql imported SUCCESSFULLY\n")
+        f.write(f"pymysql location: {pymysql.__file__}\n")
+    except ImportError as e:
+        f.write(f"pymysql import FAILED: {e}\n")
+
+
+
 # Your cPanel ngodiges
 username = 'ngodiges'
 
