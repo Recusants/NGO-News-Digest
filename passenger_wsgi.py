@@ -3,7 +3,7 @@ import os
 import sys
 
 # Your cPanel ngodiges
-ngodiges = 'ngodiges'
+username = 'ngodiges'
 
 # Exact path to your app
 project_path = f'/home/ngodiges/public_html/NGO-News-Digest'
