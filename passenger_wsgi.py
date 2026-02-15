@@ -11,3 +11,4 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'newsletter.settings.production'
 
 # Import the Django WSGI application
 from newsletter.wsgi import application
+
