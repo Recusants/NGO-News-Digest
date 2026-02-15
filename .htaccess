@@ -1,2 +1,21 @@
+# .htaccess for Django with Passenger
 PassengerEnabled On
 PassengerAppRoot /home/ngodiges/public_html/NGO-News-Digest
+PassengerPython /home/ngodiges/virtualenv/public_html/NGO-News-Digest/3.10/bin/python
+PassengerFriendlyErrorPages on
+
+# Set Django settings module
+SetEnv DJANGO_SETTINGS_MODULE newsletter.settings.production
+
+# Set Python path to include your project
+SetEnv PYTHONPATH /home/ngodiges/public_html/NGO-News-Digest
+
+# Static files handling
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ /passenger_wsgi.py/$1 [QSA,L]
+
+# Optional: Increase timeout for large requests
+PassengerHighPerformance on
+PassengerMaxRequests 1000
+PassengerStatThrottleRate 120
