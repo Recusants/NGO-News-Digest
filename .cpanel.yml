@@ -8,6 +8,7 @@ deployment:
     - export DEPLOYPATH=/home/ngodiges/public_html/NGO-News-Digest/
     - export REPOPATH=/home/ngodiges/repositories/NGO-News-Digest/
     
+    
     # ==========================================================================
     # Create deployment directory if it doesn't exist
     # ==========================================================================
