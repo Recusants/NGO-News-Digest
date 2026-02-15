@@ -3,7 +3,7 @@ Production settings for cPanel deployment with MySQL
 """
 from .base import *
 import os
-import pymysql  # Add this
+import PyMySQL as pymysql
 
 # Install pymysql if you don't have it: pip install pymysql
 
