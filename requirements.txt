@@ -23,5 +23,5 @@ typing_extensions>=4.13.0
 tzdata>=2025.1
 urllib3>=2.3.0
 whitenoise>=6.9.0
-mysql-connector-python==9.2.0
+PyMySQL
 mysqlclient==2.2.8

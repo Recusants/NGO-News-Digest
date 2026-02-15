@@ -1,16 +1,23 @@
 ---
 deployment:
   tasks:
-    # ==========================================================================
-    # IMPORTANT: REPLACE 'ngodiges' WITH YOUR ACTUAL cPanel USERNAME
-    # ==========================================================================
-    - export DEPLOYPATH=/home/ngodiges/public_html/NGO-News-Digest/
-    
-    # ==========================================================================
-    # Copy all files from the git repository to the deployment directory
-    # ==========================================================================
+    - export DEPLOYPATH=/home/ngodiges/public_html/NGO-News-Digest
+
+    # Copy project files
     - /bin/cp -r * $DEPLOYPATH
     - /bin/cp -r .[!.]* $DEPLOYPATH 2>/dev/null || :
+
+    # Activate cPanel's existing virtualenv
+    - source /home/ngodiges/virtualenv/public_html/NGO-News-Digest/3.10/bin/activate
+
+    # Install/Update dependencies
+    - pip install -r $DEPLOYPATH/requirements.txt
+
+    # Run migrations
+    - python $DEPLOYPATH/manage.py migrate --noinput
+
+    # Collect static files
+    - python $DEPLOYPATH/manage.py collectstatic --noinput
     
     # ==========================================================================
     # Fix permissions

@@ -22,42 +22,32 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
     raise ValueError("❌ ALLOWED_HOSTS environment variable not set in cPanel!")
 
+
+
+
+
 # ==============================================================================
-# Database - MySQL for cPanel
+# Database - MySQL using PyMySQL
 # ==============================================================================
 
-# Check if using DATABASE_URL or individual variables
-if os.environ.get('DATABASE_URL'):
-    # For MySQL URLs like: mysql://user:pass@host:3306/dbname
-    import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600,
-            engine='django.db.backends.mysql'  # Force MySQL backend
-        )
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+        },
     }
-else:
-    # Standard MySQL connection (most common in cPanel)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'mysql.connector.django',  # 👈 THIS IS KEY - uses official connector
-            'NAME': os.environ.get('DB_NAME'),
-            'USER': os.environ.get('DB_USER'),
-            'PASSWORD': os.environ.get('DB_PASSWORD'),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '3306'),
-            'OPTIONS': {
-                'autocommit': True,
-                'charset': 'utf8mb4',
-                'use_pure': True,  # Use pure Python implementation
-            },
-        }
-    }
+}
 
-# Validate database settings
-if not DATABASES['default'].get('NAME'):
+if not DATABASES['default']['NAME']:
     raise ValueError("❌ Database NAME not configured! Set DB_NAME in cPanel.")
+
 
 # ==============================================================================
 # Email - Optional, but needed for your app
