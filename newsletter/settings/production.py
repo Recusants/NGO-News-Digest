@@ -33,9 +33,7 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s %(message)s'
 )
 
-# Print all database queries
-import django
-django.db.backends.base.base.logger.setLevel(logging.DEBUG)
+
 
 # ==============================================================================
 # Database - MySQL using PyMySQL
