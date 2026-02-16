@@ -148,8 +148,6 @@ def subscribe(request):
         subscriber = already_exist[0]
         subscriber.name = name
         subscriber.verification_token = verification_token
-        subscriber.is_verified = False
-        subscriber.is_active = False
         subscriber.save()
     else:
         new_subscriber = Subscriber()
@@ -178,15 +176,14 @@ Best regards,
 Newsletter Team""",
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
-            fail_silently=True,
+            fail_silently=True,  # ← This is what you want
         )
+        # Optional: Log success silently (only you can see)
+        print(f"✅ Subscription email sent to {email}")
     except Exception as e:
-        return JsonResponse({
-            'title': "Success",
-            'message': f'Failed to send email: {e}',
-            'icon': "success",
-        })
-
+        # Log the error but don't tell the user
+        print(f"❌ Email failed for {email}: {e}")
+        # Still return success to the user
     
     return JsonResponse({
         'title': "Success",

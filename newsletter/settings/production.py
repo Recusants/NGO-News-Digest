@@ -59,16 +59,26 @@ if not DATABASES['default']['NAME']:
 
 
 # ==============================================================================
-# Email - Optional, but needed for your app
+# Email - Using info@ngodigest.co.zw (PRODUCTION)
 # ==============================================================================
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'mail.ngodigest.co.zw'
+EMAIL_PORT = 587  # Use 587 with TLS, not 465
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Validate email settings if they're provided
 if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    # Settings are present, we'll use them
+    pass
+else:
+    # Log a warning but don't crash - email might be optional
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning("Email settings not fully configured in environment variables")
 
 # ==============================================================================
 # Security Settings for cPanel
