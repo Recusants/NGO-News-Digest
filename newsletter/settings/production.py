@@ -9,29 +9,29 @@ import os
 # CRITICAL: These MUST be set in cPanel Environment Variables
 # ==============================================================================
 
-# # Security - MUST be set in cPanel
-# SECRET_KEY = os.environ.get('SECRET_KEY')
-# if not SECRET_KEY:
-#     raise ValueError("❌ SECRET_KEY environment variable not set in cPanel!")
+# Security - MUST be set in cPanel
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("❌ SECRET_KEY environment variable not set in cPanel!")
 
-# # Debug must be False in production
-# DEBUG = False
+# Debug must be False in production
+DEBUG = False
 
-# # Allowed hosts - MUST be set in cPanel (comma-separated)
-# ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
-# if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
-#     raise ValueError("❌ ALLOWED_HOSTS environment variable not set in cPanel!")
+# Allowed hosts - MUST be set in cPanel (comma-separated)
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
+    raise ValueError("❌ ALLOWED_HOSTS environment variable not set in cPanel!")
 
 
-import logging
+# import logging
 
-DEBUG = True
-# Log all errors to a file
-logging.basicConfig(
-    filename='/home/ngodiges/django_debug.log',
-    level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s %(message)s'
-)
+# DEBUG = True
+# # Log all errors to a file
+# logging.basicConfig(
+#     filename='/home/ngodiges/django_debug.log',
+#     level=logging.DEBUG,
+#     format='%(asctime)s %(levelname)s %(message)s'
+# )
 
 
 
