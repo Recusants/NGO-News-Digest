@@ -23,6 +23,7 @@ import os
 #     raise ValueError("❌ ALLOWED_HOSTS environment variable not set in cPanel!")
 
 
+import logging
 
 DEBUG = True
 # Log all errors to a file
