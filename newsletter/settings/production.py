@@ -23,15 +23,15 @@ if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
     raise ValueError("❌ ALLOWED_HOSTS environment variable not set in cPanel!")
 
 
-# import logging
+import logging
 
-# DEBUG = True
-# # Log all errors to a file
-# logging.basicConfig(
-#     filename='/home/ngodiges/django_debug.log',
-#     level=logging.DEBUG,
-#     format='%(asctime)s %(levelname)s %(message)s'
-# )
+DEBUG = True
+# Log all errors to a file
+logging.basicConfig(
+    filename='/home/ngodiges/django_debug.log',
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s %(message)s'
+)
 
 
 
