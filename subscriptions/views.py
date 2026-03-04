@@ -164,7 +164,7 @@ def subscribe(request):
     
     try:
         send_mail(
-            subject='✅ Confirm Your Newsletter Subscription',
+            subject='Confirm Your Newsletter Subscription',
             message=f"""Hello {name},
 
 Thank you for subscribing to our newsletter!
@@ -174,12 +174,12 @@ Please click the link below to confirm:
 
 Best regards,
 Newsletter Team""",
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            from_email=f"NGO News Digest <{settings.DEFAULT_FROM_EMAIL}>",
             recipient_list=[email],
             fail_silently=True,  # ← This is what you want
         )
         # Optional: Log success silently (only you can see)
-        print(f"✅ Subscription email sent to {email}")
+        print(f"Subscription email sent to {email}")
     except Exception as e:
         # Log the error but don't tell the user
         print(f"❌ Email failed for {email}: {e}")
