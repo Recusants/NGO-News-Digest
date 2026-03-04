@@ -182,7 +182,7 @@ Newsletter Team""",
         print(f"Subscription email sent to {email}")
     except Exception as e:
         # Log the error but don't tell the user
-        print(f"❌ Email failed for {email}: {e}")
+        print(f"Email failed for {email}: {e}")
         # Still return success to the user
     
     return JsonResponse({
