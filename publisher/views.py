@@ -185,12 +185,12 @@ class EmailThread(threading.Thread):
                     email.attach_alternative(self.html_message, "text/html")
                 email.send()
                 self.sent_count += 1
-                print(f"✅ Email sent to {recipient}")
+                print(f"Email sent to {recipient}")
             except Exception as e:
                 self.failed_count += 1
-                print(f"❌ Failed to send email to {recipient}: {e}")
+                print(f"Failed to send email to {recipient}: {e}")
         
-        print(f"📧 Email summary: {self.sent_count} sent, {self.failed_count} failed")
+        print(f"Email summary: {self.sent_count} sent, {self.failed_count} failed")
         
         # Close database connection when done
         connection.close()
@@ -319,18 +319,18 @@ def notify_subscribers(post_id):
         ).values_list('email', flat=True)
         
         if not subscribers.exists():
-            print("ℹ️ No subscribers to notify")
+            print("No subscribers to notify")
             return
         
         # Create email content - FIXED: using post.headline instead of post.title
-        subject = f"📰 New Story: {post.headline}"
+        subject = f"New Story: {post.headline}"
         html_message = render_to_string('emails/new_story.html', {
             'post': post,
             'site_url': site_url,
         })
         
         plain_message = f"""
-        📰 New Story: {post.headline}
+        New Story: {post.headline}
         
         {post.snippet}
         
@@ -341,14 +341,14 @@ def notify_subscribers(post_id):
         """
         
         # Send in background
-        print(f"📨 Starting email thread for {subscribers.count()} subscribers...")
+        print(f"Starting email thread for {subscribers.count()} subscribers...")
         send_email_in_background(subject, plain_message, html_message, list(subscribers))
-        print(f"✅ Email thread started for story: {post.headline}")
+        print(f"Email thread started for story: {post.headline}")
         
     except Story.DoesNotExist:
-        print(f"❌ Post {post_id} not found")
+        print(f"Post {post_id} not found")
     except Exception as e:
-        print(f"❌ Error in notify_subscribers: {e}")
+        print(f"Error in notify_subscribers: {e}")
 
 
 def success_page(request):

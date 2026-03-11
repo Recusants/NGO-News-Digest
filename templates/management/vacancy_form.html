@@ -523,6 +523,7 @@
     </div>
     
     <!-- Main Form -->
+    
     <form method="POST" enctype="multipart/form-data" id="vacancyForm" class="vacancy-form">
         {% csrf_token %}
         {{ form.media }}  {# Required for CKEditor #}
@@ -673,7 +674,7 @@
                         <textarea name="{{ form.how_to_apply.html_name }}"
                                   id="{{ form.how_to_apply.id_for_label }}"
                                   class="form-control ckeditor"
-                                  rows="5">{{ form.how_to_apply.value|default:'' }}</textarea>
+                                  rows="5">{{ form.how_to_apply.value|default:''|safe }}</textarea>
                         {% if form.how_to_apply.errors %}
                         <div class="error-message">
                             {{ form.how_to_apply.errors }}

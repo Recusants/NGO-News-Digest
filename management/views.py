@@ -75,6 +75,9 @@ def vacancy_edit(request, pk):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
+        print('===========================================::::')
+        print(vacancy.how_to_apply)
+        print('===========================================::::.')
         form = VacancyForm(instance=vacancy)
     
     context = {
@@ -197,7 +200,7 @@ def story_create(request):
                 # Save the story
                 story.save()
                 
-                # ✅ ADD THIS: Send email notifications
+                # ADD THIS: Send email notifications
                 notify_subscribers(story.id)
                 messages.info(request, 'Email notifications are being sent to subscribers in the background.')
                 
@@ -322,7 +325,7 @@ def story_edit(request, pk):
                 # Save the story
                 story.save()
                 
-                # ✅ ADD THIS: Send email notifications
+                # ADD THIS: Send email notifications
                 notify_subscribers(story.id)
                 messages.info(request, 'Email notifications are being sent to subscribers in the background.')
                 

@@ -194,7 +194,7 @@ def team_profile_edit(request):
         'form': form,
         'team_profile': team_profile,
     }
-    return render(request, 'management/users/team_profile_form.html', context)
+    return render(request, 'auth/team_profile_form.html', context)
 
 
 
