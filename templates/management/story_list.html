@@ -226,7 +226,7 @@
                         <tr>
                             <th class="fw-semibold">#</th>
                             <th class="fw-semibold">Headline</th>
-                            <th class="fw-semibold">Author</th>
+                            <th class="fw-semibold">Success/Failed</th>
                             <th class="fw-semibold">Category</th>
                             <th class="fw-semibold">Status</th>
                             <th class="fw-semibold">Created</th>
@@ -239,10 +239,11 @@
                             <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
                             <td>
                                 <a href="{% url 'story_detail' story.pk %}" class="text-dark text-decoration-none fw-medium">
-                                    {{ story.headline|truncatechars:60 }}
+                                    {{ story.headline|truncatechars:60 }}<br>
+                                    <small>{{ story.author.get_full_name|default:story.author.username }}</small>
                                 </a>
                             </td>
-                            <td>{{ story.author.get_full_name|default:story.author.username }}</td>
+                            <td><span class="badge badge-success">{{ story.sent_count }}</span> {{ story.failed_count }}</td>
                             <td>
                                 {% if story.category %}
                                 <span class="badge bg-primary">{{ story.category.name }}</span>

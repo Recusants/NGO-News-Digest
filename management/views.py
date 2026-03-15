@@ -12,11 +12,17 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from django.utils.html import strip_tags
 from django.utils import timezone
+from datetime import datetime
 
 from django.db.models import Q
 from publisher.models import Story, Vacancy, Notice, Category, GenericAttachment
 from publisher.forms import StoryForm, VacancyForm, NoticeForm, CategoryForm
 from publisher.utils.attachment_utils import attach_multiple_files_to_object
+from publisher.views import notify_subscribers
+
+from accounts.models import User
+
+from django.http import Http404
 
 
 from django.views.decorators.http import require_POST
@@ -84,7 +90,6 @@ def vacancy_create(request):
             else:
                 # Validate deadline is not in the past
                 try:
-                    from datetime import datetime
                     deadline_date = datetime.strptime(application_deadline, '%Y-%m-%d').date()
                     if deadline_date < timezone.now().date():
                         errors.append('Application deadline cannot be in the past.')
@@ -239,7 +244,6 @@ def vacancy_edit(request, pk):
             else:
                 # Validate deadline is not in the past (allow existing past dates for editing)
                 try:
-                    from datetime import datetime
                     deadline_date = datetime.strptime(application_deadline, '%Y-%m-%d').date()
                 except ValueError:
                     errors.append('Invalid application deadline format.')
@@ -412,9 +416,8 @@ def notice_edit(request, pk):
 
 
 @login_required
-@require_POST
 def story_publish(request, pk):
-    """Publish a story"""
+    """Publish a story and notify subscribers"""
     try:
         story = get_object_or_404(Story, id=pk, author=request.user)
         
@@ -423,10 +426,13 @@ def story_publish(request, pk):
             story.published_at = timezone.now()
             story.save()
             
+            # Notify subscribers in background thread
+            notify_subscribers(story.id)
+            
             return JsonResponse({
                 'icon': 'success',
                 'title': 'Success!',
-                'message': 'Story published successfully',
+                'message': 'Story published successfully. Subscribers will be notified.',
                 'status': 'PUBLISHED'
             })
         else:
@@ -437,13 +443,15 @@ def story_publish(request, pk):
                 'status': story.status
             })
             
-    except Story.DoesNotExist:
+    except Http404:
         return JsonResponse({
             'icon': 'error',
-            'title': 'Error',
+            'title': 'Not Found',
             'message': 'Story not found or you do not have permission'
         }, status=404)
     except Exception as e:
+        # Log the error for debugging
+        print(f"Error in story_publish: {str(e)}")
         return JsonResponse({
             'icon': 'error',
             'title': 'Server Error',
@@ -587,145 +595,6 @@ def story_create(request):
         return render(request, 'management/story/create_story.html', context)
 
 
-
-@login_required
-def story_edit(request, pk):
-    story = get_object_or_404(Story, pk=pk)
-    from publisher.views import notify_subscribers  # ADD THIS IMPORT
-
-    if not (request.user.is_superuser or story.author == request.user):
-        messages.error(request, 'You do not have permission to edit this story.')
-        return redirect('story_detail', pk=story.pk)
-
-    if request.method == 'POST':
-        is_draft = 'save_as_draft' in request.POST
-        publish_now = 'publish_now' in request.POST
-
-        form = StoryForm(request.POST, request.FILES, instance=story, user=request.user)
-
-        if form.is_valid():
-            story = form.save(commit=False)
-
-            if publish_now:
-                errors = []
-                if not story.headline or len(story.headline.strip()) < 5:
-                    errors.append('Headline must be at least 5 characters.')
-                if not story.snippet or len(story.snippet.strip()) < 10:
-                    errors.append('Snippet must be at least 10 characters.')
-                if not story.content or len(strip_tags(story.content)) < 50:
-                    errors.append('Content must be at least 50 characters.')
-                if not story.read_time:
-                    errors.append('Read time is required.')
-
-                if errors:
-                    for e in errors:
-                        messages.error(request, e)
-                    return render(request, 'management/story_form.html', {
-                        'form': form,
-                        'story': story,
-                        'title': f'Edit Story: {story.headline}',
-                        'submit_text': 'Update Story',
-                        'is_create': False,
-                    })
-
-                story.status = 'PUBLISHED'
-                if not story.published_at:
-                    story.published_at = timezone.now()
-                success_message = 'Story published successfully!'
-                
-                # Save the story
-                story.save()
-                
-                # ADD THIS: Send email notifications
-                notify_subscribers(story.id)
-                messages.info(request, 'Email notifications are being sent to subscribers in the background.')
-                
-            elif is_draft:
-                story.status = 'DRAFT'
-                success_message = 'Draft saved successfully!'
-            else:
-                success_message = 'Story updated successfully!'
-
-            if 'clear_thumbnail' in request.POST:
-                if story.thumbnail:
-                    story.thumbnail.delete(save=False)
-                story.thumbnail = None
-
-            story.save()
-
-            for f in request.FILES.getlist('attachments'):
-                GenericAttachment.objects.create(
-                    content_object=story,
-                    file=f
-                )
-
-            for att_id in request.POST.getlist('delete_attachments'):
-                GenericAttachment.objects.filter(
-                    id=att_id,
-                    object_id=story.id
-                ).delete()
-
-            messages.success(request, success_message)
-            return redirect('story_detail', pk=story.pk)
-
-        # INVALID FORM BUT DRAFT
-        if is_draft:
-            if request.POST.get('headline'):
-                story.headline = request.POST['headline'][:200]
-            if request.POST.get('snippet'):
-                story.snippet = request.POST['snippet'][:500]
-            if request.POST.get('content'):
-                story.content = request.POST['content']
-            if request.POST.get('read_time'):
-                story.read_time = request.POST['read_time'][:20]
-
-            category_id = request.POST.get('category')
-            if category_id:
-                try:
-                    story.category = Category.objects.get(pk=category_id)
-                except Category.DoesNotExist:
-                    pass
-
-            story.status = 'DRAFT'
-            story.save()
-
-            if request.FILES.get('thumbnail'):
-                story.thumbnail = request.FILES['thumbnail']
-                story.save()
-
-            if 'clear_thumbnail' in request.POST:
-                if story.thumbnail:
-                    story.thumbnail.delete(save=False)
-                story.thumbnail = None
-                story.save()
-
-            for f in request.FILES.getlist('attachments'):
-                GenericAttachment.objects.create(
-                    content_object=story,
-                    file=f
-                )
-
-            for att_id in request.POST.getlist('delete_attachments'):
-                GenericAttachment.objects.filter(
-                    id=att_id,
-                    object_id=story.id
-                ).delete()
-
-            messages.success(request, 'Draft saved successfully!')
-            return redirect('story_detail', pk=story.pk)
-
-        messages.error(request, 'Please correct the errors below.')
-
-    else:
-        form = StoryForm(instance=story, user=request.user)
-
-    return render(request, 'management/story_form.html', {
-        'form': form,
-        'story': story,
-        'title': f'Edit Story: {story.headline}',
-        'submit_text': 'Update Story',
-        'is_create': False,
-    })
 
 
 
@@ -932,72 +801,102 @@ def category_edit(request, pk):
 # STORY VIEWS (Function-based)
 # ============================================
 
-
-
 @login_required
-def story_publish(request, pk):
-    print('Engaged ')
-    """Publish a draft story - with AJAX support"""
-    from publisher.views import notify_subscribers  # ADD THIS IMPORT
+def story_edit(request, pk):
+    story = get_object_or_404(Story, id=pk, author=request.user)
     
-    try:
-        story = get_object_or_404(Story, pk=pk)
-        
-        # Permission check
-        if not (request.user.is_superuser or story.author == request.user):
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': 'Permission denied.'}, status=403)
-            messages.error(request, 'You do not have permission to publish this story.')
-            return redirect('story_detail', pk=story.pk)
-        
-        # Validate required fields
-        errors = []
-        if not story.headline or len(story.headline.strip()) < 5:
-            errors.append('Headline is required and must be at least 5 characters.')
-        if not story.snippet or len(story.snippet.strip()) < 10:
-            errors.append('Snippet is required and must be at least 10 characters.')
-        if not story.content or len(story.content.strip()) < 50:
-            errors.append('Content is required and must be meaningful.')
-        if not story.read_time:
-            errors.append('Read time is required.')
-        
-        if errors:
-            error_message = ' '.join(errors)
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': error_message})
-            for error in errors:
-                messages.error(request, error)
-            return redirect('story_edit', pk=story.pk)
-        
-        # Publish the story
-        story.status = 'PUBLISHED'
-        if not story.published_at:
-            story.published_at = timezone.now()
-        story.save()
-        
-        # ✅ ADD THIS: Send email notifications
-        notify_subscribers(story.id)
-      
-        email_message = ' Email notifications are being sent to subscribers.'
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    if request.method == "POST":
+        try:
+            # Get data from POST request
+            headline = request.POST.get('headline')
+            snippet = request.POST.get('snippet')
+            content = request.POST.get('content')
+            read_time = request.POST.get('read_time')
+            category_id = request.POST.get('category')
+            remove_thumbnail = request.POST.get('remove_thumbnail') == '1'
+            
+            # Validation
+            errors = {}
+            
+            if not headline:
+                errors['headline'] = ['Headline is required']
+            elif len(headline) > 200:
+                errors['headline'] = ['Headline cannot exceed 200 characters']
+                
+            if not snippet:
+                errors['snippet'] = ['Snippet is required']
+            elif len(snippet) > 500:
+                errors['snippet'] = ['Snippet cannot exceed 500 characters']
+                
+            if not content or content == '<p><br></p>' or content == '<br>':
+                errors['content'] = ['Content cannot be blank']
+                
+            if not read_time:
+                errors['read_time'] = ['Read time is required']
+            elif len(read_time) > 20:
+                errors['read_time'] = ['Read time cannot exceed 20 characters']
+            
+            if errors:
+                return JsonResponse({
+                    'icon': 'error',
+                    'title': 'Validation Error',
+                    'message': 'Please correct the errors in the form',
+                    'errors': errors
+                }, status=400)
+            
+            # Handle category
+            category = None
+            if category_id and category_id != '0':
+                try:
+                    category = Category.objects.get(id=category_id)
+                except Category.DoesNotExist:
+                    return JsonResponse({
+                        'icon': 'error',
+                        'title': 'Category Error',
+                        'message': 'Invalid category selected'
+                    }, status=400)
+            
+            # Update story fields
+            story.headline = headline
+            story.snippet = snippet
+            story.content = content
+            story.read_time = read_time
+            story.category = category
+            
+            # Handle thumbnail
+            thumbnail = request.FILES.get('thumbnail')
+            if thumbnail:
+                story.thumbnail = thumbnail
+            elif remove_thumbnail:
+                story.thumbnail = None
+            
+            story.save()
+            
             return JsonResponse({
-                'success': True,
-                'message': f'Story "{story.headline}" published successfully!{email_message}',
-                'new_status': story.status,
-                'new_status_display': story.get_status_display()
-            })
-        
-        messages.success(request, f'Story "{story.headline}" published successfully!')
-        messages.info(request, 'Email notifications are being sent to subscribers.')
-        return redirect('story_detail', pk=story.pk)
-        
-    except Story.DoesNotExist:
-        print('Ran Ex')
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': False, 'message': 'Story not found.'}, status=404)
-        messages.error(request, 'Story not found.')
-        return redirect('story_list')
+                'icon': 'success',
+                'title': 'Success!',
+                'message': 'Story updated successfully',
+                'story_id': story.id,
+                'redirect_url': reverse('story_page', args=[story.id])
+            }, status=200)
+            
+        except Exception as e:
+            print(f"Error updating story: {str(e)}")
+            return JsonResponse({
+                'icon': 'error',
+                'title': 'Server Error',
+                'message': 'An error occurred while updating the story. Please try again.'
+            }, status=500)
+    
+    # GET request - render the form
+    else:
+        categories = Category.objects.all()
+        context = {
+            'story': story,
+            'categories': categories,
+        }
+        return render(request, 'management/story/edit_story.html', context)
+
 
 
 
@@ -1113,61 +1012,86 @@ def story_detail(request, pk):
 
 @login_required
 def story_list(request):
-    """Function-based story list view"""
-    queryset = Story.objects.all().select_related('author', 'category')
+    """Enhanced story list view with better filters and pagination"""
+    
+    # Base queryset with optimization
+    queryset = Story.objects.select_related('author', 'category').order_by('-created_at')
     
     # Get filter parameters
-    status_filter = request.GET.get('status', '')
-    author_filter = request.GET.get('author', '')
-    category_filter = request.GET.get('category', '')
-    date_from = request.GET.get('date_from', '')
-    date_to = request.GET.get('date_to', '')
-    mine_filter = request.GET.get('mine', '')
+    filters = {
+        'status': request.GET.get('status', ''),
+        'author': request.GET.get('author', ''),
+        'category': request.GET.get('category', ''),
+        'date_from': request.GET.get('date_from', ''),
+        'date_to': request.GET.get('date_to', ''),
+        'mine': request.GET.get('mine', ''),
+        'search': request.GET.get('search', ''),  # Added search
+    }
+    
+    # Store active filters count for UI
+    active_filters = {k: v for k, v in filters.items() if v and k != 'search'}
     
     # Apply filters
-    if status_filter and status_filter in ['DRAFT', 'PUBLISHED']:
-        queryset = queryset.filter(status=status_filter)
+    if filters['status'] in ['DRAFT', 'PUBLISHED']:
+        queryset = queryset.filter(status=filters['status'])
     
-    if author_filter:
-        queryset = queryset.filter(author__username__icontains=author_filter)
+    if filters['author']:
+        queryset = queryset.filter(
+            Q(author__username__icontains=filters['author']) |
+            Q(author__first_name__icontains=filters['author']) |
+            Q(author__last_name__icontains=filters['author'])
+        )
     
-    if category_filter:
-        queryset = queryset.filter(category__id=category_filter)
+    if filters['category'] and filters['category'].isdigit():
+        queryset = queryset.filter(category__id=filters['category'])
     
-    if date_from:
+    # Search in headline and content
+    if filters['search']:
+        queryset = queryset.filter(
+            Q(headline__icontains=filters['search']) |
+            Q(snippet__icontains=filters['search']) |
+            Q(content__icontains=filters['search'])
+        )
+    
+    # Date range filters
+    if filters['date_from']:
         try:
+            date_from = datetime.strptime(filters['date_from'], '%Y-%m-%d').date()
             queryset = queryset.filter(created_at__date__gte=date_from)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
     
-    if date_to:
+    if filters['date_to']:
         try:
+            date_to = datetime.strptime(filters['date_to'], '%Y-%m-%d').date()
             queryset = queryset.filter(created_at__date__lte=date_to)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
     
-    # Filter by author (my stories)
-    if mine_filter == 'true':
+    # My stories filter
+    if filters['mine'] == 'true':
         queryset = queryset.filter(author=request.user)
     
-    # Order results
-    queryset = queryset.order_by('-created_at')
-    
-    # Get items per page from request, default to 20
+    # Pagination with improved options
+    per_page_options = [10, 20, 50, 100, 250]
     per_page = request.GET.get('per_page', 20)
     try:
         per_page = int(per_page)
-        if per_page not in [10, 20, 50, 100]:
+        if per_page not in per_page_options:
             per_page = 20
     except (ValueError, TypeError):
         per_page = 20
     
-    # Get all categories for filter dropdown
-    categories = Category.objects.all()
+    # Get page number
+    page_number = request.GET.get('page', 1)
     
-    # Pagination
+    # Create paginator
     paginator = Paginator(queryset, per_page)
-    page_number = request.GET.get('page')
+    paginator.elided_page_range = paginator.get_elided_page_range(
+        number=page_number, 
+        on_each_side=2, 
+        on_ends=1
+    )
     
     try:
         page_obj = paginator.page(page_number)
@@ -1176,25 +1100,68 @@ def story_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
     
+    # Get categories for filter dropdown with count
+    categories = Category.objects.annotate(
+        story_count=Count('story')
+    ).filter(story_count__gt=0).order_by('name')
+    
+    # Get authors with stories for filter dropdown
+    authors = User.objects.filter(
+        story__isnull=False
+    ).distinct().annotate(
+        story_count=Count('story')
+    ).order_by('username')
+    
+    # Get counts for stats cards
+    total_count = Story.objects.count()
+    published_count = Story.objects.filter(status='PUBLISHED').count()
+    draft_count = Story.objects.filter(status='DRAFT').count()
+    
+    # Get counts for current filtered queryset
+    filtered_count = queryset.count()
+    
+    # Build pagination URL with all current filters
+    pagination_url = '?' + '&'.join([
+        f'{k}={v}' for k, v in filters.items() 
+        if v and k != 'page'
+    ])
+    if pagination_url == '?':
+        pagination_url = '?'
+    else:
+        pagination_url += '&'
+    
     context = {
-        'page_obj': page_obj,  # For pagination controls
-        'stories': page_obj.object_list,  # For the stories loop
-        'total_count': Story.objects.count(),
-        'published_count': Story.objects.filter(status='PUBLISHED').count(),
-        'draft_count': Story.objects.filter(status='DRAFT').count(),
+        # Pagination
+        'page_obj': page_obj,
+        'stories': page_obj.object_list,
+        'paginator': paginator,
+        'pagination_url': pagination_url,
+        
+        # Statistics
+        'total_count': total_count,
+        'published_count': published_count,
+        'draft_count': draft_count,
+        'filtered_count': filtered_count,
+        'active_filter_count': len(active_filters),
+        
+        # Filter data
         'categories': categories,
-        # Pass filter values back to template
-        'current_status': status_filter,
-        'current_author': author_filter,
-        'current_category': category_filter,
-        'current_date_from': date_from,
-        'current_date_to': date_to,
-        'current_mine': mine_filter,
+        'authors': authors,
+        'current_filters': filters,
         'current_per_page': per_page,
+        'per_page_options': per_page_options,
+        
+        # Preserve filter values in template
+        'current_status': filters['status'],
+        'current_author': filters['author'],
+        'current_category': filters['category'],
+        'current_date_from': filters['date_from'],
+        'current_date_to': filters['date_to'],
+        'current_mine': filters['mine'],
+        'current_search': filters['search'],
     }
     
-    return render(request, 'management/story_list.html', context)
-
+    return render(request, 'management/story/story_list.html', context)
 
 # ============================================
 # VACANCY VIEWS (Function-based)

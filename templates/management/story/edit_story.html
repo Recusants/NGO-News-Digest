@@ -1,0 +1,712 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}Edit Story: {{ story.headline }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Main Form Column - Wider -->
+        <div class="col-lg-9">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h4 mb-0">Edit Story</h2>
+                    <span class="badge {% if story.status == 'PUBLISHED' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                        {{ story.status }}
+                    </span>
+                </div>
+                
+                <div class="card-body">
+                    {% csrf_token %}
+                    
+                    <!-- Headline field - Full width -->
+                    <div class="mb-4">
+                        <label for="id_headline" class="form-label fw-semibold d-flex justify-content-between">
+                            <span>Headline</span>
+                            <small class="text-muted"><span id="headlineCount">{{ story.headline|length }}</span>/200</small>
+                        </label>
+                        <input type="text" class="form-control form-control-lg" id="id_headline" name="headline" maxlength="200" value="{{ story.headline }}" placeholder="Enter an attention-grabbing headline">
+                    </div>
+
+                    <!-- Snippet field - Full width -->
+                    <div class="mb-4">
+                        <label for="id_snippet" class="form-label fw-semibold d-flex justify-content-between">
+                            <span>Snippet</span>
+                            <small class="text-muted"><span id="snippetCount">{{ story.snippet|length }}</span>/500</small>
+                        </label>
+                        <textarea class="form-control" id="id_snippet" name="snippet" maxlength="500" rows="2" placeholder="Brief summary of your story">{{ story.snippet }}</textarea>
+                    </div>
+
+                    <!-- Content field with Rich Text Editor - using DRY component -->
+                    <div class="mb-4">
+                        <label for="id_content" class="form-label fw-semibold">Content</label>
+                        {% include 'management/components/rich_editor.html' with editor_id='content_editor' hidden_id='id_content' %}
+                    </div>
+
+                    <!-- Three column layout for metadata -->
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="id_read_time" class="form-label fw-semibold">Read Time</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="id_read_time" name="read_time" maxlength="20" value="{{ story.read_time }}" placeholder="e.g., 5 min">
+                                <span class="input-group-text">min read</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="id_category_input" class="form-label fw-semibold">Category</label>
+                            <div class="position-relative">
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="id_category_input" 
+                                       value="{% if story.category %}{{ story.category.name|lower }}{% endif %}"
+                                       placeholder="Type to search or create category"
+                                       autocomplete="off">
+                                <input type="hidden" id="id_category" name="category" value="{% if story.category %}{{ story.category.id }}{% else %}0{% endif %}">
+                                <!-- Suggestions dropdown -->
+                                <div id="categorySuggestions" class="suggestions-dropdown"></div>
+                            </div>
+                            <small class="text-muted" id="categoryFeedback">{% if story.category %}Current: {{ story.category.name }}{% endif %}</small>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="id_thumbnail" class="form-label fw-semibold">Thumbnail</label>
+                            {% if story.thumbnail %}
+                            <div class="mb-2 d-flex align-items-center gap-2">
+                                <img src="{{ story.thumbnail.url }}" alt="Current thumbnail" style="width: 50px; height: 50px; object-fit: cover; border-radius: 0.375rem;">
+                                <small class="text-muted">Current: {{ story.thumbnail.name|slice:"20:" }}</small>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="removeThumbnailBtn">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
+                                <input type="hidden" id="remove_thumbnail" name="remove_thumbnail" value="0">
+                            </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="id_thumbnail" name="thumbnail" accept="image/*">
+                            {% if story.thumbnail %}
+                            <small class="text-muted">Leave empty to keep current thumbnail</small>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Submit button at the bottom of the form -->
+                    <div class="d-flex justify-content-end gap-2 mt-5 pt-4 border-top border-2">
+                        <a href="{% url 'story_page' story.id %}" class="btn btn-outline-secondary btn-lg px-4">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="button" class="btn btn-success btn-lg px-5 py-3 fw-bold shadow" id="submitBtn" style="font-size: 1.2rem;">
+                            <i class="fas fa-save me-2"></i>Update Story
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar Column - Quick Actions -->
+        <div class="col-lg-3">
+            <!-- Quick Actions Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'story_page' story.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-2"></i>View Story
+                        </a>
+                        {% if story.status == 'DRAFT' %}
+                        <button type="button" class="btn btn-success" id="publishBtn">
+                            <i class="fas fa-upload me-2"></i>Publish Now
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-warning" id="unpublishBtn">
+                            <i class="fas fa-download me-2"></i>Unpublish
+                        </button>
+                        {% endif %}
+                        <button type="button" class="btn btn-outline-danger" id="clearBtn">
+                            <i class="fas fa-trash-alt me-2"></i>Clear Form
+                        </button>
+                    </div>
+                    
+                    <hr class="my-3">
+                    
+                    <div class="small">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Story ID:</span>
+                            <span class="fw-semibold">#{{ story.id }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Created:</span>
+                            <span class="fw-semibold">{{ story.created_at|date:'M d, Y' }}</span>
+                        </div>
+                        {% if story.published_at %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Published:</span>
+                            <span class="fw-semibold">{{ story.published_at|date:'M d, Y' }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Last edited:</span>
+                            <span class="fw-semibold">Just now</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tips Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Editing Tips</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small mb-0">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Update headline to stay current</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Refresh content with new information</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Change category if topic shifted</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Upload new thumbnail if needed</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Use "Publish Now" to make live</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+$(document).ready(function() {
+    // Story ID for AJAX calls
+    var storyId = {{ story.id }};
+    
+    // POPULATE THE EDITOR WITH EXISTING CONTENT - THIS IS THE KEY FIX
+    var editor = document.getElementById('content_editor');
+    var hiddenField = document.getElementById('id_content');
+    
+    if (editor && hiddenField) {
+        // Get the content from the story (Django template tag)
+        var storyContent = '{{ story.content|escapejs }}';
+        
+        // Set the editor content
+        editor.innerHTML = storyContent;
+        
+        // Update the hidden field
+        hiddenField.value = storyContent;
+        
+        // Trigger word count update if the function exists
+        if (typeof window.updateEditorState === 'function') {
+            window.updateEditorState();
+        }
+    }
+    
+    // Categories data
+    var categories = [
+        {% for category in categories %}
+        { id: {{ category.id }}, name: "{{ category.name|lower }}" },
+        {% endfor %}
+    ];
+    
+    var selectedCategoryId = {% if story.category %}{{ story.category.id }}{% else %}0{% endif %};
+    var categoryInput = $('#id_category_input');
+    var categoryHidden = $('#id_category');
+    var suggestions = $('#categorySuggestions');
+    var categoryFeedback = $('#categoryFeedback');
+    
+    // Character counters
+    $('#id_headline').on('input', function() {
+        var count = $(this).val().length;
+        $('#headlineCount').text(count);
+        if (count > 200) {
+            $('#headlineCount').parent().addClass('text-danger');
+        } else {
+            $('#headlineCount').parent().removeClass('text-danger');
+        }
+    });
+
+    $('#id_snippet').on('input', function() {
+        var count = $(this).val().length;
+        $('#snippetCount').text(count);
+        if (count > 500) {
+            $('#snippetCount').parent().addClass('text-danger');
+        } else {
+            $('#snippetCount').parent().removeClass('text-danger');
+        }
+    });
+    
+    // Remove thumbnail flag
+    $('#removeThumbnailBtn').on('click', function() {
+        $('#remove_thumbnail').val('1');
+        $(this).closest('.d-flex').hide();
+        $('#id_thumbnail').prop('required', false);
+        $('#categoryFeedback').text('Thumbnail will be removed on save');
+    });
+    
+    // Category search with suggestions
+    categoryInput.on('input', function() {
+        var searchTerm = $(this).val().toLowerCase().trim();
+        
+        if (searchTerm.length < 1) {
+            suggestions.hide();
+            selectedCategoryId = {% if story.category %}{{ story.category.id }}{% else %}0{% endif %};
+            categoryHidden.val(selectedCategoryId);
+            categoryFeedback.text('{% if story.category %}Current: {{ story.category.name }}{% endif %}');
+            return;
+        }
+        
+        // Filter categories
+        var matches = categories.filter(function(cat) {
+            return cat.name.includes(searchTerm);
+        });
+        
+        // Show suggestions
+        if (matches.length > 0) {
+            var html = '';
+            matches.slice(0, 5).forEach(function(cat) {
+                var selected = (cat.id == selectedCategoryId) ? ' selected' : '';
+                html += `<div class="suggestion-item${selected}" data-id="${cat.id}" data-name="${cat.name}">${cat.name}</div>`;
+            });
+            
+            // Add option to create new
+            var exactMatch = matches.some(function(cat) { return cat.name === searchTerm; });
+            if (!exactMatch) {
+                html += `<div class="suggestion-item create-new" data-name="${searchTerm}">+ Create "${searchTerm}"</div>`;
+            }
+            
+            suggestions.html(html).show();
+        } else {
+            // No matches - show create option
+            suggestions.html(`<div class="suggestion-item create-new" data-name="${searchTerm}">+ Create "${searchTerm}"</div>`).show();
+        }
+    });
+    
+    // Handle suggestion click
+    $(document).on('click', '.suggestion-item', function() {
+        var name = $(this).data('name');
+        var id = $(this).data('id');
+        
+        if ($(this).hasClass('create-new')) {
+            // Create new category via AJAX
+            categoryFeedback.text('Creating new category...').removeClass('text-success text-danger').addClass('text-info');
+            
+            $.ajax({
+                url: '{% url "category_create_ajax" %}',
+                method: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val(),
+                    'name': name
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Add to local categories
+                        categories.push({ id: response.category_id, name: name });
+                        
+                        // Select the new category
+                        selectedCategoryId = response.category_id;
+                        categoryHidden.val(response.category_id);
+                        categoryInput.val(name);
+                        
+                        categoryFeedback.text('Category created and selected').removeClass('text-info text-danger').addClass('text-success');
+                        
+                        // Update categories list
+                        categories = [
+                            {% for category in categories %}
+                            { id: {{ category.id }}, name: "{{ category.name|lower }}" },
+                            {% endfor %}
+                            { id: response.category_id, name: name }
+                        ];
+                    } else {
+                        categoryFeedback.text('Failed to create category').removeClass('text-info text-success').addClass('text-danger');
+                    }
+                },
+                error: function() {
+                    categoryFeedback.text('Server error').removeClass('text-info text-success').addClass('text-danger');
+                }
+            });
+        } else {
+            // Select existing category
+            selectedCategoryId = id;
+            categoryHidden.val(id);
+            categoryInput.val(name);
+            categoryFeedback.text('Category selected').removeClass('text-info text-danger').addClass('text-success');
+        }
+        
+        suggestions.hide();
+    });
+    
+    // Hide suggestions on click outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#id_category_input, #categorySuggestions').length) {
+            suggestions.hide();
+        }
+    });
+    
+    // Get editor content function
+    function getEditorContent() {
+        return $('#id_content').val();
+    }
+    
+    // Clear form button
+    $('#clearBtn').on('click', function() {
+        Swal.fire({
+            title: 'Clear Form?',
+            text: 'All your input will be reset to original values.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, clear it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $('#id_headline').val('{{ story.headline|escapejs }}');
+                $('#id_snippet').val('{{ story.snippet|escapejs }}');
+                
+                // Reset editor content
+                var originalContent = '{{ story.content|escapejs }}';
+                editor.innerHTML = originalContent;
+                hiddenField.value = originalContent;
+                
+                $('#id_read_time').val('{{ story.read_time|escapejs }}');
+                categoryInput.val('{% if story.category %}{{ story.category.name|lower }}{% endif %}');
+                categoryHidden.val('{% if story.category %}{{ story.category.id }}{% else %}0{% endif %}');
+                $('#id_thumbnail').val('');
+                $('#remove_thumbnail').val('0');
+                $('#headlineCount').text('{{ story.headline|length }}');
+                $('#snippetCount').text('{{ story.snippet|length }}');
+                categoryFeedback.text('{% if story.category %}Current: {{ story.category.name }}{% endif %}');
+                
+                // Show thumbnail removal button again if it was hidden
+                $('.d-flex:has(#removeThumbnailBtn)').show();
+            }
+        });
+    });
+    
+    // Publish button
+    $('#publishBtn').on('click', function() {
+        Swal.fire({
+            title: 'Publish Story?',
+            text: 'This story will be visible to the public.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, publish it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '{% url "story_publish" story.id %}',
+                    method: 'POST',
+                    data: {
+                        'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Published!',
+                            text: 'Story is now live',
+                            timer: 1500
+                        }).then(() => location.reload());
+                    }
+                });
+            }
+        });
+    });
+    
+    // Unpublish button
+    $('#unpublishBtn').on('click', function() {
+        Swal.fire({
+            title: 'Unpublish Story?',
+            text: 'This story will be hidden from the public.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, unpublish'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '{% url "story_unpublish" story.id %}',
+                    method: 'POST',
+                    data: {
+                        'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Unpublished!',
+                            text: 'Story moved to drafts',
+                            timer: 1500
+                        }).then(() => location.reload());
+                    }
+                });
+            }
+        });
+    });
+
+    // Submit button handler
+    $('#submitBtn').on('click', function() {
+        var headline = $('#id_headline').val().trim();
+        var snippet = $('#id_snippet').val().trim();
+        var content = getEditorContent();
+        var readTime = $('#id_read_time').val().trim();
+        var category = categoryHidden.val();
+        var thumbnailFile = $('#id_thumbnail')[0].files[0];
+        var removeThumbnail = $('#remove_thumbnail').val();
+        
+        // Validation
+        var errors = [];
+
+        if(headline == "") {
+            errors.push("Headline cannot be blank");
+            $('#id_headline').addClass('is-invalid');
+        } else if(headline.length > 200) {
+            errors.push("Headline cannot exceed 200 characters");
+            $('#id_headline').addClass('is-invalid');
+        } else {
+            $('#id_headline').removeClass('is-invalid');
+        }
+        
+        if(snippet == "") {
+            errors.push("Snippet cannot be blank");
+            $('#id_snippet').addClass('is-invalid');
+        } else if(snippet.length > 500) {
+            errors.push("Snippet cannot exceed 500 characters");
+            $('#id_snippet').addClass('is-invalid');
+        } else {
+            $('#id_snippet').removeClass('is-invalid');
+        }
+        
+        if(content == "" || content == "<p><br></p>" || content == "<br>") {
+            errors.push("Content cannot be blank");
+        }
+        
+        if(readTime == "") {
+            errors.push("Read time cannot be blank");
+            $('#id_read_time').addClass('is-invalid');
+        } else if(readTime.length > 20) {
+            errors.push("Read time cannot exceed 20 characters");
+            $('#id_read_time').addClass('is-invalid');
+        } else {
+            $('#id_read_time').removeClass('is-invalid');
+        }
+        
+        if(thumbnailFile && !thumbnailFile.type.match('image.*')) {
+            errors.push("Please select a valid image file for thumbnail");
+            $('#id_thumbnail').addClass('is-invalid');
+        } else {
+            $('#id_thumbnail').removeClass('is-invalid');
+        }
+        
+        if(errors.length > 0) {
+            Swal.fire({
+                title: 'Validation Error',
+                html: errors.map(error => `<div class="text-start mb-1">• ${error}</div>`).join(''),
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        // Show loading state
+        $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status"></span> Updating...');
+        
+        var formData = new FormData();
+        formData.append('csrfmiddlewaretoken', $('input[name="csrfmiddlewaretoken"]').val());
+        formData.append('headline', headline);
+        formData.append('snippet', snippet);
+        formData.append('content', content);
+        formData.append('read_time', readTime);
+        formData.append('category', category);
+        formData.append('remove_thumbnail', removeThumbnail);
+        
+        if (thumbnailFile) {
+            formData.append('thumbnail', thumbnailFile);
+        }
+        
+        $.ajax({
+            url: '{% url "story_edit" story.id %}',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+            },
+            success: function(responseData) {
+                Swal.fire({
+                    icon: responseData.icon || 'success',
+                    title: responseData.title || 'Success!',
+                    text: responseData.message || 'Story updated successfully',
+                    timer: 1500,
+                    showConfirmButton: true
+                }).then(function() {
+                    if (responseData.redirect_url) {
+                        window.location.href = responseData.redirect_url;
+                    } else {
+                        window.location.href = '{% url "story_page" story.id %}';
+                    }
+                });
+            },
+            error: function(jqXHR) {
+                var response = jqXHR.responseJSON || {};
+                var errorMessage = response.message || 'Server error. Please try again';
+                
+                if (response.errors) {
+                    $.each(response.errors, function(field, messages) {
+                        $(`#id_${field}`).addClass('is-invalid');
+                    });
+                }
+                
+                Swal.fire({
+                    icon: response.icon || 'error',
+                    title: response.title || 'Error',
+                    text: errorMessage,
+                    confirmButtonText: 'OK'
+                });
+            },
+            complete: function() {
+                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save me-2"></i> Update Story');
+            }
+        });
+    });
+});
+</script>
+
+<style>
+/* Reuse same styles from create template */
+.container-fluid {
+    max-width: 1600px;
+}
+
+.card {
+    border: none;
+    border-radius: 1rem;
+    border: 1px solid rgba(0,0,0,.05);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0,0,0,.05);
+    border-radius: 1rem 1rem 0 0 !important;
+}
+
+.form-control, .form-select {
+    border: 1px solid #e0e0e0;
+    border-radius: 0.5rem;
+    padding: 0.6rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
+}
+
+.form-control-lg {
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.5rem;
+    color: #6c757d;
+}
+
+.suggestions-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 250px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: none;
+}
+
+.suggestion-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
+
+.suggestion-item.create-new {
+    color: var(--primary);
+    font-weight: 500;
+    background-color: #f0f7ff;
+}
+
+.suggestion-item.create-new:hover {
+    background-color: #e1f0fe;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.btn {
+    border-radius: 0.5rem;
+    padding: 0.6rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border: none;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-lg {
+    padding: 0.75rem 2rem;
+    font-size: 1.2rem;
+}
+
+.shadow {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.border-top.border-2 {
+    border-top-width: 2px !important;
+    border-top-color: #dee2e6 !important;
+}
+
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+    
+    .col-lg-9, .col-lg-3 {
+        width: 100%;
+    }
+    
+    .col-lg-3 {
+        margin-top: 1rem;
+    }
+    
+    .btn-lg {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

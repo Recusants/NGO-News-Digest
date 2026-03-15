@@ -112,6 +112,8 @@ class Story(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     published_at = models.DateTimeField(null=True, blank=True)
+    sent_count = models.IntegerField(default=0)
+    failed_count = models.IntegerField(default=0)
     
     # Thumbnail and category fields
     thumbnail = models.ImageField(upload_to='blog_thumbnails/', null=True, blank=True)

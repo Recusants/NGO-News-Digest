@@ -165,12 +165,13 @@ from django.db import connection
 
 class EmailThread(threading.Thread):
     """Background thread for sending emails with better error handling"""
-    def __init__(self, subject, plain_message, html_message, recipient_list):
+    def __init__(self, subject, plain_message, html_message, recipient_list, story_id):
         super().__init__(daemon=True)
         self.subject = subject
         self.plain_message = plain_message
         self.html_message = html_message
         self.recipient_list = recipient_list
+        self.story_id = story_id
         self.sent_count = 0
         self.failed_count = 0
 
@@ -197,15 +198,23 @@ class EmailThread(threading.Thread):
                 print(f"Failed to send email to {recipient}: {e}")
         
         print(f"Email summary: {self.sent_count} sent, {self.failed_count} failed")
+        # try:
+        story = Story.objects.get(id=self.story_id)
+        story.success = self.sent_count
+        story.success = self.failed_count
+        story.save()
+        # except:
+        #     pass
+
         
         # Close database connection when done
         connection.close()
 
 
-def send_email_in_background(subject, plain_message, html_message, recipient_list):
+def send_email_in_background(subject, plain_message, html_message, recipient_list, story_id):
     """Start email sending in background thread"""
     if recipient_list:
-        EmailThread(subject, plain_message, html_message, recipient_list).start()
+        EmailThread(subject, plain_message, html_message, recipient_list, story_id).start()
         return True
     return False
 
@@ -348,7 +357,7 @@ def notify_subscribers(post_id):
         
         # Send in background
         print(f"Starting email thread for {subscribers.count()} subscribers...")
-        send_email_in_background(subject, plain_message, html_message, list(subscribers))
+        send_email_in_background(subject, plain_message, html_message, list(subscribers), post_id)
         print(f"Email thread started for story: {post.headline}")
         
     except Story.DoesNotExist:

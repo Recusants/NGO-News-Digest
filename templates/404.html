@@ -1,0 +1,93 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Page Not Found - NGO News Digest{% endblock %}
+
+{% block content %}
+    {% include 'partials/header.html' %}
+    
+    <main id="pageContent">
+        <section class="page-section">
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-8 text-center">
+                        <div class="error-container py-5">
+                            <div class="display-1 text-primary fw-bold mb-4">404</div>
+                            
+                            <i class="fas fa-map-signs fa-4x text-secondary mb-4"></i>
+                            
+                            <h1 class="h2 mb-3">Page Not Found</h1>
+                            
+                            <p class="text-secondary mb-4">
+                                The page you're looking for doesn't exist or has been moved.
+                            </p>
+                            
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="{% url 'stories_page' %}" class="btn btn-primary">
+                                    <i class="fas fa-home me-2"></i> Go to Stories
+                                </a>
+                                
+                                <button onclick="history.back()" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i> Go Back
+                                </button>
+                            </div>
+                            
+                            <hr class="my-5">
+                            
+                            <div class="text-start bg-light p-4 rounded">
+                                <h5 class="mb-3">Looking for something?</h5>
+                                <ul class="list-unstyled">
+                                    <li class="mb-2">
+                                        <a href="{% url 'stories_page' %}" class="text-decoration-none">
+                                            <i class="fas fa-newspaper me-2 text-primary"></i> Browse all stories
+                                        </a>
+                                    </li>
+                                    <li class="mb-2">
+                                        <a href="/" class="text-decoration-none">
+                                            <i class="fas fa-home me-2 text-primary"></i> Visit homepage
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="/contact/" class="text-decoration-none">
+                                            <i class="fas fa-envelope me-2 text-primary"></i> Contact support
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    {% include 'partials/footer.html' %}
+    
+    <style>
+        .error-container {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .display-1 {
+            font-size: 6rem;
+            line-height: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .display-1 {
+                font-size: 4rem;
+            }
+        }
+    </style>
+{% endblock %}

@@ -30,7 +30,7 @@ class EmailThread(threading.Thread):
             email = EmailMultiAlternatives(
                 subject=self.subject,
                 body=self.plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
+                from_email="NGO News Digest <{settings.DEFAULT_FROM_EMAIL}>",
                 to=self.recipient_list,
             )
             if self.html_message:
