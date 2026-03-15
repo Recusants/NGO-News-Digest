@@ -1,12 +1,24 @@
 {% extends 'partials/base.html' %}
 {% load static %}
+
 {% block title %}NGO News Digest - {{ story.headline }}{% endblock %}
+
 {% block content %}
     {% include 'partials/header.html' %}
+    
     <main id="pageContent">
         <section id="story-details" class="page-section">
             <div class="container section py-2">
-                <a href="{% url 'stories_page' %}" class="btn btn-small mb-2" data-page="stories"><i class="fas fa-arrow-left"></i> Back to Stories</a>
+                <!-- Navigation row with Back button and Dashboard link for logged-in users -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                    <a href="{% url 'stories_page' %}" class="btn btn-small" data-page="stories"><i class="fas fa-arrow-left"></i> Back to Stories</a>
+                    
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-small" style="background-color: var(--primary); color: white;">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    {% endif %}
+                </div>
                 
                 <div class="details-header">
                     <!-- THUMBNAIL IMAGE ADDED HERE -->
@@ -163,9 +175,47 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Owner controls moved to the bottom after content - IMPROVED ALIGNMENT -->
+                {% if is_owner %}
+                <div style="border-top: 1px solid var(--border-color); margin: 2rem 0 1rem 0;"></div>
+                
+                <div class="owner-controls" style="padding: 1.5rem; background: rgba(0,0,0,0.02); border-radius: var(--border-radius); margin-top: 1rem;">
+                    <!-- Status badge on top -->
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <span class="badge {% if story.status == 'PUBLISHED' %}badge-success{% else %}badge-warning{% endif %}" 
+                              id="storyStatusBadge" 
+                              style="font-size: 1rem; padding: 0.6rem 1.5rem;">
+                            Status: {{ story.status }}
+                        </span>
+                    </div>
+                    
+                    <!-- Buttons in a row with space between -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        {% if story.status == 'DRAFT' %}
+                        <button class="btn btn-primary" id="publishBtn" data-story-id="{{ story.id }}" style="flex: 1; min-width: 180px;">
+                            <i class="fas fa-upload"></i> Publish Story
+                        </button>
+                        {% else %}
+                        <button class="btn btn-warning" id="unpublishBtn" data-story-id="{{ story.id }}" style="flex: 1; min-width: 180px;">
+                            <i class="fas fa-download"></i> Unpublish (Draft)
+                        </button>
+                        {% endif %}
+                        
+                        <a href="{% url 'story_edit' story.id %}" class="btn btn-secondary" style="flex: 1; min-width: 180px;">
+                            <i class="fas fa-edit"></i> Edit Story
+                        </a>
+                        
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary" style="flex: 1; min-width: 180px; background-color: var(--primary);">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </section>
     </main>
+    
     {% include 'partials/footer.html' %}
     
     <script>
@@ -292,6 +342,120 @@
     });
     </script>
     
+    <!-- jQuery for AJAX calls -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+    $(document).ready(function() {
+        // Publish button handler
+        $('#publishBtn').on('click', function() {
+            var storyId = $(this).data('story-id');
+            var button = $(this);
+            
+            Swal.fire({
+                title: 'Publish Story?',
+                text: 'This story will be visible to the public.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, publish it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading
+                    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Publishing...');
+                    
+                    $.ajax({
+                        url: '{% url "story_publish" story.id %}',
+                        method: 'POST',
+                        data: {
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                icon: response.icon || 'success',
+                                title: response.title || 'Success',
+                                text: response.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                // Reload page to show updated status
+                                location.reload();
+                            });
+                        },
+                        error: function(jqXHR) {
+                            var response = jqXHR.responseJSON || {};
+                            Swal.fire({
+                                icon: response.icon || 'error',
+                                title: response.title || 'Error',
+                                text: response.message || 'An error occurred'
+                            });
+                            button.prop('disabled', false).html('<i class="fas fa-upload"></i> Publish Story');
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Unpublish button handler
+        $('#unpublishBtn').on('click', function() {
+            var storyId = $(this).data('story-id');
+            var button = $(this);
+            
+            Swal.fire({
+                title: 'Unpublish Story?',
+                text: 'This story will be hidden from the public and moved to drafts.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, unpublish it'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading
+                    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Unpublishing...');
+                    
+                    $.ajax({
+                        url: '{% url "story_unpublish" story.id %}',
+                        method: 'POST',
+                        data: {
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                icon: response.icon || 'success',
+                                title: response.title || 'Success',
+                                text: response.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                // Reload page to show updated status
+                                location.reload();
+                            });
+                        },
+                        error: function(jqXHR) {
+                            var response = jqXHR.responseJSON || {};
+                            Swal.fire({
+                                icon: response.icon || 'error',
+                                title: response.title || 'Error',
+                                text: response.message || 'An error occurred'
+                            });
+                            button.prop('disabled', false).html('<i class="fas fa-download"></i> Unpublish (Draft)');
+                        }
+                    });
+                }
+            });
+        });
+    });
+    </script>
+    
     <style>
     /* Override the border-top for story-card-share in details page */
     .details-header .story-card-share {
@@ -309,10 +473,127 @@
         box-shadow: var(--card-shadow);
     }
     
+    /* Owner controls styling */
+    .owner-controls {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 0.75rem 1rem;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+    }
+    
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .btn-primary {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-2px);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-warning {
+        background-color: #ffc107;
+        color: #212529;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .btn-warning:hover {
+        background-color: #e0a800;
+        transform: translateY(-2px);
+        color: #212529;
+        text-decoration: none;
+    }
+    
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-small {
+        padding: 0.5rem 1rem;
+        background-color: transparent;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .btn-small:hover {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    .fa-spinner {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
     /* Mobile adjustments for thumbnail */
     @media (max-width: 768px) {
         .story-detail-img {
             max-height: 300px;
+        }
+        
+        .owner-controls .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
         }
     }
     
@@ -365,14 +646,14 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         transition: all 0.2s ease;
         text-decoration: none;
     }
     
-    /* Mobile adjustments */
+    /* Mobile adjustments for share buttons */
     @media (max-width: 768px) {
         .details-header .story-card-share {
             flex-wrap: wrap;

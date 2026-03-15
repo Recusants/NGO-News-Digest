@@ -1,174 +1,219 @@
 {% extends 'management/management_base.html' %}
 {% load static %}
 
-{% block title %}Team Profile - NGO Admin{% endblock %}
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <!-- Page Header -->
-    <div class="page-header">
-        <div>
-            <h1 class="page-title">
-                <i class="fas fa-user-edit me-2"></i>
-                {% if team_profile %}Edit Team Profile{% else %}Create Team Profile{% endif %}
-            </h1>
-            <p class="page-subtitle">
-                This information will be displayed on the public team page
-            </p>
+<div class="container-fluid px-4 py-4">
+    <div class="card border shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h2 class="h4 fw-semibold mb-0">
+                <i class="fas fa-user-plus me-2"></i>{{ title }}
+            </h2>
         </div>
-        <div>
-            <a href="{% url 'user_profile' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Back to Profile
-            </a>
-        </div>
-    </div>
-    
-    <!-- Form Section -->
-    <div class="section">
-        <div class="section-body">
-            <form method="post" enctype="multipart/form-data" class="team-form">
+        
+        <div class="card-body p-4">
+            <!-- Messages Display -->
+            {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{% if 'error' in message.tags %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show d-flex align-items-center" role="alert">
+                    <i class="fas 
+                        {% if 'success' in message.tags %}fa-check-circle 
+                        {% elif 'error' in message.tags %}fa-exclamation-circle 
+                        {% elif 'warning' in message.tags %}fa-exclamation-triangle 
+                        {% else %}fa-info-circle{% endif %} me-2"></i>
+                    <div class="flex-grow-1">{{ message }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Form -->
+            <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
                 {% csrf_token %}
                 
-                <div class="form-grid">
-                    <!-- Basic Information -->
-                    <div class="form-column">
-                        <h3 class="form-section-title">
-                            <i class="fas fa-info-circle me-2"></i>Basic Information
-                        </h3>
-                        
-                        <div class="form-group">
-                            <label for="{{ form.prefix.id_for_label }}">
-                                Prefix (Optional)
+                <div class="row g-4">
+                    <!-- Left Column -->
+                    <div class="col-lg-8">
+                        <!-- User Selection -->
+                        <div class="mb-4">
+                            <label for="{{ form.user.id_for_label }}" class="form-label fw-semibold">
+                                User <span class="text-danger">*</span>
                             </label>
-                            {{ form.prefix }}
-                            <div class="form-help">e.g., Mr, Ms, Dr, Prof</div>
+                            {{ form.user }}
+                            {% if form.user.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.user.errors %}
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text text-secondary">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Select a user to create team profile. Only users without existing team profiles are shown.
+                            </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="{{ form.position.id_for_label }}">
-                                Position *
+                        <!-- Position -->
+                        <div class="mb-4">
+                            <label for="{{ form.position.id_for_label }}" class="form-label fw-semibold">
+                                Position <span class="text-danger">*</span>
                             </label>
                             {{ form.position }}
                             {% if form.position.errors %}
-                            <div class="form-error">{{ form.position.errors }}</div>
+                            <div class="text-danger small mt-1">
+                                {% for error in form.position.errors %}
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
                             {% endif %}
                         </div>
                         
-                        <div class="form-group">
-                            <label for="{{ form.department.id_for_label }}">
-                                Department *
+                        <!-- Bio -->
+                        <div class="mb-4">
+                            <label for="{{ form.bio.id_for_label }}" class="form-label fw-semibold">
+                                Bio
                             </label>
-                            {{ form.department }}
-                            {% if form.department.errors %}
-                            <div class="form-error">{{ form.department.errors }}</div>
+                            {{ form.bio }}
+                            {% if form.bio.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.bio.errors %}
+                                <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                {% endfor %}
+                            </div>
                             {% endif %}
+                            <div class="form-text text-secondary">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Brief description of the team member's role and background.
+                            </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="{{ form.location.id_for_label }}">
-                                Location
-                            </label>
-                            {{ form.location }}
+                        <!-- Social Media URLs -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.twitter_url.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fab fa-twitter text-primary me-1"></i>Twitter URL
+                                </label>
+                                {{ form.twitter_url }}
+                                {% if form.twitter_url.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.twitter_url.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.linkedin_url.id_for_label }}" class="form-label fw-semibold">
+                                    <i class="fab fa-linkedin text-primary me-1"></i>LinkedIn URL
+                                </label>
+                                {{ form.linkedin_url }}
+                                {% if form.linkedin_url.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.linkedin_url.errors %}
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Profile Image -->
-                    <div class="form-column">
-                        <h3 class="form-section-title">
-                            <i class="fas fa-camera me-2"></i>Profile Image
-                        </h3>
-                        
-                        <div class="form-group">
-                            <label for="{{ form.head_shot.id_for_label }}">
-                                Head Shot
-                            </label>
-                            {% if team_profile and team_profile.head_shot %}
-                            <div class="current-image">
-                                <img src="{{ team_profile.head_shot.url }}" alt="Current head shot">
-                                <div class="image-info">
-                                    <small>Current image</small>
+                    <!-- Right Column - Photo and Settings -->
+                    <div class="col-lg-4">
+                        <div class="card bg-light border-0">
+                            <div class="card-body">
+                                <h5 class="card-title h6 fw-semibold mb-3">
+                                    <i class="fas fa-cog me-2"></i>Profile Settings
+                                </h5>
+                                
+                                <!-- Profile Photo -->
+                                <div class="mb-4 text-center">
+                                    <label for="{{ form.head_shot.id_for_label }}" class="form-label fw-semibold d-block">
+                                        Profile Photo
+                                    </label>
+                                    
+                                    <div class="profile-photo-preview mb-3">
+                                        {% if form.instance.head_shot %}
+                                        <img src="{{ form.instance.head_shot.url }}" alt="Profile Photo" 
+                                             class="rounded-circle border" style="width: 120px; height: 120px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="rounded-circle bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center mx-auto" 
+                                             style="width: 120px; height: 120px;">
+                                            <i class="fas fa-camera fa-3x text-secondary opacity-50"></i>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {{ form.head_shot }}
+                                    {% if form.head_shot.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.head_shot.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <div class="form-text text-secondary small">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Recommended: Square image, at least 300x300px
+                                    </div>
+                                </div>
+                                
+                                <!-- Display Order -->
+                                <div class="mb-4">
+                                    <label for="{{ form.display_order.id_for_label }}" class="form-label fw-semibold">
+                                        Display Order
+                                    </label>
+                                    {{ form.display_order }}
+                                    {% if form.display_order.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.display_order.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <div class="form-text text-secondary small">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Lower numbers appear first
+                                    </div>
+                                </div>
+                                
+                                <!-- Active Status -->
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        {{ form.is_active }}
+                                        <label class="form-check-label fw-semibold" for="{{ form.is_active.id_for_label }}">
+                                            Active Profile
+                                        </label>
+                                    </div>
+                                    <div class="form-text text-secondary small ms-4">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Inactive profiles won't appear on the public site
+                                    </div>
                                 </div>
                             </div>
-                            {% endif %}
-                            
-                            {{ form.head_shot }}
-                            <div class="form-help">
-                                Recommended size: 400x400px, max 2MB
-                            </div>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="{{ form.display_order.id_for_label }}">
-                                Display Order
-                            </label>
-                            {{ form.display_order }}
-                            <div class="form-help">
-                                Lower numbers appear first
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="checkbox-label">
-                                {{ form.is_active }}
-                                <span class="checkmark"></span>
-                                Display on Team Page
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Bio -->
-                <h3 class="form-section-title mt-2">
-                    <i class="fas fa-file-alt me-2"></i>Bio
-                </h3>
-                
-                <div class="form-group">
-                    <label for="{{ form.bio.id_for_label }}">
-                        Biography
-                    </label>
-                    {{ form.bio }}
-                    <div class="form-help">
-                        Write a short biography about yourself (max 500 characters)
-                    </div>
-                </div>
-                
-                <!-- Social Links -->
-                <h3 class="form-section-title mt-2">
-                    <i class="fas fa-share-alt me-2"></i>Social Links
-                </h3>
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="{{ form.twitter_url.id_for_label }}">
-                            Twitter URL
-                        </label>
-                        {{ form.twitter_url }}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="{{ form.linkedin_url.id_for_label }}">
-                            LinkedIn URL
-                        </label>
-                            {{ form.linkedin_url }}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="{{ form.facebook_url.id_for_label }}">
-                            Facebook URL
-                        </label>
-                        {{ form.facebook_url }}
                     </div>
                 </div>
                 
                 <!-- Form Actions -->
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-1"></i>
-                        {% if team_profile %}Update Profile{% else %}Create Profile{% endif %}
+                <div class="d-flex gap-2 mt-4 pt-4 border-top">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save me-2"></i>Save Changes
                     </button>
-                    <a href="{% url 'user_profile' %}" class="btn btn-secondary">
-                        Cancel
+                    
+                    <a href="" class="btn btn-outline-secondary px-4">
+                        <i class="fas fa-times me-2"></i>Cancel
                     </a>
+                    
+                    {% if team_member %}
+                    <button type="button" class="btn btn-outline-danger ms-auto" onclick="deleteTeamMember({{ team_member.pk }})">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                    {% endif %}
                 </div>
             </form>
         </div>
@@ -178,67 +223,284 @@
 
 {% block extra_css %}
 <style>
-    .form-container {
-        padding: 1.5rem;
-        max-width: 1200px;
-        margin: 0 auto;
+    /* Form field styling for Django form fields */
+    form input[type="text"],
+    form input[type="url"],
+    form input[type="number"],
+    form select,
+    form textarea,
+    form input[type="file"] {
+        display: block;
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
     }
     
-    .team-form {
-        max-width: 100%;
+    form select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
     }
     
-    .current-image {
-        margin-bottom: 1rem;
-        text-align: center;
+    form textarea {
+        min-height: 120px;
+        resize: vertical;
     }
     
-    .current-image img {
-        width: 150px;
-        height: 150px;
-        object-fit: cover;
-        border-radius: 50%;
-        border: 3px solid var(--light);
-        margin-bottom: 0.5rem;
+    form input:focus,
+    form select:focus,
+    form textarea:focus {
+        border-color: #86b7fe;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
     
-    .image-info {
-        font-size: 0.75rem;
-        color: var(--secondary);
+    /* Error state */
+    form .is-invalid,
+    form input:invalid,
+    form select:invalid,
+    form textarea:invalid {
+        border-color: #dc3545;
+    }
+    
+    form .is-invalid:focus,
+    form input:invalid:focus,
+    form select:invalid:focus,
+    form textarea:invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
     }
     
     /* File input styling */
-    input[type="file"] {
-        width: 100%;
-        padding: 0.5rem;
-        border: 2px dashed var(--border);
-        border-radius: var(--radius);
-        background: var(--light);
+    form input[type="file"] {
+        padding: 0.375rem 0.75rem;
+    }
+    
+    form input[type="file"]::file-selector-button {
+        padding: 0.375rem 0.75rem;
+        margin: -0.375rem -0.75rem;
+        margin-inline-end: 0.75rem;
+        color: #212529;
+        background-color: #e9ecef;
+        border: 0 solid #dee2e6;
+        border-inline-end-width: 1px;
+        border-radius: 0;
+        transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    form input[type="file"]::file-selector-button:hover {
+        background-color: #dde0e3;
+    }
+    
+    /* Number input styling */
+    form input[type="number"] {
+        -moz-appearance: textfield;
+    }
+    
+    form input[type="number"]::-webkit-outer-spin-button,
+    form input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    /* Checkbox and Radio styling */
+    .form-check-input {
         cursor: pointer;
-        transition: var(--transition);
     }
     
-    input[type="file"]:hover {
-        border-color: var(--primary);
-        background: #eff6ff;
+    .form-check-label {
+        cursor: pointer;
+        user-select: none;
     }
     
+    /* Form switch */
+    .form-switch .form-check-input {
+        width: 2.5em;
+        margin-left: -2.5em;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");
+        background-position: left center;
+        border-radius: 2em;
+        transition: background-position 0.15s ease-in-out;
+    }
+    
+    .form-switch .form-check-input:checked {
+        background-position: right center;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+    }
+    
+    /* Profile photo preview */
+    .profile-photo-preview {
+        transition: transform 0.3s ease;
+    }
+    
+    .profile-photo-preview:hover {
+        transform: scale(1.02);
+    }
+    
+    /* Responsive adjustments */
     @media (max-width: 768px) {
-        .form-container {
-            padding: 1rem;
+        .card-body {
+            padding: 1.5rem !important;
         }
         
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .form-actions {
+        .d-flex.gap-2.mt-4.pt-4.border-top {
             flex-direction: column;
         }
         
-        .form-actions .btn {
+        .d-flex.gap-2.mt-4.pt-4.border-top .btn {
             width: 100%;
         }
+        
+        .btn-outline-danger.ms-auto {
+            margin-left: 0 !important;
+        }
+    }
+    
+    /* Error list styling */
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 0.25rem 0 0 0;
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+    
+    /* SweetAlert2 customization */
+    .swal2-popup {
+        border-radius: 0.5rem !important;
+    }
+    
+    .swal2-title {
+        font-size: 1.5rem !important;
+    }
+    
+    .swal2-html-container {
+        font-size: 1rem !important;
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Bootstrap JS Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add Bootstrap classes to Django form fields
+        const form = document.querySelector('form');
+        
+        if (form) {
+            // Add form-control class to all input fields except checkboxes
+            form.querySelectorAll('input[type="text"], input[type="url"], input[type="number"], select, textarea').forEach(field => {
+                field.classList.add('form-control');
+            });
+            
+            // Add form-check-input to checkboxes
+            form.querySelectorAll('input[type="checkbox"]').forEach(field => {
+                field.classList.add('form-check-input');
+            });
+            
+            // Add form-check-label to checkbox labels
+            form.querySelectorAll('.form-check-label').forEach(label => {
+                label.classList.add('form-check-label');
+            });
+            
+            // Handle file input
+            form.querySelectorAll('input[type="file"]').forEach(field => {
+                field.classList.add('form-control');
+                field.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        const preview = document.querySelector('.profile-photo-preview img, .profile-photo-preview div');
+                        
+                        reader.onload = function(e) {
+                            if (preview.tagName === 'IMG') {
+                                preview.src = e.target.result;
+                            } else {
+                                // Replace the placeholder with an image
+                                const newImg = document.createElement('img');
+                                newImg.src = e.target.result;
+                                newImg.alt = 'Profile Photo';
+                                newImg.className = 'rounded-circle border';
+                                newImg.style.width = '120px';
+                                newImg.style.height = '120px';
+                                newImg.style.objectFit = 'cover';
+                                preview.parentNode.replaceChild(newImg, preview);
+                            }
+                        }
+                        
+                        reader.readAsDataURL(file);
+                    }
+                });
+            });
+            
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                
+                form.classList.add('was-validated');
+            });
+        }
+        
+        // Auto-hide messages after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(message => {
+                const alert = bootstrap.Alert.getOrCreateInstance(message);
+                alert.close();
+            });
+        }, 5000);
+    });
+    
+    // Delete team member function
+    function deleteTeamMember(pk) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This team member will be deleted permanently!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#0d6efd',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            customClass: {
+                confirmButton: 'btn btn-danger',
+                cancelButton: 'btn btn-primary'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/management/team-members/${pk}/delete/`;
+                
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = '{{ csrf_token }}';
+                
+                form.appendChild(csrfInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+</script>
 {% endblock %}

@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.db import transaction
 from django.http import JsonResponse
 from django.contrib.contenttypes.models import ContentType
@@ -19,7 +19,7 @@ from publisher.forms import StoryForm, VacancyForm, NoticeForm, CategoryForm
 from publisher.utils.attachment_utils import attach_multiple_files_to_object
 
 
-
+from django.views.decorators.http import require_POST
 
 
 # views.py - UPDATED FUNCTIONS ONLY
@@ -28,34 +28,160 @@ from publisher.utils.attachment_utils import attach_multiple_files_to_object
 # VACANCY VIEWS (Function-based)
 # ============================================
 
+# ============================================
+# VACANCY VIEWS (Function-based) - AJAX ready
+# ============================================
+
 @login_required
 @permission_required('core.add_vacancy', raise_exception=True)
 def vacancy_create(request):
-    """Create a new vacancy"""
-    if request.method == 'POST':
-        form = VacancyForm(request.POST, request.FILES)
-        if form.is_valid():
-            # Set author manually before saving
-            vacancy = form.save(commit=False)
-            vacancy.author = request.user
-            vacancy.save()
-            
-            # Now handle attachments
-            files = request.FILES.getlist('attachments')
-            if files:
-                attach_multiple_files_to_object(vacancy, files)
-            
-            messages.success(request, f'Vacancy "{vacancy.title}" created successfully!')
-            return redirect('vacancy_detail', pk=vacancy.pk)
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = VacancyForm()
+    """Create a new vacancy with AJAX support"""
     
+    if request.method == 'POST':
+        # Check if AJAX request
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        try:
+            # Extract data from POST
+            title = request.POST.get('title', '').strip()
+            organization = request.POST.get('organization', '').strip()
+            organization_details = request.POST.get('organization_details', '').strip()
+            location = request.POST.get('location', '').strip()
+            job_type = request.POST.get('job_type', 'FULL_TIME')
+            description = request.POST.get('description', '')
+            how_to_apply = request.POST.get('how_to_apply', '')
+            application_deadline = request.POST.get('application_deadline', '')
+            application_link = request.POST.get('application_link', '').strip()
+            expiration_date = request.POST.get('expiration_date', '')
+            is_active = request.POST.get('is_active') == 'on'
+            is_featured = request.POST.get('is_featured') == 'on'
+            
+            # Validate required fields
+            errors = []
+            if not title:
+                errors.append('Job title is required.')
+            elif len(title) > 200:
+                errors.append('Job title must not exceed 200 characters.')
+                
+            if not organization:
+                errors.append('Organization name is required.')
+            elif len(organization) > 200:
+                errors.append('Organization name must not exceed 200 characters.')
+                
+            if organization_details and len(organization_details) > 200:
+                errors.append('Organization details must not exceed 200 characters.')
+                
+            if not location:
+                errors.append('Location is required.')
+                
+            if not description:
+                errors.append('Job description is required.')
+            elif len(description) < 50:
+                errors.append('Job description must be at least 50 characters.')
+                
+            if not application_deadline:
+                errors.append('Application deadline is required.')
+            else:
+                # Validate deadline is not in the past
+                try:
+                    from datetime import datetime
+                    deadline_date = datetime.strptime(application_deadline, '%Y-%m-%d').date()
+                    if deadline_date < timezone.now().date():
+                        errors.append('Application deadline cannot be in the past.')
+                except ValueError:
+                    errors.append('Invalid application deadline format.')
+            
+            # Validate expiration date if provided
+            if expiration_date:
+                try:
+                    exp_date = datetime.strptime(expiration_date, '%Y-%m-%d').date()
+                    if exp_date < timezone.now().date():
+                        errors.append('Expiration date cannot be in the past.')
+                    if application_deadline and exp_date < deadline_date:
+                        errors.append('Expiration date cannot be before application deadline.')
+                except ValueError:
+                    errors.append('Invalid expiration date format.')
+            
+            # Validate application link if provided
+            if application_link and not (application_link.startswith('http://') or application_link.startswith('https://')):
+                errors.append('Application link must be a valid URL starting with http:// or https://')
+            
+            if errors:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Validation Error',
+                        'errors': errors
+                    }, status=400)
+                else:
+                    for error in errors:
+                        messages.error(request, error)
+                    # Return form with data
+                    context = {
+                        'form_data': request.POST,
+                        'title': 'Create New Vacancy',
+                        'submit_text': 'Create Vacancy',
+                    }
+                    return render(request, 'management/vacancy_form.html', context)
+            
+            # Create vacancy
+            with transaction.atomic():
+                vacancy = Vacancy(
+                    title=title,
+                    organization=organization,
+                    organization_details=organization_details,
+                    location=location,
+                    job_type=job_type,
+                    description=description,
+                    how_to_apply=how_to_apply,
+                    application_deadline=application_deadline,
+                    application_link=application_link if application_link else '',
+                    expiration_date=expiration_date if expiration_date else None,
+                    is_active=is_active,
+                    is_featured=is_featured,
+                    author=request.user
+                )
+                vacancy.save()
+                
+                # Handle file attachments
+                files = request.FILES.getlist('attachments')
+                if files:
+                    attachments = attach_multiple_files_to_object(vacancy, files)
+                
+                # Handle deleted attachments (none for create)
+                
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'title': 'Success!',
+                    'message': f'Vacancy "{vacancy.title}" created successfully!',
+                    'icon': 'success',
+                    'redirect_url': reverse('vacancy_detail', kwargs={'pk': vacancy.pk})
+                })
+            else:
+                messages.success(request, f'Vacancy "{vacancy.title}" created successfully!')
+                return redirect('vacancy_detail', pk=vacancy.pk)
+                
+        except Exception as e:
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                }, status=500)
+            else:
+                messages.error(request, f'Error creating vacancy: {str(e)}')
+                context = {
+                    'form_data': request.POST,
+                    'title': 'Create New Vacancy',
+                    'submit_text': 'Create Vacancy',
+                }
+                return render(request, 'management/vacancy_form.html', context)
+    
+    # GET request
     context = {
-        'form': form,
         'title': 'Create New Vacancy',
         'submit_text': 'Create Vacancy',
+        'is_create': True,
     }
     return render(request, 'management/vacancy_form.html', context)
 
@@ -63,28 +189,160 @@ def vacancy_create(request):
 @login_required
 @permission_required('core.change_vacancy', raise_exception=True)
 def vacancy_edit(request, pk):
-    """Edit an existing vacancy"""
+    """Edit an existing vacancy with AJAX support"""
     vacancy = get_object_or_404(Vacancy, pk=pk)
     
     if request.method == 'POST':
-        form = VacancyForm(request.POST, request.FILES, instance=vacancy)
-        if form.is_valid():
-            vacancy = form.save()
-            messages.success(request, f'Vacancy "{vacancy.title}" updated successfully!')
-            return redirect('vacancy_detail', pk=vacancy.pk)
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = VacancyForm(instance=vacancy)
+        # Check if AJAX request
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        
+        try:
+            # Extract data from POST
+            title = request.POST.get('title', '').strip()
+            organization = request.POST.get('organization', '').strip()
+            organization_details = request.POST.get('organization_details', '').strip()
+            location = request.POST.get('location', '').strip()
+            job_type = request.POST.get('job_type', 'FULL_TIME')
+            description = request.POST.get('description', '')
+            how_to_apply = request.POST.get('how_to_apply', '')
+            application_deadline = request.POST.get('application_deadline', '')
+            application_link = request.POST.get('application_link', '').strip()
+            expiration_date = request.POST.get('expiration_date', '')
+            is_active = request.POST.get('is_active') == 'on'
+            is_featured = request.POST.get('is_featured') == 'on'
+            
+            # Validate required fields
+            errors = []
+            if not title:
+                errors.append('Job title is required.')
+            elif len(title) > 200:
+                errors.append('Job title must not exceed 200 characters.')
+                
+            if not organization:
+                errors.append('Organization name is required.')
+            elif len(organization) > 200:
+                errors.append('Organization name must not exceed 200 characters.')
+                
+            if organization_details and len(organization_details) > 200:
+                errors.append('Organization details must not exceed 200 characters.')
+                
+            if not location:
+                errors.append('Location is required.')
+                
+            if not description:
+                errors.append('Job description is required.')
+            elif len(description) < 50:
+                errors.append('Job description must be at least 50 characters.')
+                
+            if not application_deadline:
+                errors.append('Application deadline is required.')
+            else:
+                # Validate deadline is not in the past (allow existing past dates for editing)
+                try:
+                    from datetime import datetime
+                    deadline_date = datetime.strptime(application_deadline, '%Y-%m-%d').date()
+                except ValueError:
+                    errors.append('Invalid application deadline format.')
+            
+            # Validate expiration date if provided
+            if expiration_date:
+                try:
+                    exp_date = datetime.strptime(expiration_date, '%Y-%m-%d').date()
+                    if application_deadline and exp_date < deadline_date:
+                        errors.append('Expiration date cannot be before application deadline.')
+                except ValueError:
+                    errors.append('Invalid expiration date format.')
+            
+            # Validate application link if provided
+            if application_link and not (application_link.startswith('http://') or application_link.startswith('https://')):
+                errors.append('Application link must be a valid URL starting with http:// or https://')
+            
+            if errors:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Validation Error',
+                        'errors': errors
+                    }, status=400)
+                else:
+                    for error in errors:
+                        messages.error(request, error)
+                    context = {
+                        'vacancy': vacancy,
+                        'form_data': request.POST,
+                        'title': f'Edit Vacancy: {vacancy.title}',
+                        'submit_text': 'Update Vacancy',
+                        'is_create': False,
+                    }
+                    return render(request, 'management/vacancy_form.html', context)
+            
+            # Update vacancy
+            with transaction.atomic():
+                vacancy.title = title
+                vacancy.organization = organization
+                vacancy.organization_details = organization_details
+                vacancy.location = location
+                vacancy.job_type = job_type
+                vacancy.description = description
+                vacancy.how_to_apply = how_to_apply
+                vacancy.application_deadline = application_deadline
+                vacancy.application_link = application_link if application_link else ''
+                vacancy.expiration_date = expiration_date if expiration_date else None
+                vacancy.is_active = is_active
+                vacancy.is_featured = is_featured
+                vacancy.save()
+                
+                # Handle new file attachments
+                files = request.FILES.getlist('attachments')
+                if files:
+                    attachments = attach_multiple_files_to_object(vacancy, files)
+                
+                # Handle deleted attachments
+                delete_attachments = request.POST.getlist('delete_attachments')
+                if delete_attachments:
+                    GenericAttachment.objects.filter(
+                        id__in=delete_attachments,
+                        object_id=vacancy.id,
+                        content_type=ContentType.objects.get_for_model(Vacancy)
+                    ).delete()
+                
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'title': 'Success!',
+                    'message': f'Vacancy "{vacancy.title}" updated successfully!',
+                    'icon': 'success',
+                    'redirect_url': reverse('vacancy_detail', kwargs={'pk': vacancy.pk})
+                })
+            else:
+                messages.success(request, f'Vacancy "{vacancy.title}" updated successfully!')
+                return redirect('vacancy_detail', pk=vacancy.pk)
+                
+        except Exception as e:
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                }, status=500)
+            else:
+                messages.error(request, f'Error updating vacancy: {str(e)}')
+                context = {
+                    'vacancy': vacancy,
+                    'form_data': request.POST,
+                    'title': f'Edit Vacancy: {vacancy.title}',
+                    'submit_text': 'Update Vacancy',
+                    'is_create': False,
+                }
+                return render(request, 'management/vacancy_form.html', context)
     
+    # GET request
     context = {
-        'form': form,
         'vacancy': vacancy,
         'title': f'Edit Vacancy: {vacancy.title}',
         'submit_text': 'Update Vacancy',
+        'is_create': False,
     }
     return render(request, 'management/vacancy_form.html', context)
-
 
 # ============================================
 # NOTICE VIEWS (Function-based)
@@ -153,124 +411,180 @@ def notice_edit(request, pk):
 # ============================================
 
 
+@login_required
+@require_POST
+def story_publish(request, pk):
+    """Publish a story"""
+    try:
+        story = get_object_or_404(Story, id=pk, author=request.user)
+        
+        if story.status == 'DRAFT':
+            story.status = 'PUBLISHED'
+            story.published_at = timezone.now()
+            story.save()
+            
+            return JsonResponse({
+                'icon': 'success',
+                'title': 'Success!',
+                'message': 'Story published successfully',
+                'status': 'PUBLISHED'
+            })
+        else:
+            return JsonResponse({
+                'icon': 'info',
+                'title': 'Already Published',
+                'message': 'This story is already published',
+                'status': story.status
+            })
+            
+    except Story.DoesNotExist:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Error',
+            'message': 'Story not found or you do not have permission'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Server Error',
+            'message': 'An error occurred. Please try again.'
+        }, status=500)
+
+
+
+@login_required
+@require_POST
+def story_unpublish(request, pk):
+    """Unpublish a story (revert to draft)"""
+    try:
+        story = get_object_or_404(Story, id=pk, author=request.user)
+        
+        if story.status == 'PUBLISHED':
+            story.status = 'DRAFT'
+            story.published_at = None
+            story.save()
+            
+            return JsonResponse({
+                'icon': 'success',
+                'title': 'Success!',
+                'message': 'Story unpublished and reverted to draft',
+                'status': 'DRAFT'
+            })
+        else:
+            return JsonResponse({
+                'icon': 'info',
+                'title': 'Already Draft',
+                'message': 'This story is already in draft mode',
+                'status': story.status
+            })
+            
+    except Story.DoesNotExist:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Error',
+            'message': 'Story not found or you do not have permission'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Server Error',
+            'message': 'An error occurred. Please try again.'
+        }, status=500)
+
 
 @login_required
 def story_create(request):
-    """Create a new story (draft or published)"""
-    from publisher.views import notify_subscribers  # ADD THIS IMPORT
+    if request.method == "POST":
+        try:
+            # Get data from POST request
+            headline = request.POST.get('headline')
+            snippet = request.POST.get('snippet')
+            content = request.POST.get('content')
+            read_time = request.POST.get('read_time')
+            category_id = request.POST.get('category')
+            
+            # Validation
+            errors = {}
+            
+            if not headline:
+                errors['headline'] = ['Headline is required']
+            elif len(headline) > 200:
+                errors['headline'] = ['Headline cannot exceed 200 characters']
+                
+            if not snippet:
+                errors['snippet'] = ['Snippet is required']
+            elif len(snippet) > 500:
+                errors['snippet'] = ['Snippet cannot exceed 500 characters']
+                
+            if not content or content == '<p><br></p>' or content == '<br>':
+                errors['content'] = ['Content cannot be blank']
+                
+            if not read_time:
+                errors['read_time'] = ['Read time is required']
+            elif len(read_time) > 20:
+                errors['read_time'] = ['Read time cannot exceed 20 characters']
+            
+            # Return validation errors if any
+            if errors:
+                return JsonResponse({
+                    'icon': 'error',
+                    'title': 'Validation Error',
+                    'message': 'Please correct the errors in the form',
+                    'errors': errors
+                }, status=400)
+            
+            # Handle category (convert '0' to None)
+            category = None
+            if category_id and category_id != '0':
+                try:
+                    category = Category.objects.get(id=category_id)
+                except Category.DoesNotExist:
+                    return JsonResponse({
+                        'icon': 'error',
+                        'title': 'Category Error',
+                        'message': 'Invalid category selected'
+                    }, status=400)
+            
+            # Handle thumbnail upload
+            thumbnail = request.FILES.get('thumbnail')
+            
+            # Create the story with DRAFT status by default
+            story = Story.objects.create(
+                headline=headline,
+                snippet=snippet,
+                content=content,
+                read_time=read_time,
+                status='DRAFT',  # Always save as DRAFT
+                author=request.user,
+                category=category,
+                thumbnail=thumbnail
+            )
+            
+            # Return success response with icon, title, and message
+            return JsonResponse({
+                'icon': 'success',
+                'title': 'Success!',
+                'message': 'Story saved as draft successfully',
+                'story_id': story.id,
+                'redirect_url': reverse('story_page', args=[story.id])
+            }, status=201)
+            
+        except Exception as e:
+            # Log the error for debugging
+            print(f"Error creating story: {str(e)}")
+            return JsonResponse({
+                'icon': 'error',
+                'title': 'Server Error',
+                'message': 'An error occurred while creating the story. Please try again.'
+            }, status=500)
     
-    if request.method == 'POST':
-        is_draft = 'save_as_draft' in request.POST
-        publish_now = 'publish_now' in request.POST
-
-        form = StoryForm(request.POST, request.FILES, user=request.user)
-
-        if form.is_valid():
-            story = form.save(commit=False)
-            story.author = request.user  # Set author
-
-            if publish_now:
-                errors = []
-                if not story.headline or len(story.headline.strip()) < 5:
-                    errors.append('Headline must be at least 5 characters.')
-                if not story.snippet or len(story.snippet.strip()) < 10:
-                    errors.append('Snippet must be at least 10 characters.')
-                if not story.content or len(strip_tags(story.content)) < 50:
-                    errors.append('Content must be at least 50 characters.')
-                if not story.read_time:
-                    errors.append('Read time is required.')
-
-                if errors:
-                    for e in errors:
-                        messages.error(request, e)
-                    return render(request, 'management/story_form.html', {
-                        'form': form,
-                        'title': 'Create New Story',
-                        'submit_text': 'Create Story',
-                        'is_create': True,
-                    })
-
-                story.status = 'PUBLISHED'
-                story.published_at = timezone.now()
-                success_message = f'Story "{story.headline}" published successfully!'
-                
-                # Save the story
-                story.save()
-                
-                # ✅ ADD THIS: Send email notifications
-                notify_subscribers(story.id)
-                messages.info(request, 'Email notifications are being sent to subscribers in the background.')
-                
-            else:
-                story.status = 'DRAFT'
-                if not story.headline:
-                    story.headline = f"Draft Story - {timezone.now():%Y%m%d-%H%M}"
-                if not story.read_time:
-                    story.read_time = "5 min read"
-                success_message = 'Story saved as draft successfully!'
-                story.save()
-
-            # Attachments
-            for f in request.FILES.getlist('attachments'):
-                GenericAttachment.objects.create(
-                    content_object=story,
-                    file=f
-                )
-
-            messages.success(request, success_message)
-            return redirect('story_detail', pk=story.pk)
-
-        # FORM INVALID
-        if is_draft:
-            try:
-                story = Story.objects.create(
-                    author=request.user,
-                    status='DRAFT',
-                    headline=request.POST.get(
-                        'headline',
-                        f"Draft Story - {timezone.now():%Y%m%d-%H%M}"
-                    )[:200],
-                    snippet=request.POST.get('snippet', '')[:500],
-                    content=request.POST.get('content', ''),
-                    read_time=request.POST.get('read_time', '5 min read')[:20],
-                )
-
-                category_id = request.POST.get('category')
-                if category_id:
-                    try:
-                        story.category = Category.objects.get(pk=category_id)
-                        story.save()
-                    except Category.DoesNotExist:
-                        pass
-
-                if request.FILES.get('thumbnail'):
-                    story.thumbnail = request.FILES['thumbnail']
-                    story.save()
-
-                for f in request.FILES.getlist('attachments'):
-                    GenericAttachment.objects.create(
-                        content_object=story,
-                        file=f
-                    )
-
-                messages.success(request, 'Draft saved successfully!')
-                return redirect('story_detail', pk=story.pk)
-
-            except Exception as e:
-                messages.error(request, f'Error saving draft: {e}')
-        else:
-            messages.error(request, 'Please correct the errors below.')
-
+    # GET request - render the form
     else:
-        form = StoryForm(user=request.user)
-
-    return render(request, 'management/story_form.html', {
-        'form': form,
-        'title': 'Create New Story',
-        'submit_text': 'Create Story',
-        'is_create': True,
-    })
-
+        categories = Category.objects.all()
+        context = {
+            'categories': categories,
+        }
+        return render(request, 'management/story/create_story.html', context)
 
 
 
@@ -322,7 +636,7 @@ def story_edit(request, pk):
                 # Save the story
                 story.save()
                 
-                # ✅ ADD THIS: Send email notifications
+                # ADD THIS: Send email notifications
                 notify_subscribers(story.id)
                 messages.info(request, 'Email notifications are being sent to subscribers in the background.')
                 
@@ -418,6 +732,30 @@ def story_edit(request, pk):
 # ============================================
 # CATEGORY VIEWS (Function-based)
 # ============================================
+
+
+@login_required
+def category_create_ajax(request):
+    if request.method == 'POST':
+        name = request.POST.get('name').lower().strip()
+        
+        if not name:
+            return JsonResponse({'success': False, 'message': 'Category name is required'})
+        
+        # Check if category already exists
+        category, created = Category.objects.get_or_create(
+            name__iexact=name,
+            defaults={'name': name}
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'category_id': category.id,
+            'created': created,
+            'message': 'Category created successfully' if created else 'Category already exists'
+        })
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 @login_required
 @permission_required('core.add_category', raise_exception=True)
@@ -871,13 +1209,35 @@ def vacancy_detail(request, pk):
         pk=pk
     )
     
+    # Check if AJAX request for data
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'vacancy': {
+                'id': vacancy.id,
+                'title': vacancy.title,
+                'organization': vacancy.organization,
+                'location': vacancy.location,
+                'job_type': vacancy.get_job_type_display(),
+                'description': vacancy.description,
+                'how_to_apply': vacancy.how_to_apply,
+                'application_deadline': vacancy.application_deadline.strftime('%Y-%m-%d'),
+                'application_link': vacancy.application_link,
+                'expiration_date': vacancy.expiration_date.strftime('%Y-%m-%d') if vacancy.expiration_date else None,
+                'is_active': vacancy.is_active,
+                'is_featured': vacancy.is_featured,
+                'created_at': vacancy.created_at.strftime('%Y-%m-%d %H:%M'),
+                'updated_at': vacancy.updated_at.strftime('%Y-%m-%d %H:%M'),
+                'author': vacancy.author.get_full_name() or vacancy.author.username,
+            }
+        })
+    
     context = {
         'vacancy': vacancy,
         'attachments': vacancy.attachments,
         'can_edit': request.user.has_perm('core.change_vacancy'),
     }
     return render(request, 'management/vacancy_detail.html', context)
-
 
 
 

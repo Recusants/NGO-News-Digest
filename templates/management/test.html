@@ -1,0 +1,234 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}Create New Story{% endblock %}
+
+{% block content %}
+    <div id="storyContainer">
+        <h2>Create New Story</h2>
+        
+        {% csrf_token %}
+        
+        <!-- Headline field -->
+        <div>
+            <label for="id_headline">Headline (max 200 characters):</label><br>
+            <input type="text" id="id_headline" name="headline" maxlength="200" placeholder="Enter headline"><br><br>
+        </div>
+
+        <!-- Snippet field -->
+        <div>
+            <label for="id_snippet">Snippet (max 500 characters):</label><br>
+            <textarea id="id_snippet" name="snippet" maxlength="500" rows="3" placeholder="Enter short description"></textarea><br><br>
+        </div>
+
+        <!-- Content field with TinyMCE -->
+        <div>
+            <label for="id_content">Content (Rich Text):</label><br>
+            <textarea id="id_content" name="content" rows="15" cols="80"></textarea><br><br>
+        </div>
+
+        <!-- Read time field -->
+        <div>
+            <label for="id_read_time">Read Time (e.g., "5 min read"):</label><br>
+            <input type="text" id="id_read_time" name="read_time" maxlength="20" placeholder="e.g., 5 min read"><br><br>
+        </div>
+
+        <!-- Status field -->
+        <div>
+            <label for="id_status">Status:</label><br>
+            <select id="id_status" name="status">
+                <option value="">Select status</option>
+                {% for status in statuses %}
+                    <option value="{{ status }}">{{ status }}</option>
+                {% endfor %}
+            </select><br><br>
+        </div>
+
+        <!-- Thumbnail field -->
+        <div>
+            <label for="id_thumbnail">Thumbnail Image:</label><br>
+            <input type="file" id="id_thumbnail" name="thumbnail" accept="image/*"><br><br>
+        </div>
+
+        <!-- Category field -->
+        <div>
+            <label for="id_category">Category:</label><br>
+            <select id="id_category" name="category">
+                <option value="0">Select a category</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category|lower }}</option>
+                {% endfor %}
+            </select><br><br>
+        </div>
+
+        <!-- Submit button -->
+        <button type="button" id="submitBtn">Add Blog Post</button>
+    </div>
+
+    <!-- TinyMCE with correct API key - FIXED -->
+    <script src="https://cdn.tiny.cloud/1/3gdvs32q76qwgcvomkm9escc14kv12r20ep1r8im5t63tcrr/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Make sure TinyMCE is loaded before initializing
+    if (typeof tinymce !== 'undefined') {
+        // Initialize TinyMCE on the content textarea
+        tinymce.init({
+            selector: '#id_content',
+            height: 500,
+            plugins: 'advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
+            toolbar: 'undo redo | blocks | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | link image media | code | help',
+            toolbar_mode: 'wrap',
+            menubar: true,
+            branding: false,
+            elementpath: true,
+            // Security settings
+            convert_urls: false,
+            verify_html: true,
+            invalid_elements: 'script,iframe,object,embed,applet,frame,frameset',
+            valid_elements: '*[*]',
+            extended_valid_elements: 'div[*],span[*],section[*],article[*]',
+            // Image settings
+            image_advtab: true,
+            automatic_uploads: false,
+            setup: function(editor) {
+                editor.on('init', function() {
+                    console.log('TinyMCE initialized successfully with API key');
+                });
+            }
+        });
+    } else {
+        console.error('TinyMCE failed to load');
+        // Fallback to regular textarea
+        $('#id_content').css('border', '1px solid red');
+    }
+
+    $('#submitBtn').on('click', function() {
+        // Get values from elements
+        var headline = $('#id_headline').val().trim();
+        var snippet = $('#id_snippet').val().trim();
+        
+        // Get content from TinyMCE
+        var content = '';
+        if (typeof tinymce !== 'undefined' && tinymce.get('id_content')) {
+            content = tinymce.get('id_content').getContent();
+        } else {
+            content = $('#id_content').val();
+        }
+        
+        var readTime = $('#id_read_time').val().trim();
+        var status = $('#id_status').val();
+        var category = $('#id_category').val();
+        var thumbnailFile = $('#id_thumbnail')[0].files[0];
+        
+        // Validation
+        var errors = "";
+
+        if(headline == ""){
+            errors = "Headline cannot be blank";
+        } else if(headline.length > 200){
+            errors = "Headline cannot exceed 200 characters";
+        } else if(snippet == ""){
+            errors = "Snippet cannot be blank";
+        } else if(snippet.length > 500){
+            errors = "Snippet cannot exceed 500 characters";
+        } else if(content == "" || content == "<p></p>" || content == "<p><br data-mce-bogus=\"1\"></p>" || content == "<p>&nbsp;</p>"){
+            errors = "Content cannot be blank";
+        } else if(readTime == ""){
+            errors = "Read time cannot be blank";
+        } else if(readTime.length > 20){
+            errors = "Read time cannot exceed 20 characters";
+        } else if(status == ""){
+            errors = "Please select a status";
+        } else if(thumbnailFile && !thumbnailFile.type.match('image.*')){
+            errors = "Please select a valid image file for thumbnail";
+        }
+        
+        // If validation errors exist
+        if(errors != ""){
+            Swal.fire({
+                title: 'Validation Error',
+                text: errors,
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        // Prepare form data
+        var formData = new FormData();
+        formData.append('csrfmiddlewaretoken', $('input[name="csrfmiddlewaretoken"]').val());
+        formData.append('headline', headline);
+        formData.append('snippet', snippet);
+        formData.append('content', content);
+        formData.append('read_time', readTime);
+        formData.append('status', status);
+        formData.append('category', category);
+        
+        if(thumbnailFile) {
+            formData.append('thumbnail', thumbnailFile);
+        }
+        
+        // Show loading state
+        $('#submitBtn').prop('disabled', true).text('Processing...');
+        
+        $.ajax({
+            url: '{% url "story_create" %}',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+            },
+            success: function(responseData) {
+                Swal.fire({
+                    title: 'Success',
+                    text: responseData.message || 'Story created successfully',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: true
+                }).then((result) => {
+                    if (responseData.redirect_url) {
+                        window.location.href = responseData.redirect_url;
+                    } else {
+                        // Clear form
+                        $('#id_headline').val('');
+                        $('#id_snippet').val('');
+                        if (typeof tinymce !== 'undefined' && tinymce.get('id_content')) {
+                            tinymce.get('id_content').setContent('');  // Clear TinyMCE
+                        }
+                        $('#id_read_time').val('');
+                        $('#id_status').val('');
+                        $('#id_category').val('0');
+                        $('#id_thumbnail').val('');
+                    }
+                });
+            },
+            error: function(jqXHR) {
+                var errorMessage = 'Server error. Please try again';
+                
+                if (jqXHR.responseJSON?.error) {
+                    errorMessage = jqXHR.responseJSON.error;
+                } else if (jqXHR.responseJSON?.errors) {
+                    var serverErrors = jqXHR.responseJSON.errors;
+                    errorMessage = Object.values(serverErrors).flat().join('\n');
+                }
+                
+                Swal.fire({
+                    title: 'Error',
+                    text: errorMessage,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            },
+            complete: function(){
+                $('#submitBtn').prop('disabled', false).text('Add Blog Post');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

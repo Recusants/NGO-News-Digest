@@ -12,7 +12,7 @@ import os
 # Security - MUST be set in cPanel
 SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:
-    raise ValueError("❌ SECRET_KEY environment variable not set in cPanel!")
+    raise ValueError("SECRET_KEY environment variable not set in cPanel!")
 
 # Debug must be False in production
 DEBUG = False
@@ -20,7 +20,7 @@ DEBUG = False
 # Allowed hosts - MUST be set in cPanel (comma-separated)
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
-    raise ValueError("❌ ALLOWED_HOSTS environment variable not set in cPanel!")
+    raise ValueError("ALLOWED_HOSTS environment variable not set in cPanel!")
 
 
 import logging
@@ -56,7 +56,7 @@ DATABASES = {
 }
 
 if not DATABASES['default']['NAME']:
-    raise ValueError("❌ Database NAME not configured! Set DB_NAME in cPanel.")
+    raise ValueError("Database NAME not configured! Set DB_NAME in cPanel.")
 
 
 # ==============================================================================
