@@ -4,72 +4,680 @@
 {% block title %}NGO News Digest - Notice{% endblock %}
 
 {% block content %}
-    {% include 'partials/header.html' %}
-    <main id="pageContent">
-        <section id="notice-details" class="page-section">
-            <div class="container section py-2">
-                <a href="{% url 'notices_page' %}" class="btn btn-small mb-2" data-page="notices"><i class="fas fa-arrow-left"></i> Back to Notices</a>
-                
-                <div class="details-header">
-                    <div class="badge badge-red" id="noticeCategory">{{ notice.category }}</div>
-                    <h1 class="details-title" id="noticeTitle">{{ notice.overview }}</h1>
-                    
-                    <div class="details-meta">
-                        <div><i class="fas fa-building"></i> <span id="noticeOrg">{{ notice.organization }}</span></div>
-                        <div><i class="far fa-calendar"></i> Posted: <span id="noticeDate">{{ notice.publish_date }}</span></div>
-                        <div><i class="far fa-calendar-alt"></i> Deadline: <span id="noticeDeadline">{{ notice.expiration_date }}</span></div>
-                    </div>
-                    
-                    {% if notice.important %}
-                    <div class="mt-2">
-                        <span class="badge badge-orange">High Priority</span>
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="two-column">
-                    <div class="details-content" id="noticeContent">
-                        {{ notice.description|safe }}
-                    </div>
-                    
-                    <div class="details-sidebar">
-                        <div class="sidebar-section">
-                            <h3>Attachments</h3>
-                            <div id="noticeAttachments">
-                                {% for file in notice.attachments %}
-                                    <div class="card mb-1" style="padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
-                                        <div>
-                                            <i class="fas fa-file-pdf mr-2" style="color: #e53935;"></i>
-                                            <span>{{ file.file_name }}</span>
-                                        </div>
-                                        <a href="{{ file.file }}" style="color: var(--primary);">Download</a>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        
-                        <div class="sidebar-section">
-                            <h3>Contact Information</h3>
-                            <div class="card" style="padding: 1rem;">
-                                {{ notice.contact_details|safe }}
-                            </div>
-                        </div>
-                        
-                        <div class="sidebar-section">
-                            <h3>Related Notices</h3>
-                            <div id="relatedNotices">
-                                {% for notice in related_notices %}
-                                    <div class="mb-2">
-                                        <a href="/notice_page/{{ notice.id }}" class="story-card-title" style="font-size: 1rem;">{{notice.headline}}</a>
-                                        <div style="font-size: 0.8rem; color: var(--text-light);">{{notice.organization}} • {{notice.publish_date}}</div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-    {% include 'partials/footer.html' %}
+{% include 'partials/header.html' %}
+
+<main id="pageContent">
+<section id="notice-details" class="page-section">
+<div class="container section py-2">
+
+<a href="{% url 'notices_page' %}" class="btn btn-small mb-2">
+<i class="fas fa-arrow-left"></i> Back to Notices
+</a>
+
+<div class="details-header">
+
+<div class="badge badge-red" id="noticeCategory">
+{{ notice.category }}
+</div>
+
+<h1 class="details-title" id="noticeTitle">
+{{ notice.overview }}
+</h1>
+
+<div class="details-meta">
+
+<div>
+<i class="fas fa-building"></i>
+<span id="noticeOrg">{{ notice.organization }}</span>
+</div>
+
+<div>
+<i class="far fa-calendar"></i>
+Posted:
+<span id="noticeDate">{{ notice.publish_date }}</span>
+</div>
+
+<div>
+<i class="far fa-calendar-alt"></i>
+Deadline:
+<span id="noticeDeadline">{{ notice.expiration_date }}</span>
+</div>
+
+</div>
+
+{% if notice.important %}
+<div class="mt-2">
+<span class="badge badge-orange">High Priority</span>
+</div>
+{% endif %}
+
+</div>
+
+
+
+<div class="two-column">
+
+<div class="details-content" id="noticeContent">
+{{ notice.description|safe }}
+</div>
+
+
+
+<div class="details-sidebar">
+
+<div class="sidebar-section">
+<h3>Attachments</h3>
+
+<div id="noticeAttachments">
+
+{% for file in notice.attachments %}
+
+<div class="card mb-1 attachment-card">
+
+<div>
+<i class="fas fa-file-pdf pdf-icon"></i>
+<span>{{ file.file_name }}</span>
+</div>
+
+<a href="{{ file.file }}" class="download-link">
+Download
+</a>
+
+</div>
+
+{% endfor %}
+
+</div>
+</div>
+
+
+
+<div class="sidebar-section">
+<h3>Contact Information</h3>
+
+<div class="card contact-card">
+{{ notice.contact_details|safe }}
+</div>
+
+</div>
+
+
+
+<div class="sidebar-section">
+
+<h3>Related Notices</h3>
+
+<div id="relatedNotices">
+
+{% for notice in related_notices %}
+
+<div class="mb-2">
+
+<a href="/notice_page/{{ notice.id }}" class="story-card-title related-title">
+{{ notice.headline }}
+</a>
+
+<div class="related-meta">
+{{ notice.organization }} • {{ notice.publish_date }}
+</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+
+
+{% if can_manage %}
+
+<hr class="my-4">
+
+<div class="admin-controls">
+
+<div class="admin-header">
+
+<h5>Notice Management</h5>
+
+<span class="admin-status">
+
+{% if notice.is_active %}
+<span class="status active">Active</span>
+{% else %}
+<span class="status inactive">Inactive</span>
+{% endif %}
+
+</span>
+
+</div>
+
+
+
+<div class="admin-actions">
+
+<a href="{% url 'notice_edit' notice.id %}" class="admin-btn edit">
+<i class="fas fa-pen"></i>
+Edit
+</a>
+
+
+{% if notice.is_active %}
+
+<button class="admin-btn toggle deactivate-btn"
+data-notice-id="{{ notice.id }}">
+<i class="fas fa-eye-slash"></i>
+Deactivate
+</button>
+
+{% else %}
+
+<button class="admin-btn toggle activate-btn"
+data-notice-id="{{ notice.id }}">
+<i class="fas fa-eye"></i>
+Activate
+</button>
+
+{% endif %}
+
+
+
+{% if notice.important %}
+
+<button class="admin-btn feature unimportant-btn"
+data-notice-id="{{ notice.id }}">
+<i class="fas fa-star"></i>
+Remove Priority
+</button>
+
+{% else %}
+
+<button class="admin-btn feature important-btn"
+data-notice-id="{{ notice.id }}">
+<i class="fas fa-star"></i>
+Mark Priority
+</button>
+
+{% endif %}
+
+
+
+<a href="{% url 'notice_list' %}" class="admin-btn list">
+<i class="fas fa-list"></i>
+List
+</a>
+
+
+
+<button class="admin-btn delete delete-btn"
+data-notice-id="{{ notice.id }}"
+data-notice-title="{{ notice.headline }}">
+<i class="fas fa-trash"></i>
+Delete
+</button>
+
+</div>
+
+
+
+<div class="admin-stats">
+
+<div class="stat">
+<small>Created</small>
+<strong>{{ notice.created_at|date:"M d, Y" }}</strong>
+</div>
+
+<div class="stat">
+
+<small>Status</small>
+
+<strong>
+
+{% if notice.is_expired %}
+<span class="text-danger">Expired</span>
+{% else %}
+{{ notice.is_active|yesno:"Active,Inactive" }}
+{% endif %}
+
+</strong>
+
+</div>
+
+<div class="stat">
+<small>Attachments</small>
+<strong>{{ attachments|length }}</strong>
+</div>
+
+</div>
+
+</div>
+
+{% endif %}
+
+</div>
+</section>
+</main>
+
+{% include 'partials/footer.html' %}
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+
+<script>
+
+$(document).ready(function() {
+
+function showConfirmAlert(title,text,confirmText,icon='warning'){
+
+return Swal.fire({
+
+title:title,
+text:text,
+icon:icon,
+
+showCancelButton:true,
+
+confirmButtonColor:
+icon === 'error'
+? '#ef4444'
+: (icon === 'warning' ? '#f59e0b' : '#10b981'),
+
+cancelButtonColor:'#6b7280',
+
+confirmButtonText:confirmText,
+cancelButtonText:'Cancel',
+
+reverseButtons:true
+
+});
+
+}
+
+
+
+$('.activate-btn').on('click',function(){
+
+var noticeId=$(this).data('notice-id');
+
+showConfirmAlert(
+'Activate Notice',
+'Are you sure you want to activate this notice?',
+'Activate',
+'success'
+).then((result)=>{
+
+if(result.isConfirmed){
+
+$.ajax({
+
+url:'{% url "notice_toggle_active" 0 %}'.replace('0',noticeId),
+
+type:'POST',
+
+headers:{
+'X-CSRFToken':'{{ csrf_token }}'
+},
+
+success:function(){
+location.reload();
+},
+
+error:function(){
+Swal.fire('Error','Failed to activate notice','error');
+}
+
+});
+
+}
+
+});
+
+});
+
+
+
+$('.deactivate-btn').on('click',function(){
+
+var noticeId=$(this).data('notice-id');
+
+showConfirmAlert(
+'Deactivate Notice',
+'Are you sure you want to deactivate this notice?',
+'Deactivate',
+'warning'
+).then((result)=>{
+
+if(result.isConfirmed){
+
+$.ajax({
+
+url:'{% url "notice_toggle_active" 0 %}'.replace('0',noticeId),
+
+type:'POST',
+
+headers:{
+'X-CSRFToken':'{{ csrf_token }}'
+},
+
+success:function(){
+location.reload();
+},
+
+error:function(){
+Swal.fire('Error','Failed to deactivate notice','error');
+}
+
+});
+
+}
+
+});
+
+});
+
+
+
+$('.important-btn').on('click',function(){
+
+var noticeId=$(this).data('notice-id');
+
+showConfirmAlert(
+'Mark Priority',
+'Are you sure you want to mark this notice as high priority?',
+'Mark Priority',
+'success'
+).then((result)=>{
+
+if(result.isConfirmed){
+
+$.ajax({
+
+url:'{% url "notice_toggle_important" 0 %}'.replace('0',noticeId),
+
+type:'POST',
+
+headers:{
+'X-CSRFToken':'{{ csrf_token }}'
+},
+
+success:function(){
+location.reload();
+},
+
+error:function(){
+Swal.fire('Error','Failed to mark priority','error');
+}
+
+});
+
+}
+
+});
+
+});
+
+
+
+$('.unimportant-btn').on('click',function(){
+
+var noticeId=$(this).data('notice-id');
+
+showConfirmAlert(
+'Remove Priority',
+'Are you sure you want to remove priority status?',
+'Remove',
+'warning'
+).then((result)=>{
+
+if(result.isConfirmed){
+
+$.ajax({
+
+url:'{% url "notice_toggle_important" 0 %}'.replace('0',noticeId),
+
+type:'POST',
+
+headers:{
+'X-CSRFToken':'{{ csrf_token }}'
+},
+
+success:function(){
+location.reload();
+},
+
+error:function(){
+Swal.fire('Error','Failed to remove priority','error');
+}
+
+});
+
+}
+
+});
+
+});
+
+
+
+$('.delete-btn').on('click',function(){
+
+var noticeId=$(this).data('notice-id');
+var title=$(this).data('notice-title');
+
+showConfirmAlert(
+'Delete Notice',
+`Are you sure you want to delete "${title}"? This cannot be undone.`,
+'Delete',
+'error'
+).then((result)=>{
+
+if(result.isConfirmed){
+
+$.ajax({
+
+url:'{% url "notice_delete" 0 %}'.replace('0',noticeId),
+
+type:'POST',
+
+headers:{
+'X-CSRFToken':'{{ csrf_token }}'
+},
+
+success:function(){
+window.location.href='{% url "notice_list" %}';
+},
+
+error:function(){
+Swal.fire('Error','Failed to delete notice','error');
+}
+
+});
+
+}
+
+});
+
+});
+
+});
+</script>
+
+
+
+<style>
+
+/* attachments */
+
+.attachment-card{
+padding:1rem;
+display:flex;
+align-items:center;
+justify-content:space-between;
+}
+
+.pdf-icon{
+color:#e53935;
+margin-right:8px;
+}
+
+.download-link{
+color:var(--primary);
+}
+
+
+
+/* contact */
+
+.contact-card{
+padding:1rem;
+}
+
+
+
+/* related */
+
+.related-title{
+font-size:1rem;
+}
+
+.related-meta{
+font-size:0.8rem;
+color:var(--text-light);
+}
+
+
+
+/* badges */
+
+.badge-red{
+background:#dc3545;
+color:white;
+padding:4px 10px;
+border-radius:4px;
+font-size:12px;
+}
+
+.badge-orange{
+background:#fd7e14;
+color:white;
+padding:4px 10px;
+border-radius:4px;
+font-size:12px;
+}
+
+
+
+/* admin panel */
+
+.admin-controls{
+background:#fafafa;
+border:1px solid #e5e7eb;
+border-radius:10px;
+padding:18px;
+}
+
+.admin-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:15px;
+}
+
+.admin-header h5{
+margin:0;
+font-weight:600;
+}
+
+.status{
+font-size:12px;
+padding:4px 10px;
+border-radius:20px;
+}
+
+.status.active{
+background:#dcfce7;
+color:#166534;
+}
+
+.status.inactive{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.admin-actions{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+margin-bottom:18px;
+}
+
+.admin-btn{
+display:flex;
+align-items:center;
+gap:6px;
+padding:7px 14px;
+border-radius:6px;
+border:1px solid #e5e7eb;
+background:white;
+font-size:14px;
+cursor:pointer;
+}
+
+.admin-btn:hover{
+background:#f3f4f6;
+}
+
+.admin-btn.edit{
+border-color:#3b82f6;
+color:#3b82f6;
+}
+
+.admin-btn.toggle{
+border-color:#6b7280;
+color:#374151;
+}
+
+.admin-btn.feature{
+border-color:#f59e0b;
+color:#b45309;
+}
+
+.admin-btn.list{
+border-color:#6b7280;
+color:#6b7280;
+}
+
+.admin-btn.delete{
+border-color:#ef4444;
+color:#ef4444;
+}
+
+.admin-btn.delete:hover{
+background:#ef4444;
+color:white;
+}
+
+.admin-stats{
+display:flex;
+gap:40px;
+padding-top:12px;
+border-top:1px solid #e5e7eb;
+}
+
+.admin-stats small{
+display:block;
+color:#6b7280;
+font-size:12px;
+}
+
+</style>
+
 {% endblock %}

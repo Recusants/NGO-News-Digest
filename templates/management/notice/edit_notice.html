@@ -1,0 +1,658 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}Edit Notice: {{ notice.headline }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Main Form Column - Wider -->
+        <div class="col-lg-9">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h4 mb-0">Edit Notice</h2>
+                    <span class="badge {% if notice.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ notice.is_active|yesno:"Active,Inactive" }}
+                    </span>
+                </div>
+                
+                <div class="card-body">
+                    {% csrf_token %}
+                    
+                    <!-- Headline and Organization row -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="id_headline" class="form-label fw-semibold d-flex justify-content-between">
+                                <span>Headline</span>
+                                <small class="text-muted"><span id="headlineCount">{{ notice.headline|length }}</span>/200</small>
+                            </label>
+                            <input type="text" class="form-control" id="id_headline" name="headline" maxlength="200" value="{{ notice.headline }}" placeholder="Enter notice headline">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="id_organization" class="form-label fw-semibold d-flex justify-content-between">
+                                <span>Organization</span>
+                                <small class="text-muted"><span id="orgCount">{{ notice.organization|length }}</span>/200</small>
+                            </label>
+                            <input type="text" class="form-control" id="id_organization" name="organization" maxlength="200" value="{{ notice.organization }}" placeholder="e.g., UNICEF, WHO, etc.">
+                        </div>
+                    </div>
+                    
+                    <!-- Overview field -->
+                    <div class="mb-3">
+                        <label for="id_overview" class="form-label fw-semibold d-flex justify-content-between">
+                            <span>Overview</span>
+                            <small class="text-muted"><span id="overviewCount">{{ notice.overview|length }}</span>/500</small>
+                        </label>
+                        <textarea class="form-control" id="id_overview" name="overview" maxlength="500" rows="3" placeholder="Brief summary of the notice">{{ notice.overview }}</textarea>
+                    </div>
+                    
+                    <!-- Description field with Rich Text Editor -->
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label fw-semibold">Description</label>
+                        {% include 'management/components/rich_editor.html' with editor_id='description_editor' hidden_id='id_description' %}
+                    </div>
+                    
+                    <!-- Contact Details field with Rich Text Editor -->
+                    <div class="mb-3">
+                        <label for="id_contact_details" class="form-label fw-semibold">Contact Details</label>
+                        {% include 'management/components/rich_editor.html' with editor_id='contact_editor' hidden_id='id_contact_details' %}
+                    </div>
+                    
+                    <!-- Category and Dates row -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label for="id_category" class="form-label fw-semibold">Category</label>
+                            <select class="form-select" id="id_category" name="category">
+                                <option value="">Select category</option>
+                                {% for value, label in categories %}
+                                <option value="{{ value }}" {% if notice.category == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="id_publish_date" class="form-label fw-semibold">Publish Date</label>
+                            <input type="date" class="form-control" id="id_publish_date" name="publish_date" value="{{ notice.publish_date|date:'Y-m-d' }}">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label for="id_expiration_date" class="form-label fw-semibold">Expiration Date <span class="text-muted">(optional)</span></label>
+                            <input type="date" class="form-control" id="id_expiration_date" name="expiration_date" value="{{ notice.expiration_date|date:'Y-m-d' }}">
+                        </div>
+                    </div>
+                    
+                    <!-- Status row -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="id_is_active" name="is_active" {% if notice.is_active %}checked{% endif %}>
+                                <label class="form-check-label fw-semibold" for="id_is_active">
+                                    Is Active <span class="text-muted">(visible to public)</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="id_is_important" name="is_important" {% if notice.is_important %}checked{% endif %}>
+                                <label class="form-check-label fw-semibold" for="id_is_important">
+                                    Is Important <span class="text-muted">(highlighted)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Existing Attachments Section -->
+                    {% if attachments %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Current Attachments</label>
+                        <div class="list-group">
+                            {% for attachment in attachments %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center" id="attachment-{{ attachment.id }}">
+                                <div>
+                                    <i class="fas 
+                                        {% if attachment.is_image %}fa-file-image text-info
+                                        {% elif attachment.is_pdf %}fa-file-pdf text-danger
+                                        {% else %}fa-file text-secondary{% endif %} me-2"></i>
+                                    <a href="{{ attachment.file.url }}" target="_blank">{{ attachment.file_name }}</a>
+                                    <small class="text-muted ms-2">({{ attachment.get_file_size_display }})</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteAttachment({{ attachment.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" id="deleted_attachments" name="deleted_attachments" value="">
+                    </div>
+                    {% endif %}
+                    
+                    <!-- New Attachments Section -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Add New Attachments <span class="text-muted">(optional)</span></label>
+                        
+                        <div id="attachments-container">
+                            <!-- First attachment -->
+                            <div class="attachment-item mb-2">
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="id_attachment_1" name="attachment_1" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                    <button type="button" class="btn btn-outline-danger remove-attachment" style="display: none;" onclick="removeAttachment(this)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Accepted: PDF, DOC, DOCX, JPG, PNG</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addAttachment()">
+                                <i class="fas fa-plus me-1"></i> Add Another Attachment
+                            </button>
+                        </div>
+                        
+                        <small class="text-muted d-block mt-1">You can upload multiple files up to 5 total</small>
+                    </div>
+                    
+                    <!-- Submit button at the bottom -->
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top border-2">
+                        <a href="{% url 'notice_page' notice.pk %}" class="btn btn-outline-secondary btn-lg px-4">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="button" class="btn btn-success btn-lg px-5 py-3 fw-bold shadow" id="submitBtn" style="font-size: 1.2rem;">
+                            <i class="fas fa-save me-2"></i>Update Notice
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar Column - Quick Actions -->
+        <div class="col-lg-3">
+            <!-- Quick Actions Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'notice_page' notice.pk %}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-2"></i>View Notice
+                        </a>
+                        <button type="button" class="btn btn-outline-danger" id="clearBtn">
+                            <i class="fas fa-trash-alt me-2"></i>Reset Changes
+                        </button>
+                    </div>
+                    
+                    <hr class="my-3">
+                    
+                    <div class="small">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Notice ID:</span>
+                            <span class="fw-semibold">#{{ notice.id }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Created:</span>
+                            <span class="fw-semibold">{{ notice.created_at|date:'M d, Y' }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Author:</span>
+                            <span class="fw-semibold">{{ notice.author.get_full_name|default:notice.author.username }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tips Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Editing Tips</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled small mb-0">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Update headline if needed</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Refresh contact information</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Extend expiration dates if needed</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Add new attachments as required</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Toggle important status for visibility</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center" style="background: rgba(0,0,0,0.7); z-index: 9999;">
+    <div class="bg-white p-4 rounded-3 text-center shadow-lg">
+        <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+        <p class="text-secondary mb-0">Updating...</p>
+    </div>
+</div>
+
+<!-- jQuery and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+$(document).ready(function() {
+    // POPULATE RICH EDITORS WITH EXISTING CONTENT
+    var descEditor = document.getElementById('description_editor');
+    var descHidden = document.getElementById('id_description');
+    if (descEditor && descHidden) {
+        var descContent = '{{ notice.description|escapejs }}';
+        descEditor.innerHTML = descContent;
+        descHidden.value = descContent;
+    }
+    
+    var contactEditor = document.getElementById('contact_editor');
+    var contactHidden = document.getElementById('id_contact_details');
+    if (contactEditor && contactHidden) {
+        var contactContent = '{{ notice.contact_details|escapejs }}';
+        contactEditor.innerHTML = contactContent;
+        contactHidden.value = contactContent;
+    }
+    
+    // Attachment counter
+    let attachmentCount = 1;
+    const MAX_ATTACHMENTS = 5;
+    let deletedAttachments = [];
+    
+    // Character counters
+    $('#id_headline').on('input', function() {
+        var count = $(this).val().length;
+        $('#headlineCount').text(count);
+        if (count > 200) {
+            $('#headlineCount').parent().addClass('text-danger');
+        } else {
+            $('#headlineCount').parent().removeClass('text-danger');
+        }
+    });
+    
+    $('#id_organization').on('input', function() {
+        var count = $(this).val().length;
+        $('#orgCount').text(count);
+        if (count > 200) {
+            $('#orgCount').parent().addClass('text-danger');
+        } else {
+            $('#orgCount').parent().removeClass('text-danger');
+        }
+    });
+    
+    $('#id_overview').on('input', function() {
+        var count = $(this).val().length;
+        $('#overviewCount').text(count);
+        if (count > 500) {
+            $('#overviewCount').parent().addClass('text-danger');
+        } else {
+            $('#overviewCount').parent().removeClass('text-danger');
+        }
+    });
+    
+    // Get editor content functions
+    function getDescriptionContent() {
+        return $('#id_description').val();
+    }
+    
+    function getContactContent() {
+        return $('#id_contact_details').val();
+    }
+    
+    // Add attachment function
+    window.addAttachment = function() {
+        if (attachmentCount >= MAX_ATTACHMENTS) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Maximum Reached',
+                text: `You can only upload up to ${MAX_ATTACHMENTS} attachments`
+            });
+            return;
+        }
+        
+        attachmentCount++;
+        const container = document.getElementById('attachments-container');
+        const newAttachment = document.createElement('div');
+        newAttachment.className = 'attachment-item mb-2';
+        newAttachment.innerHTML = `
+            <div class="input-group">
+                <input type="file" class="form-control" id="id_attachment_${attachmentCount}" name="attachment_${attachmentCount}" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                <button type="button" class="btn btn-outline-danger remove-attachment" onclick="removeAttachment(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <small class="text-muted">Accepted: PDF, DOC, DOCX, JPG, PNG</small>
+        `;
+        container.appendChild(newAttachment);
+        
+        if (attachmentCount > 1) {
+            document.querySelectorAll('.remove-attachment').forEach(btn => {
+                btn.style.display = 'block';
+            });
+        }
+    };
+    
+    window.removeAttachment = function(button) {
+        const attachmentItem = button.closest('.attachment-item');
+        attachmentItem.remove();
+        attachmentCount--;
+        
+        if (attachmentCount === 1) {
+            document.querySelectorAll('.remove-attachment').forEach(btn => {
+                btn.style.display = 'none';
+            });
+        }
+    };
+    
+    window.deleteAttachment = function(attachmentId) {
+        Swal.fire({
+            title: 'Delete Attachment?',
+            text: 'Are you sure you want to delete this attachment?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deletedAttachments.push(attachmentId);
+                $('#deleted_attachments').val(deletedAttachments.join(','));
+                
+                $(`#attachment-${attachmentId}`).fadeOut(300, function() {
+                    $(this).remove();
+                });
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Deleted',
+                    text: 'Attachment will be removed when you save',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+        });
+    };
+    
+    // Clear form button (reset to original)
+    $('#clearBtn').on('click', function() {
+        Swal.fire({
+            title: 'Reset Form?',
+            text: 'All your changes will be lost.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, reset it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                location.reload();
+            }
+        });
+    });
+
+    // Submit button handler
+    $('#submitBtn').on('click', function() {
+        var headline = $('#id_headline').val().trim();
+        var overview = $('#id_overview').val().trim();
+        var organization = $('#id_organization').val().trim();
+        var description = getDescriptionContent();
+        var contactDetails = getContactContent();
+        var category = $('#id_category').val();
+        var publishDate = $('#id_publish_date').val();
+        var expirationDate = $('#id_expiration_date').val();
+        var isActive = $('#id_is_active').is(':checked');
+        var isImportant = $('#id_is_important').is(':checked');
+        
+        var attachments = [];
+        for (let i = 1; i <= attachmentCount; i++) {
+            let fileInput = $(`#id_attachment_${i}`)[0];
+            if (fileInput && fileInput.files.length > 0) {
+                attachments.push(fileInput.files[0]);
+            }
+        }
+        
+        var errors = [];
+
+        if(headline == "") {
+            errors.push("Headline cannot be blank");
+            $('#id_headline').addClass('is-invalid');
+        } else if(headline.length > 200) {
+            errors.push("Headline cannot exceed 200 characters");
+            $('#id_headline').addClass('is-invalid');
+        } else {
+            $('#id_headline').removeClass('is-invalid');
+        }
+        
+        if(overview == "") {
+            errors.push("Overview cannot be blank");
+            $('#id_overview').addClass('is-invalid');
+        } else if(overview.length > 500) {
+            errors.push("Overview cannot exceed 500 characters");
+            $('#id_overview').addClass('is-invalid');
+        } else {
+            $('#id_overview').removeClass('is-invalid');
+        }
+        
+        if(organization == "") {
+            errors.push("Organization cannot be blank");
+            $('#id_organization').addClass('is-invalid');
+        } else if(organization.length > 200) {
+            errors.push("Organization cannot exceed 200 characters");
+            $('#id_organization').addClass('is-invalid');
+        } else {
+            $('#id_organization').removeClass('is-invalid');
+        }
+        
+        if(description == "" || description == "<p><br></p>" || description == "<br>") {
+            errors.push("Description cannot be blank");
+        }
+        
+        if(contactDetails == "" || contactDetails == "<p><br></p>" || contactDetails == "<br>") {
+            errors.push("Contact details cannot be blank");
+        }
+        
+        if(category == "") {
+            errors.push("Please select a category");
+            $('#id_category').addClass('is-invalid');
+        } else {
+            $('#id_category').removeClass('is-invalid');
+        }
+        
+        if(publishDate == "") {
+            errors.push("Publish date cannot be blank");
+            $('#id_publish_date').addClass('is-invalid');
+        } else {
+            $('#id_publish_date').removeClass('is-invalid');
+        }
+        
+        attachments.forEach(file => {
+            const fileType = file.type;
+            const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/jpeg', 'image/png', 'image/jpg'];
+            if (!allowedTypes.includes(fileType)) {
+                errors.push(`File "${file.name}" has invalid type. Only PDF, DOC, DOCX, JPG, PNG allowed.`);
+            }
+        });
+        
+        if(errors.length > 0) {
+            Swal.fire({
+                title: 'Validation Error',
+                html: errors.map(error => `<div class="text-start mb-1">• ${error}</div>`).join(''),
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status"></span> Updating...');
+        
+        var formData = new FormData();
+        formData.append('csrfmiddlewaretoken', $('input[name="csrfmiddlewaretoken"]').val());
+        formData.append('headline', headline);
+        formData.append('overview', overview);
+        formData.append('organization', organization);
+        formData.append('description', description);
+        formData.append('contact_details', contactDetails);
+        formData.append('category', category);
+        formData.append('publish_date', publishDate);
+        formData.append('expiration_date', expirationDate);
+        formData.append('is_active', isActive);
+        formData.append('is_important', isImportant);
+        formData.append('deleted_attachments', deletedAttachments.join(','));
+        
+        attachments.forEach((file, index) => {
+            formData.append(`attachment_${index + 1}`, file);
+        });
+        
+        $.ajax({
+            url: '{% url "notice_edit" notice.pk %}',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+            },
+            success: function(responseData) {
+                Swal.fire({
+                    icon: responseData.icon || 'success',
+                    title: responseData.title || 'Success!',
+                    text: responseData.message || 'Notice updated successfully',
+                    timer: 1500,
+                    showConfirmButton: true
+                }).then(function() {
+                    if (responseData.redirect_url) {
+                        window.location.href = responseData.redirect_url;
+                    } else {
+                        window.location.href = '{% url "notice_page" notice.pk %}';
+                    }
+                });
+            },
+            error: function(jqXHR) {
+                var response = jqXHR.responseJSON || {};
+                var errorMessage = response.message || 'Server error. Please try again';
+                
+                if (response.errors) {
+                    $.each(response.errors, function(field, messages) {
+                        $(`#id_${field}`).addClass('is-invalid');
+                    });
+                }
+                
+                Swal.fire({
+                    icon: response.icon || 'error',
+                    title: response.title || 'Error',
+                    text: errorMessage,
+                    confirmButtonText: 'OK'
+                });
+            },
+            complete: function() {
+                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save me-2"></i> Update Notice');
+            }
+        });
+    });
+});
+</script>
+
+<style>
+/* Reuse styles from create template */
+.container-fluid {
+    max-width: 1600px;
+}
+
+.card {
+    border: none;
+    border-radius: 1rem;
+    border: 1px solid rgba(0,0,0,.05);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0,0,0,.05);
+    border-radius: 1rem 1rem 0 0 !important;
+}
+
+.form-control, .form-select {
+    border: 1px solid #e0e0e0;
+    border-radius: 0.5rem;
+    padding: 0.6rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-success {
+    background-color: #28a745;
+    border: none;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+}
+
+.btn-lg {
+    padding: 0.75rem 2rem;
+    font-size: 1.2rem;
+}
+
+.shadow {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.border-top.border-2 {
+    border-top-width: 2px !important;
+    border-top-color: #dee2e6 !important;
+}
+
+.text-danger {
+    color: #dc3545 !important;
+}
+
+.attachment-item .input-group {
+    transition: all 0.2s;
+}
+
+.attachment-item .btn-outline-danger {
+    border-color: #e0e0e0;
+    border-left: none;
+}
+
+.attachment-item .btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.list-group-item {
+    border-radius: 0.5rem !important;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e0e0e0;
+}
+
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+    
+    .col-lg-9, .col-lg-3 {
+        width: 100%;
+    }
+    
+    .col-lg-3 {
+        margin-top: 1rem;
+    }
+    
+    .btn-lg {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

@@ -335,63 +335,347 @@ def vacancy_create(request):
 # ============================================
 # NOTICE VIEWS (Function-based)
 # ============================================
+@login_required
+@require_POST
+def notice_toggle_important(request, pk):
+    """Toggle notice important status"""
+    try:
+        notice = get_object_or_404(Notice, id=pk)
+        
+        # Check if user is author OR has 'Publisher' in roles
+        is_author = notice.author == request.user
+        is_publisher = hasattr(request.user, 'roles') and 'Publisher' in request.user.roles
+        
+        if not (is_author or is_publisher):
+            return JsonResponse({
+                'icon': 'error',
+                'title': 'Permission Denied',
+                'message': 'You do not have permission to modify this notice'
+            }, status=403)
+        
+        notice.is_important = not notice.is_important
+        notice.save()
+        
+        return JsonResponse({
+            'icon': 'success',
+            'title': 'Success!',
+            'message': f'Notice marked as {"important" if notice.is_important else "not important"}',
+            'is_important': notice.is_important
+        })
+        
+    except Notice.DoesNotExist:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Error',
+            'message': 'Notice not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Server Error',
+            'message': 'An error occurred. Please try again.'
+        }, status=500)
+
 
 @login_required
-@permission_required('core.add_notice', raise_exception=True)
+@require_POST
+def notice_toggle_active(request, pk):
+    """Toggle notice active status"""
+    try:
+        notice = get_object_or_404(Notice, id=pk)
+        
+        # Check if user is author OR has 'Publisher' in roles
+        is_author = notice.author == request.user
+        is_publisher = hasattr(request.user, 'roles') and 'Publisher' in request.user.roles
+        
+        if not (is_author or is_publisher):
+            return JsonResponse({
+                'icon': 'error',
+                'title': 'Permission Denied',
+                'message': 'You do not have permission to modify this notice'
+            }, status=403)
+        
+        notice.is_active = not notice.is_active
+        notice.save()
+        
+        return JsonResponse({
+            'icon': 'success',
+            'title': 'Success!',
+            'message': f'Notice marked as {"active" if notice.is_active else "inactive"}',
+            'is_active': notice.is_active
+        })
+        
+    except Notice.DoesNotExist:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Error',
+            'message': 'Notice not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Server Error',
+            'message': 'An error occurred. Please try again.'
+        }, status=500)
+
+
+@login_required
 def notice_create(request):
-    """Create a new notice"""
-    if request.method == 'POST':
-        form = NoticeForm(request.POST, request.FILES)
-        if form.is_valid():
-            # Set author manually before saving
-            notice = form.save(commit=False)
-            notice.author = request.user
-            notice.save()
+    """Create a new notice with AJAX support"""
+    if request.method == "POST":
+        try:
+            # Get data from POST request
+            headline = request.POST.get('headline')
+            overview = request.POST.get('overview')
+            description = request.POST.get('description')
+            contact_details = request.POST.get('contact_details')
+            organization = request.POST.get('organization')
+            category = request.POST.get('category')
+            publish_date = request.POST.get('publish_date')
+            expiration_date = request.POST.get('expiration_date')
+            is_active = request.POST.get('is_active') == 'true'
+            is_important = request.POST.get('is_important') == 'true'
             
-            # Now handle attachments
-            files = request.FILES.getlist('attachments')
-            if files:
-                attach_multiple_files_to_object(notice, files)
+            # Validation
+            errors = {}
             
-            messages.success(request, f'Notice "{notice.headline}" created successfully!')
-            return redirect('notice_detail', pk=notice.pk)
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = NoticeForm()
+            if not headline:
+                errors['headline'] = ['Headline is required']
+            elif len(headline) > 200:
+                errors['headline'] = ['Headline cannot exceed 200 characters']
+                
+            if not overview:
+                errors['overview'] = ['Overview is required']
+            elif len(overview) > 500:
+                errors['overview'] = ['Overview cannot exceed 500 characters']
+                
+            if not description or description == '<p><br></p>' or description == '<br>':
+                errors['description'] = ['Description cannot be blank']
+                
+            if not contact_details or contact_details == '<p><br></p>' or contact_details == '<br>':
+                errors['contact_details'] = ['Contact details cannot be blank']
+                
+            if not organization:
+                errors['organization'] = ['Organization is required']
+            elif len(organization) > 200:
+                errors['organization'] = ['Organization cannot exceed 200 characters']
+                
+            if not category:
+                errors['category'] = ['Category is required']
+            elif category not in ['EVENT', 'TENDER', 'ANNOUNCEMENT']:
+                errors['category'] = ['Invalid category']
+            
+            # Return validation errors if any
+            if errors:
+                return JsonResponse({
+                    'icon': 'error',
+                    'title': 'Validation Error',
+                    'message': 'Please correct the errors in the form',
+                    'errors': errors
+                }, status=400)
+            
+            # Create the notice
+            notice = Notice.objects.create(
+                headline=headline,
+                overview=overview,
+                description=description,
+                contact_details=contact_details,
+                organization=organization,
+                category=category,
+                publish_date=publish_date if publish_date else timezone.now().date(),
+                expiration_date=expiration_date if expiration_date else None,
+                is_active=is_active,
+                is_important=is_important,
+                author=request.user
+            )
+            
+            # Handle file attachments
+            attachments = []
+            for key, file in request.FILES.items():
+                if key.startswith('attachment_'):
+                    attachments.append(file)
+            
+            # Save attachments
+            content_type = ContentType.objects.get_for_model(Notice)
+            for index, file in enumerate(attachments):
+                attachment = GenericAttachment.objects.create(
+                    content_type=content_type,
+                    object_id=notice.id,
+                    file=file,
+                    order=index
+                )
+            
+            # Return success response
+            return JsonResponse({
+                'icon': 'success',
+                'title': 'Success!',
+                'message': f'Notice created successfully with {len(attachments)} attachment(s)',
+                'notice_id': notice.id,
+                'redirect_url': reverse('notice_list')
+            }, status=201)
+            
+        except Exception as e:
+            # Log the error for debugging
+            print(f"Error creating notice: {str(e)}")
+            return JsonResponse({
+                'icon': 'error',
+                'title': 'Server Error',
+                'message': 'An error occurred while creating the notice. Please try again.'
+            }, status=500)
     
-    context = {
-        'form': form,
-        'title': 'Create New Notice',
-        'submit_text': 'Create Notice',
-    }
-    return render(request, 'management/notice_form.html', context)
+    # GET request - render the form
+    else:
+        context = {
+            'categories': Notice.CATEGORIES,
+        }
+        return render(request, 'management/notice/create_notice.html', context)
 
 
 @login_required
-@permission_required('core.change_notice', raise_exception=True)
 def notice_edit(request, pk):
     """Edit an existing notice"""
-    notice = get_object_or_404(Notice, pk=pk)
-    
-    if request.method == 'POST':
-        form = NoticeForm(request.POST, request.FILES, instance=notice)
-        if form.is_valid():
-            notice = form.save()
-            messages.success(request, f'Notice "{notice.headline}" updated successfully!')
-            return redirect('notice_detail', pk=notice.pk)
+    try:
+        notice = get_object_or_404(Notice, id=pk)
+        
+        # Check if user is author OR has 'Publisher' in roles
+        is_author = notice.author == request.user
+        is_publisher = hasattr(request.user, 'roles') and 'Publisher' in request.user.roles
+        
+        if not (is_author or is_publisher):
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'icon': 'error',
+                    'title': 'Permission Denied',
+                    'message': 'You do not have permission to edit this notice'
+                }, status=403)
+            else:
+                messages.error(request, 'You do not have permission to edit this notice')
+                return redirect('notice_list')
+        
+        if request.method == "POST":
+            try:
+                # Get data from POST request
+                headline = request.POST.get('headline')
+                overview = request.POST.get('overview')
+                description = request.POST.get('description')
+                contact_details = request.POST.get('contact_details')
+                organization = request.POST.get('organization')
+                category = request.POST.get('category')
+                publish_date = request.POST.get('publish_date')
+                expiration_date = request.POST.get('expiration_date')
+                is_active = request.POST.get('is_active') == 'true'
+                is_important = request.POST.get('is_important') == 'true'
+                
+                # Validation
+                errors = {}
+                
+                if not headline:
+                    errors['headline'] = ['Headline is required']
+                elif len(headline) > 200:
+                    errors['headline'] = ['Headline cannot exceed 200 characters']
+                    
+                if not overview:
+                    errors['overview'] = ['Overview is required']
+                elif len(overview) > 500:
+                    errors['overview'] = ['Overview cannot exceed 500 characters']
+                    
+                if not description or description == '<p><br></p>' or description == '<br>':
+                    errors['description'] = ['Description cannot be blank']
+                    
+                if not contact_details or contact_details == '<p><br></p>' or contact_details == '<br>':
+                    errors['contact_details'] = ['Contact details cannot be blank']
+                    
+                if not organization:
+                    errors['organization'] = ['Organization is required']
+                elif len(organization) > 200:
+                    errors['organization'] = ['Organization cannot exceed 200 characters']
+                    
+                if not category:
+                    errors['category'] = ['Category is required']
+                elif category not in ['EVENT', 'TENDER', 'ANNOUNCEMENT']:
+                    errors['category'] = ['Invalid category']
+                
+                if errors:
+                    return JsonResponse({
+                        'icon': 'error',
+                        'title': 'Validation Error',
+                        'message': 'Please correct the errors in the form',
+                        'errors': errors
+                    }, status=400)
+                
+                # Update notice fields
+                notice.headline = headline
+                notice.overview = overview
+                notice.description = description
+                notice.contact_details = contact_details
+                notice.organization = organization
+                notice.category = category
+                notice.publish_date = publish_date if publish_date else timezone.now().date()
+                notice.expiration_date = expiration_date if expiration_date else None
+                notice.is_active = is_active
+                notice.is_important = is_important
+                notice.save()
+                
+                # Handle new attachments
+                content_type = ContentType.objects.get_for_model(Notice)
+                existing_count = notice.attachments.count()
+                
+                for key, file in request.FILES.items():
+                    if key.startswith('attachment_'):
+                        GenericAttachment.objects.create(
+                            content_type=content_type,
+                            object_id=notice.id,
+                            file=file,
+                            order=existing_count
+                        )
+                        existing_count += 1
+                
+                # Handle deleted attachments (if any)
+                deleted_attachments = request.POST.get('deleted_attachments', '')
+                if deleted_attachments:
+                    for att_id in deleted_attachments.split(','):
+                        if att_id.strip():
+                            try:
+                                att = GenericAttachment.objects.get(id=att_id.strip())
+                                if att.content_object == notice:
+                                    if att.file:
+                                        att.file.delete()
+                                    att.delete()
+                            except GenericAttachment.DoesNotExist:
+                                pass
+                
+                return JsonResponse({
+                    'icon': 'success',
+                    'title': 'Success!',
+                    'message': 'Notice updated successfully',
+                    'notice_id': notice.id,
+                    'redirect_url': reverse('notice_page', args=[notice.id])
+                }, status=200)
+                
+            except Exception as e:
+                print(f"Error updating notice: {str(e)}")
+                return JsonResponse({
+                    'icon': 'error',
+                    'title': 'Server Error',
+                    'message': 'An error occurred while updating the notice.'
+                }, status=500)
+        
+        # GET request - render edit form
         else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = NoticeForm(instance=notice)
-    
-    context = {
-        'form': form,
-        'notice': notice,
-        'title': f'Edit Notice: {notice.headline}',
-        'submit_text': 'Update Notice',
-    }
-    return render(request, 'management/notice_form.html', context)
+            # Get existing attachments
+            attachments = notice.attachments.all()
+            
+            context = {
+                'notice': notice,
+                'attachments': attachments,
+                'categories': Notice.CATEGORIES,
+                'is_edit': True,
+            }
+            return render(request, 'management/notice/edit.html', context)
+            
+    except Notice.DoesNotExist:
+        messages.error(request, 'Notice not found')
+        return redirect('notice_list')
 
 
 # ============================================
@@ -1467,85 +1751,129 @@ def notice_detail(request, pk):
     return render(request, 'management/notice_detail.html', context)
 
 
-
-
-
-
-
 @login_required
-@permission_required('core.delete_notice', raise_exception=True)
+@require_POST
 def notice_delete(request, pk):
-    """Function-based notice delete view"""
-    notice = get_object_or_404(Notice, pk=pk)
-    
-    if request.method == 'POST':
-        notice_headline = notice.headline
+    """Delete a notice"""
+    try:
+        notice = get_object_or_404(Notice, id=pk)
+        
+        # Check if user is author OR has 'Publisher' in roles
+        is_author = notice.author == request.user
+        is_publisher = hasattr(request.user, 'roles') and 'Publisher' in request.user.roles
+        
+        if not (is_author or is_publisher):
+            return JsonResponse({
+                'icon': 'error',
+                'title': 'Permission Denied',
+                'message': 'You do not have permission to delete this notice'
+            }, status=403)
+        
+        # Delete attachments
+        for attachment in notice.attachments:
+            if attachment.file:
+                attachment.file.delete()
+            attachment.delete()
+        
         notice.delete()
-        messages.success(request, f'Notice "{notice_headline}" deleted successfully!')
-        return redirect('notice_list')
-    
-    # GET request - show confirmation
-    context = {
-        'object': notice,
-        'object_type': 'notice',
-        'object_name': notice.headline,
-        'back_url': reverse_lazy('notice_detail', kwargs={'pk': notice.pk}),
-    }
-    return render(request, 'management/confirm_delete.html', context)
+        
+        # Get updated counts
+        total_count = Notice.objects.count()
+        active_count = Notice.objects.filter(is_active=True).count()
+        inactive_count = Notice.objects.filter(is_active=False).count()
+        important_count = Notice.objects.filter(is_important=True).count()
+        
+        return JsonResponse({
+            'icon': 'success',
+            'title': 'Success!',
+            'message': 'Notice deleted successfully',
+            'new_counts': {
+                'total': total_count,
+                'active': active_count,
+                'inactive': inactive_count,
+                'important': important_count,
+            }
+        })
+        
+    except Notice.DoesNotExist:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Error',
+            'message': 'Notice not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Server Error',
+            'message': 'An error occurred. Please try again.'
+        }, status=500)
+
 
 
 @login_required
 def notice_list(request):
-    """Function-based notice list view"""
-    queryset = Notice.objects.all()
+    """List all notices with filters"""
+    queryset = Notice.objects.select_related('author').order_by('-publish_date', '-created_at')
     
-    # Get all filter parameters
-    status = request.GET.get('status', '')
-    organization = request.GET.get('organization', '')
-    category = request.GET.get('category', '')
-    publish_from = request.GET.get('publish_from', '')
-    publish_to = request.GET.get('publish_to', '')
-    important = request.GET.get('important', '')
-    per_page = request.GET.get('per_page', 20)
+    # Get filter parameters
+    filters = {
+        'category': request.GET.get('category', ''),
+        'organization': request.GET.get('organization', ''),
+        'status': request.GET.get('status', ''),
+        'important': request.GET.get('important', ''),
+        'date_from': request.GET.get('date_from', ''),
+        'date_to': request.GET.get('date_to', ''),
+        'mine': request.GET.get('mine', ''),
+        'search': request.GET.get('search', ''),
+    }
     
     # Apply filters
-    if status:
-        if status == 'active':
-            queryset = queryset.filter(is_active=True)
-        elif status == 'inactive':
-            queryset = queryset.filter(is_active=False)
-        elif status == 'expired':
-            queryset = queryset.filter(expiration_date__lt=timezone.now().date())
+    if filters['category']:
+        queryset = queryset.filter(category=filters['category'])
     
-    if organization:
-        queryset = queryset.filter(organization__icontains=organization)
+    if filters['organization']:
+        queryset = queryset.filter(organization__icontains=filters['organization'])
     
-    if category in ['EVENT', 'TENDER', 'ANNOUNCEMENT']:
-        queryset = queryset.filter(category=category)
+    if filters['status'] == 'active':
+        queryset = queryset.filter(is_active=True)
+    elif filters['status'] == 'inactive':
+        queryset = queryset.filter(is_active=False)
+    elif filters['status'] == 'expired':
+        queryset = [n for n in queryset if n.is_expired()]
+        # Note: This is inefficient for large datasets. Consider adding a method to filter in DB.
     
-    if publish_from:
-        queryset = queryset.filter(publish_date__gte=publish_from)
-    
-    if publish_to:
-        queryset = queryset.filter(publish_date__lte=publish_to)
-    
-    if important == 'true':
+    if filters['important'] == 'true':
         queryset = queryset.filter(is_important=True)
     
-    # Order results
-    queryset = queryset.order_by('-publish_date', '-created_at')
+    # Search in headline and overview
+    if filters['search']:
+        queryset = queryset.filter(
+            Q(headline__icontains=filters['search']) |
+            Q(overview__icontains=filters['search']) |
+            Q(organization__icontains=filters['search'])
+        )
     
-    # Calculate important count
-    important_count = Notice.objects.filter(is_important=True).count()
+    # Date range filters
+    if filters['date_from']:
+        try:
+            date_from = datetime.strptime(filters['date_from'], '%Y-%m-%d').date()
+            queryset = queryset.filter(publish_date__gte=date_from)
+        except (ValueError, TypeError):
+            pass
     
-    # Calculate attachment count
-    from django.contrib.contenttypes.models import ContentType
-    notice_content_type = ContentType.objects.get_for_model(Notice)
-    attachment_count = GenericAttachment.objects.filter(
-        content_type=notice_content_type
-    ).count()
+    if filters['date_to']:
+        try:
+            date_to = datetime.strptime(filters['date_to'], '%Y-%m-%d').date()
+            queryset = queryset.filter(publish_date__lte=date_to)
+        except (ValueError, TypeError):
+            pass
+    
+    # My notices filter
+    if filters['mine'] == 'true':
+        queryset = queryset.filter(author=request.user)
     
     # Pagination
+    per_page = request.GET.get('per_page', 20)
     try:
         per_page = int(per_page)
         if per_page not in [10, 20, 50, 100]:
@@ -1554,35 +1882,35 @@ def notice_list(request):
         per_page = 20
     
     paginator = Paginator(queryset, per_page)
-    page = request.GET.get('page')
+    page_number = request.GET.get('page', 1)
     
     try:
-        page_obj = paginator.page(page)
+        page_obj = paginator.page(page_number)
     except PageNotAnInteger:
         page_obj = paginator.page(1)
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
     
+    # Get counts
+    total_count = Notice.objects.count()
+    active_count = Notice.objects.filter(is_active=True).count()
+    inactive_count = Notice.objects.filter(is_active=False).count()
+    important_count = Notice.objects.filter(is_important=True).count()
+    
     context = {
-        'notices': page_obj.object_list,
         'page_obj': page_obj,
-        'total_count': Notice.objects.count(),
-        'active_count': Notice.objects.filter(is_active=True).count(),
+        'notices': page_obj.object_list,
+        'total_count': total_count,
+        'active_count': active_count,
+        'inactive_count': inactive_count,
         'important_count': important_count,
-        'attachment_count': attachment_count,
-        'now': timezone.now(),  # Add current time
-        # Filter parameters for template
-        'current_status': status,
-        'current_organization': organization,
-        'current_category': category,
-        'current_publish_from': publish_from,
-        'current_publish_to': publish_to,
-        'current_important': important,
+        'categories': Notice.CATEGORIES,
+        'current_filters': filters,
         'current_per_page': per_page,
+        'active_filter_count': sum(1 for v in filters.values() if v),
     }
     
-    return render(request, 'management/notice_list.html', context)
-
+    return render(request, 'management/notice/notice_list.html', context)
 
 @login_required
 @permission_required('core.change_notice', raise_exception=True)

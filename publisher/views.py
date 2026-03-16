@@ -560,11 +560,45 @@ def notices(request):
 
 
 def notice_page(request, pk):
-    notice = Notice.objects.get(id=pk)
-    related_notices = Notice.objects.filter(category=notice.category)[:6]
+    notice = get_object_or_404(Notice, id=pk)
+    
+    # Get attachments
+    attachments = notice.attachments.all()
+    
+    # Get related notices (same category, exclude current)
+    related_notices = Notice.objects.filter(
+        category=notice.category, 
+        is_active=True
+    ).exclude(id=pk).order_by('-publish_date')[:3]
+    
+    # Permission checks for template - FIXED
+    user = request.user
+    is_authenticated = user.is_authenticated
+    is_author = False
+    is_publisher = False
+    
+    if is_authenticated:
+        is_author = (notice.author == user)
+        # Check if user has 'Publisher' in roles (assuming roles is a list or has 'Publisher' in it)
+        is_publisher = hasattr(user, 'roles') and 'Publisher' in user.roles
+    
+    can_manage = is_authenticated and (is_author or is_publisher)
+    
+    # Debug prints (remove in production)
+    print(f"User: {user}")
+    print(f"Is authenticated: {is_authenticated}")
+    print(f"Is author: {is_author}")
+    print(f"Is publisher: {is_publisher}")
+    print(f"Can manage: {can_manage}")
+    
     context = {
         'notice': notice,
+        'attachments': attachments,
         'related_notices': related_notices,
+        'is_authenticated': is_authenticated,
+        'is_author': is_author,
+        'is_publisher': is_publisher,
+        'can_manage': can_manage,
     }
     
     return render(request, 'publisher/notice_page.html', context)

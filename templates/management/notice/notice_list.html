@@ -1,0 +1,789 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}Notices{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container-fluid px-4 py-4" style="max-width: 1400px;">
+    <!-- Header with Filter Button -->
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-4 mb-4">
+        <div>
+            <h1 class="h2 fw-semibold text-dark mb-2">
+                <i class="fas fa-bullhorn me-2"></i>Notices
+            </h1>
+            <p class="text-secondary mb-0">
+                Manage announcements, events, and tenders
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <!-- Filter Button with Badge -->
+            <button type="button" class="btn btn-outline-primary position-relative" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <i class="fas fa-filter me-2"></i> Filters
+                {% if active_filter_count > 0 %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ active_filter_count }}
+                    <span class="visually-hidden">active filters</span>
+                </span>
+                {% endif %}
+            </button>
+            <a href="{% url 'notice_create' %}" class="btn btn-primary px-4 py-2">
+                <i class="fas fa-plus me-2"></i> Create New Notice
+            </a>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-white border-0 h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-white-50 mb-2 text-uppercase small">Total Notices</h6>
+                            <h3 class="card-title text-white mb-0 display-6">{{ total_count }}</h3>
+                        </div>
+                        <i class="fas fa-bullhorn fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-white border-0 h-100" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-white-50 mb-2 text-uppercase small">Active</h6>
+                            <h3 class="card-title text-white mb-0 display-6">{{ active_count }}</h3>
+                        </div>
+                        <i class="fas fa-check-circle fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-white border-0 h-100" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-white-50 mb-2 text-uppercase small">Inactive</h6>
+                            <h3 class="card-title text-white mb-0 display-6">{{ inactive_count }}</h3>
+                        </div>
+                        <i class="fas fa-pause-circle fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-white border-0 h-100" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-white-50 mb-2 text-uppercase small">Important</h6>
+                            <h3 class="card-title text-white mb-0 display-6">{{ important_count }}</h3>
+                        </div>
+                        <i class="fas fa-star fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Messages as SweetAlert Popups -->
+    {% if messages %}
+        {% for message in messages %}
+        <script>
+            Swal.fire({
+                icon: '{% if "error" in message.tags %}error{% elif "success" in message.tags %}success{% else %}info{% endif %}',
+                title: '{% if "error" in message.tags %}Error{% elif "success" in message.tags %}Success{% else %}Notice{% endif %}',
+                text: '{{ message|escapejs }}',
+                timer: 3000,
+                showConfirmButton: true
+            });
+        </script>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Active Filters Display -->
+    {% if active_filter_count > 0 %}
+    <div class="d-flex flex-wrap gap-2 mb-3 p-3 bg-light rounded">
+        <span class="text-secondary me-2"><i class="fas fa-filter me-1"></i>Active filters:</span>
+        
+        {% if current_filters.category %}
+        <div class="badge bg-light text-primary d-inline-flex align-items-center px-3 py-2">
+            <span>Category: 
+                {% for value, label in categories %}
+                    {% if value == current_filters.category %}{{ label }}{% endif %}
+                {% endfor %}
+            </span>
+            <button type="button" onclick="removeFilter('category')" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        {% if current_filters.organization %}
+        <div class="badge bg-light text-info d-inline-flex align-items-center px-3 py-2">
+            <span>Organization: {{ current_filters.organization }}</span>
+            <button type="button" onclick="removeFilter('organization')" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        {% if current_filters.status %}
+        <div class="badge bg-light text-success d-inline-flex align-items-center px-3 py-2">
+            <span>Status: {{ current_filters.status|title }}</span>
+            <button type="button" onclick="removeFilter('status')" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        {% if current_filters.important == 'true' %}
+        <div class="badge bg-light text-warning d-inline-flex align-items-center px-3 py-2">
+            <span>Important Only</span>
+            <button type="button" onclick="removeFilter('important')" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        {% if current_filters.search %}
+        <div class="badge bg-light text-secondary d-inline-flex align-items-center px-3 py-2">
+            <span>Search: "{{ current_filters.search }}"</span>
+            <button type="button" onclick="removeFilter('search')" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        {% if current_filters.mine == 'true' %}
+        <div class="badge bg-light text-purple d-inline-flex align-items-center px-3 py-2">
+            <span>My Notices Only</span>
+            <button type="button" onclick="removeFilter('mine')" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        {% if current_filters.date_from or current_filters.date_to %}
+        <div class="badge bg-light text-warning d-inline-flex align-items-center px-3 py-2">
+            <span>Date: 
+                {% if current_filters.date_from %}{{ current_filters.date_from }}{% else %}Any{% endif %} 
+                to 
+                {% if current_filters.date_to %}{{ current_filters.date_to }}{% else %}Any{% endif %}
+            </span>
+            <button type="button" onclick="removeDateFilters()" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        <a href="{% url 'notice_list' %}" class="btn btn-sm btn-outline-danger ms-2">
+            <i class="fas fa-times me-1"></i> Clear all
+        </a>
+    </div>
+    {% endif %}
+    
+    <!-- Notices Table -->
+    <div class="card border">
+        <div class="card-body p-4">
+            {% if notices %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="fw-semibold">#</th>
+                            <th class="fw-semibold">Headline & Organization</th>
+                            <th class="fw-semibold">Category</th>
+                            <th class="fw-semibold">Dates</th>
+                            <th class="fw-semibold">Status</th>
+                            <th class="fw-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="notices-table-body">
+                        {% for notice in notices %}
+                        <tr id="notice-row-{{ notice.pk }}" class="{% if notice.is_expired %}table-secondary{% endif %}">
+                            <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                            <td>
+                                <div>
+                                    <a href="{% url 'notice_page' notice.pk %}" class="text-dark text-decoration-none fw-medium">
+                                        {{ notice.headline|truncatechars:60 }}
+                                    </a>
+                                    <div class="small text-secondary mt-1">
+                                        <i class="fas fa-building me-1" style="font-size: 0.7rem;"></i>
+                                        {{ notice.organization|truncatechars:30 }}
+                                        {% if notice.is_important %}
+                                        <span class="badge bg-warning text-dark ms-2">IMPORTANT</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ notice.get_category_color }}">
+                                    {{ notice.get_category_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div><small>Publish: {{ notice.publish_date|date:"M d, Y" }}</small></div>
+                                {% if notice.expiration_date %}
+                                    <div><small>Expires: {{ notice.expiration_date|date:"M d, Y" }}</small></div>
+                                    {% if notice.is_expired %}
+                                        <small class="text-danger">Expired</small>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span id="status-badge-{{ notice.pk }}" 
+                                      class="badge 
+                                        {% if notice.is_expired %}bg-dark
+                                        {% elif notice.is_active %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                    {% if notice.is_expired %}
+                                        Expired
+                                    {% else %}
+                                        {{ notice.is_active|yesno:"Active,Inactive" }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 action-buttons" data-notice-id="{{ notice.pk }}" data-notice-title="{{ notice.headline|escapejs }}">
+                                    <!-- View Button -->
+                                    <a href="{% url 'notice_page' notice.pk %}" 
+                                       class="btn btn-sm btn-outline-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    <!-- Edit Button -->
+                                    <a href="{% url 'notice_edit' notice.pk %}" 
+                                       class="btn btn-sm btn-outline-primary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    <!-- Activate/Deactivate Button -->
+                                    {% if notice.is_active %}
+                                    <button class="btn btn-sm btn-outline-warning deactivate-btn" 
+                                            title="Deactivate"
+                                            data-action="deactivate">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-outline-success activate-btn" 
+                                            title="Activate"
+                                            data-action="activate">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <!-- Important/Unimportant Button -->
+                                    {% if notice.is_important %}
+                                    <button class="btn btn-sm btn-outline-warning unimportant-btn" 
+                                            title="Remove Important"
+                                            data-action="unimportant">
+                                        <i class="fas fa-star"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-outline-warning important-btn" 
+                                            title="Mark Important"
+                                            data-action="important">
+                                        <i class="fas fa-star"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <!-- Delete Button -->
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" 
+                                            title="Delete"
+                                            data-action="delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center flex-wrap gap-3 mt-4 pt-3 border-top">
+                <div class="text-secondary small order-2 order-md-1">
+                    Showing <strong>{{ page_obj.start_index }}</strong> to 
+                    <strong>{{ page_obj.end_index }}</strong> of 
+                    <strong>{{ page_obj.paginator.count }}</strong> notices
+                </div>
+                
+                <nav aria-label="Page navigation" class="order-1 order-md-2">
+                    <ul class="pagination mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}" aria-label="Previous">
+                                <i class="fas fa-angle-left me-1"></i> Prev
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-left me-1"></i> Prev</span>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if num >= page_obj.number|add:'-1' and num <= page_obj.number|add:'1' %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}" aria-label="Next">
+                                Next <i class="fas fa-angle-right ms-1"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Next <i class="fas fa-angle-right ms-1"></i></span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                
+                <div class="d-flex align-items-center gap-2 order-3">
+                    <span class="small text-secondary">Show:</span>
+                    <select onchange="changePageSize(this)" class="form-select form-select-sm w-auto">
+                        <option value="10" {% if request.GET.per_page == "10" %}selected{% endif %}>10</option>
+                        <option value="20" {% if request.GET.per_page == "20" or not request.GET.per_page %}selected{% endif %}>20</option>
+                        <option value="50" {% if request.GET.per_page == "50" %}selected{% endif %}>50</option>
+                        <option value="100" {% if request.GET.per_page == "100" %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-bullhorn fa-4x text-secondary mb-3" style="color: #cbd5e1;"></i>
+                <h4 class="h5 mb-2">No notices found</h4>
+                <p class="text-secondary mb-4">
+                    {% if active_filter_count > 0 %}
+                    Try changing your filters
+                    {% else %}
+                    Create your first notice to get started
+                    {% endif %}
+                </p>
+                {% if active_filter_count > 0 %}
+                <button onclick="resetFilters()" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i> Clear Filters
+                </button>
+                {% else %}
+                <a href="{% url 'notice_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i> Create Notice
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">
+                    <i class="fas fa-filter me-2"></i>Filter Notices
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="GET" action="" id="filterForm">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Search Bar -->
+                        <div class="col-12">
+                            <label class="form-label fw-medium text-dark">Search</label>
+                            <input type="text" class="form-control" name="search" value="{{ current_filters.search|default:'' }}" 
+                                   placeholder="Search in headline, overview, organization...">
+                        </div>
+                        
+                        <!-- Category Filter -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-dark">Category</label>
+                            <select name="category" class="form-select">
+                                <option value="">All Categories</option>
+                                {% for value, label in categories %}
+                                <option value="{{ value }}" {% if current_filters.category == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-dark">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="">All Status</option>
+                                <option value="active" {% if current_filters.status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if current_filters.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                <option value="expired" {% if current_filters.status == 'expired' %}selected{% endif %}>Expired</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Organization Filter -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-dark">Organization</label>
+                            <input type="text" name="organization" value="{{ current_filters.organization|default:'' }}" 
+                                   class="form-control" placeholder="Organization name...">
+                        </div>
+                        
+                        <!-- Important Filter -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-dark">Importance</label>
+                            <select name="important" class="form-select">
+                                <option value="">All</option>
+                                <option value="true" {% if current_filters.important == 'true' %}selected{% endif %}>Important Only</option>
+                            </select>
+                        </div>
+                        
+                        <!-- My Notices Filter -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-dark">My Notices</label>
+                            <div class="form-check mt-2">
+                                <input type="checkbox" name="mine" class="form-check-input" id="modalMineCheckbox" value="true" 
+                                       {% if current_filters.mine == 'true' %}checked{% endif %}>
+                                <label class="form-check-label" for="modalMineCheckbox">
+                                    Show only my notices
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Date Range -->
+                        <div class="col-12">
+                            <label class="form-label fw-medium text-dark">Publish Date Range</label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input type="date" name="date_from" id="dateFrom" value="{{ current_filters.date_from|default:'' }}" 
+                                           class="form-control" placeholder="From">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="date" name="date_to" id="dateTo" value="{{ current_filters.date_to|default:'' }}"
+                                           class="form-control" placeholder="To">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Date Presets -->
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="text-secondary small me-2">Quick dates:</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setDatePreset('week')">Last 7 days</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setDatePreset('month')">Last 30 days</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setDatePreset('expired')">Expired</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Per Page -->
+                        <div class="col-12">
+                            <label class="form-label fw-medium text-dark">Items per page</label>
+                            <select name="per_page" class="form-select">
+                                <option value="10" {% if current_per_page == 10 %}selected{% endif %}>10</option>
+                                <option value="20" {% if current_per_page == 20 %}selected{% endif %}>20</option>
+                                <option value="50" {% if current_per_page == 50 %}selected{% endif %}>50</option>
+                                <option value="100" {% if current_per_page == 100 %}selected{% endif %}>100</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="reset" class="btn btn-outline-danger" onclick="resetFiltersAndClose()">Clear All</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center" style="background: rgba(0,0,0,0.7); z-index: 9999;">
+    <div class="bg-white p-4 rounded-3 text-center shadow-lg">
+        <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+        <p class="text-secondary mb-0">Processing...</p>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// Function to show loading overlay
+function showLoading() {
+    document.getElementById('loadingOverlay').classList.remove('d-none');
+    document.getElementById('loadingOverlay').classList.add('d-flex');
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('d-none');
+    document.getElementById('loadingOverlay').classList.remove('d-flex');
+}
+
+function resetFilters() {
+    window.location.href = '{% url "notice_list" %}';
+}
+
+function resetFiltersAndClose() {
+    window.location.href = '{% url "notice_list" %}';
+}
+
+function removeFilter(filterName) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(filterName);
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+
+function removeDateFilters() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('date_from');
+    url.searchParams.delete('date_to');
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+
+function changePageSize(select) {
+    const perPage = select.value;
+    const url = new URL(window.location.href);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+
+function setDatePreset(preset) {
+    const today = new Date();
+    let fromDate = new Date();
+    
+    if (preset === 'week') {
+        fromDate.setDate(today.getDate() - 7);
+    } else if (preset === 'month') {
+        fromDate.setMonth(today.getMonth() - 1);
+    } else if (preset === 'expired') {
+        document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+        return;
+    }
+    
+    document.getElementById('dateFrom').value = fromDate.toISOString().split('T')[0];
+    document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+}
+
+function showConfirmAlert(title, text, confirmText, icon = 'warning') {
+    return Swal.fire({
+        title: title,
+        text: text,
+        icon: icon,
+        showCancelButton: true,
+        confirmButtonColor: icon === 'error' ? '#ef4444' : (icon === 'warning' ? '#f59e0b' : '#10b981'),
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+    });
+}
+
+// Initialize event listeners
+$(document).ready(function() {
+    function handleAction(button, action, noticeId, title, confirmTitle, confirmText, confirmButton, icon) {
+        let url;
+        if (action === 'activate' || action === 'deactivate') {
+            url = "{% url 'notice_toggle_active' 0 %}".replace('0', noticeId);
+        } else if (action === 'important' || action === 'unimportant') {
+            url = "{% url 'notice_toggle_important' 0 %}".replace('0', noticeId);
+        } else if (action === 'delete') {
+            url = "{% url 'notice_delete' 0 %}".replace('0', noticeId);
+        } else {
+            console.error('Unknown action:', action);
+            return;
+        }
+        
+        showConfirmAlert(confirmTitle, confirmText, confirmButton, icon).then((result) => {
+            if (result.isConfirmed) {
+                showLoading();
+                
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: response.message,
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        console.error('AJAX error:', xhr);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: xhr.responseJSON?.message || 'An error occurred.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    },
+                    complete: function() {
+                        hideLoading();
+                    }
+                });
+            }
+        });
+    }
+    
+    $('.action-buttons').each(function() {
+        const container = $(this);
+        const noticeId = container.data('notice-id');
+        const title = container.data('notice-title');
+        
+        container.find('.activate-btn').on('click', function(e) {
+            e.preventDefault();
+            handleAction(this, 'activate', noticeId, title, 
+                'Activate Notice', 
+                `Are you sure you want to activate this notice?`, 
+                'Activate', 
+                'success');
+        });
+        
+        container.find('.deactivate-btn').on('click', function(e) {
+            e.preventDefault();
+            handleAction(this, 'deactivate', noticeId, title, 
+                'Deactivate Notice', 
+                `Are you sure you want to deactivate this notice?`, 
+                'Deactivate', 
+                'warning');
+        });
+        
+        container.find('.important-btn').on('click', function(e) {
+            e.preventDefault();
+            handleAction(this, 'important', noticeId, title, 
+                'Mark Important', 
+                `Are you sure you want to mark this notice as important?`, 
+                'Mark Important', 
+                'success');
+        });
+        
+        container.find('.unimportant-btn').on('click', function(e) {
+            e.preventDefault();
+            handleAction(this, 'unimportant', noticeId, title, 
+                'Remove Important', 
+                `Are you sure you want to remove important status?`, 
+                'Remove', 
+                'warning');
+        });
+        
+        container.find('.delete-btn').on('click', function(e) {
+            e.preventDefault();
+            handleAction(this, 'delete', noticeId, title, 
+                'Delete Notice', 
+                `Are you sure you want to delete "${title}"? This cannot be undone.`, 
+                'Delete', 
+                'error');
+        });
+    });
+    
+    $('#filterForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = $(this).serializeArray();
+        const params = new URLSearchParams();
+        
+        formData.forEach(item => {
+            if (item.value) {
+                params.set(item.name, item.value);
+            }
+        });
+        
+        const perPage = new URLSearchParams(window.location.search).get('per_page');
+        if (perPage && !params.has('per_page')) {
+            params.set('per_page', perPage);
+        }
+        
+        params.set('page', '1');
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        window.location.href = '?' + params.toString();
+    });
+});
+</script>
+
+<style>
+.btn-outline-purple {
+    color: #8b5cf6;
+    border-color: #8b5cf6;
+}
+.btn-outline-purple:hover {
+    color: #fff;
+    background-color: #8b5cf6;
+    border-color: #8b5cf6;
+}
+.bg-purple {
+    background-color: #8b5cf6 !important;
+}
+.text-purple {
+    color: #8b5cf6 !important;
+}
+.opacity-25 {
+    opacity: 0.25;
+}
+
+.badge.d-inline-flex {
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.badge.d-inline-flex .btn-close {
+    font-size: 0.5rem;
+    padding: 0.25rem;
+    margin: -0.25rem -0.25rem -0.25rem 0.5rem;
+}
+
+.badge.d-inline-flex .btn-close:focus {
+    box-shadow: none;
+}
+
+.pagination .page-link {
+    padding: 0.5rem 0.75rem;
+}
+
+@media (max-width: 768px) {
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .pagination .page-item {
+        margin: 2px;
+    }
+}
+
+.modal-content {
+    border: none;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #f0f0f0;
+    background-color: #f8f9fa;
+}
+
+.modal-footer {
+    border-top: 1px solid #f0f0f0;
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

@@ -32,6 +32,9 @@ urlpatterns = [
     path('notices/<int:pk>/mark-important/', views.notice_mark_important, name='notice_mark_important'),
     path('notices/<int:pk>/unmark-important/', views.notice_unmark_important, name='notice_unmark_important'),
     path('notices/<int:pk>/delete/', views.notice_delete, name='notice_delete'),
+    path('notice/<int:pk>/toggle-active/', views.notice_toggle_active, name='notice_toggle_active'),
+    path('notice/<int:pk>/toggle-important/', views.notice_toggle_important, name='notice_toggle_important'),
+    
     
     # CATEGORY URLS
     path('category/create/ajax/', views.category_create_ajax, name='category_create_ajax'),
