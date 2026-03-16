@@ -671,7 +671,7 @@ def notice_edit(request, pk):
                 'categories': Notice.CATEGORIES,
                 'is_edit': True,
             }
-            return render(request, 'management/notice/edit.html', context)
+            return render(request, 'management/notice/edit_notice.html', context)
             
     except Notice.DoesNotExist:
         messages.error(request, 'Notice not found')
