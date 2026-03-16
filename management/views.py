@@ -28,6 +28,10 @@ from django.http import Http404
 from django.views.decorators.http import require_POST
 
 
+
+
+
+
 # views.py - UPDATED FUNCTIONS ONLY
 
 # ============================================
@@ -38,315 +42,295 @@ from django.views.decorators.http import require_POST
 # VACANCY VIEWS (Function-based) - AJAX ready
 # ============================================
 
+
+@login_required
+def vacancy_edit(request, pk):
+    """Edit an existing vacancy"""
+    try:
+        vacancy = get_object_or_404(Vacancy, id=pk)
+        
+        # Check if user is author OR has 'Publisher' in roles
+        is_author = vacancy.author == request.user
+        is_publisher = hasattr(request.user, 'roles') and 'Publisher' in request.user.roles
+        
+        if not (is_author or is_publisher):
+            # For AJAX requests
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'icon': 'error',
+                    'title': 'Permission Denied',
+                    'message': f'You do not have permission. Ony a publisher or {vacancy.author.first_name.title()} {vacancy.author.last_name.title()} can edit this vacancy'
+                }, status=403)
+            
+            # For regular GET requests (clicking edit link)
+            messages.error(request, f'You do not have permission. Ony a publisher or {vacancy.author.first_name.title()} {vacancy.author.last_name.title()} can edit this vacancy')
+            
+            # Redirect back to the referring page or list
+            referer = request.META.get('HTTP_REFERER')
+            if referer:
+                return redirect(referer)
+            return redirect('vacancy_list')
+        
+        if request.method == "POST":
+            try:
+                # Get data from POST request
+                title = request.POST.get('title')
+                organization = request.POST.get('organization')
+                organization_details = request.POST.get('organization_details')
+                description = request.POST.get('description')
+                how_to_apply = request.POST.get('how_to_apply')
+                location = request.POST.get('location')
+                job_type = request.POST.get('job_type')
+                application_deadline = request.POST.get('application_deadline')
+                application_link = request.POST.get('application_link', '')
+                is_active = request.POST.get('is_active') == 'true'
+                is_featured = request.POST.get('is_featured') == 'true'
+                expiration_date = request.POST.get('expiration_date')
+                
+                # Validation
+                errors = {}
+                
+                if not title:
+                    errors['title'] = ['Title is required']
+                elif len(title) > 200:
+                    errors['title'] = ['Title cannot exceed 200 characters']
+                    
+                if not organization:
+                    errors['organization'] = ['Organization is required']
+                elif len(organization) > 200:
+                    errors['organization'] = ['Organization cannot exceed 200 characters']
+                    
+                if not organization_details:
+                    errors['organization_details'] = ['Organization details are required']
+                elif len(organization_details) > 200:
+                    errors['organization_details'] = ['Organization details cannot exceed 200 characters']
+                    
+                if not description or description == '<p><br></p>' or description == '<br>':
+                    errors['description'] = ['Description cannot be blank']
+                    
+                if not how_to_apply or how_to_apply == '<p><br></p>' or how_to_apply == '<br>':
+                    errors['how_to_apply'] = ['How to apply cannot be blank']
+                    
+                if not location:
+                    errors['location'] = ['Location is required']
+                    
+                if not job_type:
+                    errors['job_type'] = ['Job type is required']
+                elif job_type not in ['FULL_TIME', 'PART_TIME', 'CONTRACT']:
+                    errors['job_type'] = ['Invalid job type']
+                    
+                if not application_deadline:
+                    errors['application_deadline'] = ['Application deadline is required']
+                
+                if errors:
+                    return JsonResponse({
+                        'icon': 'error',
+                        'title': 'Validation Error',
+                        'message': 'Please correct the errors in the form',
+                        'errors': errors
+                    }, status=400)
+                
+                # Update vacancy fields
+                vacancy.title = title
+                vacancy.organization = organization
+                vacancy.organization_details = organization_details
+                vacancy.description = description
+                vacancy.how_to_apply = how_to_apply
+                vacancy.location = location
+                vacancy.job_type = job_type
+                vacancy.application_deadline = application_deadline
+                vacancy.application_link = application_link
+                vacancy.is_active = is_active
+                vacancy.is_featured = is_featured
+                vacancy.expiration_date = expiration_date if expiration_date else None
+                vacancy.save()
+                
+                # Handle new attachments
+                content_type = ContentType.objects.get_for_model(Vacancy)
+                existing_count = vacancy.attachments.count()
+                
+                for key, file in request.FILES.items():
+                    if key.startswith('attachment_'):
+                        GenericAttachment.objects.create(
+                            content_type=content_type,
+                            object_id=vacancy.id,
+                            file=file,
+                            order=existing_count
+                        )
+                        existing_count += 1
+                
+                # Handle deleted attachments (if any)
+                deleted_attachments = request.POST.get('deleted_attachments', '')
+                if deleted_attachments:
+                    for att_id in deleted_attachments.split(','):
+                        if att_id.strip():
+                            try:
+                                att = GenericAttachment.objects.get(id=att_id.strip())
+                                if att.content_object == vacancy:
+                                    if att.file:
+                                        att.file.delete()
+                                    att.delete()
+                            except GenericAttachment.DoesNotExist:
+                                pass
+                
+                return JsonResponse({
+                    'icon': 'success',
+                    'title': 'Success!',
+                    'message': 'Vacancy updated successfully',
+                    'vacancy_id': vacancy.id,
+                    'redirect_url': reverse('vacancy_page', args=[vacancy.id])
+                }, status=200)
+                
+            except Exception as e:
+                print(f"Error updating vacancy: {str(e)}")
+                return JsonResponse({
+                    'icon': 'error',
+                    'title': 'Server Error',
+                    'message': 'An error occurred while updating the vacancy.'
+                }, status=500)
+        
+        # GET request - render edit form
+        else:
+            # Get existing attachments
+            attachments = vacancy.attachments.all()
+            
+            context = {
+                'vacancy': vacancy,
+                'attachments': attachments,
+                'job_types': Vacancy.JOB_TYPES,
+                'is_edit': True,
+            }
+            return render(request, 'management/vacancy/edit_vacancy.html', context)
+            
+    except Vacancy.DoesNotExist:
+        messages.error(request, 'Vacancy not found')
+        return redirect('vacancy_list')
+
+
 @login_required
 @permission_required('core.add_vacancy', raise_exception=True)
 def vacancy_create(request):
     """Create a new vacancy with AJAX support"""
-    
-    if request.method == 'POST':
-        # Check if AJAX request
-        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-        
+    if request.method == "POST":
         try:
-            # Extract data from POST
-            title = request.POST.get('title', '').strip()
-            organization = request.POST.get('organization', '').strip()
-            organization_details = request.POST.get('organization_details', '').strip()
-            location = request.POST.get('location', '').strip()
-            job_type = request.POST.get('job_type', 'FULL_TIME')
-            description = request.POST.get('description', '')
-            how_to_apply = request.POST.get('how_to_apply', '')
-            application_deadline = request.POST.get('application_deadline', '')
-            application_link = request.POST.get('application_link', '').strip()
-            expiration_date = request.POST.get('expiration_date', '')
-            is_active = request.POST.get('is_active') == 'on'
-            is_featured = request.POST.get('is_featured') == 'on'
+            # Get data from POST request
+            title = request.POST.get('title')
+            organization = request.POST.get('organization')
+            organization_details = request.POST.get('organization_details')
+            description = request.POST.get('description')
+            how_to_apply = request.POST.get('how_to_apply')
+            location = request.POST.get('location')
+            job_type = request.POST.get('job_type')
+            application_deadline = request.POST.get('application_deadline')
+            application_link = request.POST.get('application_link', '')
+            is_active = request.POST.get('is_active') == 'true'
+            is_featured = request.POST.get('is_featured') == 'true'
+            expiration_date = request.POST.get('expiration_date')
             
-            # Validate required fields
-            errors = []
+            # Validation
+            errors = {}
+            
             if not title:
-                errors.append('Job title is required.')
+                errors['title'] = ['Title is required']
             elif len(title) > 200:
-                errors.append('Job title must not exceed 200 characters.')
+                errors['title'] = ['Title cannot exceed 200 characters']
                 
             if not organization:
-                errors.append('Organization name is required.')
+                errors['organization'] = ['Organization is required']
             elif len(organization) > 200:
-                errors.append('Organization name must not exceed 200 characters.')
+                errors['organization'] = ['Organization cannot exceed 200 characters']
                 
-            if organization_details and len(organization_details) > 200:
-                errors.append('Organization details must not exceed 200 characters.')
+            if not organization_details:
+                errors['organization_details'] = ['Organization details are required']
+            elif len(organization_details) > 200:
+                errors['organization_details'] = ['Organization details cannot exceed 200 characters']
+                
+            if not description or description == '<p><br></p>' or description == '<br>':
+                errors['description'] = ['Description cannot be blank']
+                
+            if not how_to_apply or how_to_apply == '<p><br></p>' or how_to_apply == '<br>':
+                errors['how_to_apply'] = ['How to apply cannot be blank']
                 
             if not location:
-                errors.append('Location is required.')
+                errors['location'] = ['Location is required']
                 
-            if not description:
-                errors.append('Job description is required.')
-            elif len(description) < 50:
-                errors.append('Job description must be at least 50 characters.')
+            if not job_type:
+                errors['job_type'] = ['Job type is required']
+            elif job_type not in ['FULL_TIME', 'PART_TIME', 'CONTRACT']:
+                errors['job_type'] = ['Invalid job type']
                 
             if not application_deadline:
-                errors.append('Application deadline is required.')
-            else:
-                # Validate deadline is not in the past
-                try:
-                    deadline_date = datetime.strptime(application_deadline, '%Y-%m-%d').date()
-                    if deadline_date < timezone.now().date():
-                        errors.append('Application deadline cannot be in the past.')
-                except ValueError:
-                    errors.append('Invalid application deadline format.')
+                errors['application_deadline'] = ['Application deadline is required']
             
-            # Validate expiration date if provided
-            if expiration_date:
-                try:
-                    exp_date = datetime.strptime(expiration_date, '%Y-%m-%d').date()
-                    if exp_date < timezone.now().date():
-                        errors.append('Expiration date cannot be in the past.')
-                    if application_deadline and exp_date < deadline_date:
-                        errors.append('Expiration date cannot be before application deadline.')
-                except ValueError:
-                    errors.append('Invalid expiration date format.')
-            
-            # Validate application link if provided
-            if application_link and not (application_link.startswith('http://') or application_link.startswith('https://')):
-                errors.append('Application link must be a valid URL starting with http:// or https://')
-            
+            # Return validation errors if any
             if errors:
-                if is_ajax:
-                    return JsonResponse({
-                        'success': False,
-                        'message': 'Validation Error',
-                        'errors': errors
-                    }, status=400)
-                else:
-                    for error in errors:
-                        messages.error(request, error)
-                    # Return form with data
-                    context = {
-                        'form_data': request.POST,
-                        'title': 'Create New Vacancy',
-                        'submit_text': 'Create Vacancy',
-                    }
-                    return render(request, 'management/vacancy_form.html', context)
+                return JsonResponse({
+                    'icon': 'error',
+                    'title': 'Validation Error',
+                    'message': 'Please correct the errors in the form',
+                    'errors': errors
+                }, status=400)
             
-            # Create vacancy
-            with transaction.atomic():
-                vacancy = Vacancy(
-                    title=title,
-                    organization=organization,
-                    organization_details=organization_details,
-                    location=location,
-                    job_type=job_type,
-                    description=description,
-                    how_to_apply=how_to_apply,
-                    application_deadline=application_deadline,
-                    application_link=application_link if application_link else '',
-                    expiration_date=expiration_date if expiration_date else None,
-                    is_active=is_active,
-                    is_featured=is_featured,
-                    author=request.user
+            # Create the vacancy
+            vacancy = Vacancy.objects.create(
+                title=title,
+                organization=organization,
+                organization_details=organization_details,
+                description=description,
+                how_to_apply=how_to_apply,
+                location=location,
+                job_type=job_type,
+                application_deadline=application_deadline,
+                application_link=application_link,
+                is_active=is_active,
+                is_featured=is_featured,
+                expiration_date=expiration_date if expiration_date else None,
+                author=request.user
+            )
+            
+            # Handle file attachments
+            attachments = []
+            for key, file in request.FILES.items():
+                if key.startswith('attachment_'):
+                    attachments.append(file)
+            
+            # Save attachments
+            content_type = ContentType.objects.get_for_model(Vacancy)
+            for index, file in enumerate(attachments):
+                attachment = GenericAttachment.objects.create(
+                    content_type=content_type,
+                    object_id=vacancy.id,
+                    file=file,
+                    order=index
                 )
-                vacancy.save()
-                
-                # Handle file attachments
-                files = request.FILES.getlist('attachments')
-                if files:
-                    attachments = attach_multiple_files_to_object(vacancy, files)
-                
-                # Handle deleted attachments (none for create)
-                
-            if is_ajax:
-                return JsonResponse({
-                    'success': True,
-                    'title': 'Success!',
-                    'message': f'Vacancy "{vacancy.title}" created successfully!',
-                    'icon': 'success',
-                    'redirect_url': reverse('vacancy_detail', kwargs={'pk': vacancy.pk})
-                })
-            else:
-                messages.success(request, f'Vacancy "{vacancy.title}" created successfully!')
-                return redirect('vacancy_detail', pk=vacancy.pk)
-                
+            
+            # Return success response
+            return JsonResponse({
+                'icon': 'success',
+                'title': 'Success!',
+                'message': f'Vacancy created successfully with {len(attachments)} attachment(s)',
+                'vacancy_id': vacancy.id,
+                'redirect_url': reverse('vacancy_list')
+            }, status=201)
+            
         except Exception as e:
-            if is_ajax:
-                return JsonResponse({
-                    'success': False,
-                    'error': str(e)
-                }, status=500)
-            else:
-                messages.error(request, f'Error creating vacancy: {str(e)}')
-                context = {
-                    'form_data': request.POST,
-                    'title': 'Create New Vacancy',
-                    'submit_text': 'Create Vacancy',
-                }
-                return render(request, 'management/vacancy_form.html', context)
+            # Log the error for debugging
+            print(f"Error creating vacancy: {str(e)}")
+            return JsonResponse({
+                'icon': 'error',
+                'title': 'Server Error',
+                'message': 'An error occurred while creating the vacancy. Please try again.'
+            }, status=500)
     
-    # GET request
-    context = {
-        'title': 'Create New Vacancy',
-        'submit_text': 'Create Vacancy',
-        'is_create': True,
-    }
-    return render(request, 'management/vacancy_form.html', context)
+    # GET request - render the form
+    else:
+        context = {
+            'job_types': Vacancy.JOB_TYPES,
+        }
+        return render(request, 'management/vacancy/create_vacancy.html', context)
 
 
-@login_required
-@permission_required('core.change_vacancy', raise_exception=True)
-def vacancy_edit(request, pk):
-    """Edit an existing vacancy with AJAX support"""
-    vacancy = get_object_or_404(Vacancy, pk=pk)
-    
-    if request.method == 'POST':
-        # Check if AJAX request
-        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-        
-        try:
-            # Extract data from POST
-            title = request.POST.get('title', '').strip()
-            organization = request.POST.get('organization', '').strip()
-            organization_details = request.POST.get('organization_details', '').strip()
-            location = request.POST.get('location', '').strip()
-            job_type = request.POST.get('job_type', 'FULL_TIME')
-            description = request.POST.get('description', '')
-            how_to_apply = request.POST.get('how_to_apply', '')
-            application_deadline = request.POST.get('application_deadline', '')
-            application_link = request.POST.get('application_link', '').strip()
-            expiration_date = request.POST.get('expiration_date', '')
-            is_active = request.POST.get('is_active') == 'on'
-            is_featured = request.POST.get('is_featured') == 'on'
-            
-            # Validate required fields
-            errors = []
-            if not title:
-                errors.append('Job title is required.')
-            elif len(title) > 200:
-                errors.append('Job title must not exceed 200 characters.')
-                
-            if not organization:
-                errors.append('Organization name is required.')
-            elif len(organization) > 200:
-                errors.append('Organization name must not exceed 200 characters.')
-                
-            if organization_details and len(organization_details) > 200:
-                errors.append('Organization details must not exceed 200 characters.')
-                
-            if not location:
-                errors.append('Location is required.')
-                
-            if not description:
-                errors.append('Job description is required.')
-            elif len(description) < 50:
-                errors.append('Job description must be at least 50 characters.')
-                
-            if not application_deadline:
-                errors.append('Application deadline is required.')
-            else:
-                # Validate deadline is not in the past (allow existing past dates for editing)
-                try:
-                    deadline_date = datetime.strptime(application_deadline, '%Y-%m-%d').date()
-                except ValueError:
-                    errors.append('Invalid application deadline format.')
-            
-            # Validate expiration date if provided
-            if expiration_date:
-                try:
-                    exp_date = datetime.strptime(expiration_date, '%Y-%m-%d').date()
-                    if application_deadline and exp_date < deadline_date:
-                        errors.append('Expiration date cannot be before application deadline.')
-                except ValueError:
-                    errors.append('Invalid expiration date format.')
-            
-            # Validate application link if provided
-            if application_link and not (application_link.startswith('http://') or application_link.startswith('https://')):
-                errors.append('Application link must be a valid URL starting with http:// or https://')
-            
-            if errors:
-                if is_ajax:
-                    return JsonResponse({
-                        'success': False,
-                        'message': 'Validation Error',
-                        'errors': errors
-                    }, status=400)
-                else:
-                    for error in errors:
-                        messages.error(request, error)
-                    context = {
-                        'vacancy': vacancy,
-                        'form_data': request.POST,
-                        'title': f'Edit Vacancy: {vacancy.title}',
-                        'submit_text': 'Update Vacancy',
-                        'is_create': False,
-                    }
-                    return render(request, 'management/vacancy_form.html', context)
-            
-            # Update vacancy
-            with transaction.atomic():
-                vacancy.title = title
-                vacancy.organization = organization
-                vacancy.organization_details = organization_details
-                vacancy.location = location
-                vacancy.job_type = job_type
-                vacancy.description = description
-                vacancy.how_to_apply = how_to_apply
-                vacancy.application_deadline = application_deadline
-                vacancy.application_link = application_link if application_link else ''
-                vacancy.expiration_date = expiration_date if expiration_date else None
-                vacancy.is_active = is_active
-                vacancy.is_featured = is_featured
-                vacancy.save()
-                
-                # Handle new file attachments
-                files = request.FILES.getlist('attachments')
-                if files:
-                    attachments = attach_multiple_files_to_object(vacancy, files)
-                
-                # Handle deleted attachments
-                delete_attachments = request.POST.getlist('delete_attachments')
-                if delete_attachments:
-                    GenericAttachment.objects.filter(
-                        id__in=delete_attachments,
-                        object_id=vacancy.id,
-                        content_type=ContentType.objects.get_for_model(Vacancy)
-                    ).delete()
-                
-            if is_ajax:
-                return JsonResponse({
-                    'success': True,
-                    'title': 'Success!',
-                    'message': f'Vacancy "{vacancy.title}" updated successfully!',
-                    'icon': 'success',
-                    'redirect_url': reverse('vacancy_detail', kwargs={'pk': vacancy.pk})
-                })
-            else:
-                messages.success(request, f'Vacancy "{vacancy.title}" updated successfully!')
-                return redirect('vacancy_detail', pk=vacancy.pk)
-                
-        except Exception as e:
-            if is_ajax:
-                return JsonResponse({
-                    'success': False,
-                    'error': str(e)
-                }, status=500)
-            else:
-                messages.error(request, f'Error updating vacancy: {str(e)}')
-                context = {
-                    'vacancy': vacancy,
-                    'form_data': request.POST,
-                    'title': f'Edit Vacancy: {vacancy.title}',
-                    'submit_text': 'Update Vacancy',
-                    'is_create': False,
-                }
-                return render(request, 'management/vacancy_form.html', context)
-    
-    # GET request
-    context = {
-        'vacancy': vacancy,
-        'title': f'Edit Vacancy: {vacancy.title}',
-        'submit_text': 'Update Vacancy',
-        'is_create': False,
-    }
-    return render(request, 'management/vacancy_form.html', context)
+
 
 # ============================================
 # NOTICE VIEWS (Function-based)
@@ -1167,167 +1151,73 @@ def story_list(request):
 # VACANCY VIEWS (Function-based)
 # ============================================
 
-@login_required
-@permission_required('core.view_vacancy', raise_exception=True)
-def vacancy_detail(request, pk):
-    """View vacancy details"""
-    vacancy = get_object_or_404(
-        Vacancy.objects.select_related('author'), 
-        pk=pk
-    )
-    
-    # Check if AJAX request for data
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({
-            'success': True,
-            'vacancy': {
-                'id': vacancy.id,
-                'title': vacancy.title,
-                'organization': vacancy.organization,
-                'location': vacancy.location,
-                'job_type': vacancy.get_job_type_display(),
-                'description': vacancy.description,
-                'how_to_apply': vacancy.how_to_apply,
-                'application_deadline': vacancy.application_deadline.strftime('%Y-%m-%d'),
-                'application_link': vacancy.application_link,
-                'expiration_date': vacancy.expiration_date.strftime('%Y-%m-%d') if vacancy.expiration_date else None,
-                'is_active': vacancy.is_active,
-                'is_featured': vacancy.is_featured,
-                'created_at': vacancy.created_at.strftime('%Y-%m-%d %H:%M'),
-                'updated_at': vacancy.updated_at.strftime('%Y-%m-%d %H:%M'),
-                'author': vacancy.author.get_full_name() or vacancy.author.username,
-            }
-        })
-    
-    context = {
-        'vacancy': vacancy,
-        'attachments': vacancy.attachments,
-        'can_edit': request.user.has_perm('core.change_vacancy'),
-    }
-    return render(request, 'management/vacancy_detail.html', context)
-
-
-
-
-
-
-
-
-
-@login_required
-@permission_required('core.change_vacancy', raise_exception=True)
-def vacancy_activate(request, pk):
-    """Activate a vacancy"""
-    vacancy = get_object_or_404(Vacancy, pk=pk)
-    vacancy.is_active = True
-    vacancy.save()
-    messages.success(request, f'Vacancy "{vacancy.title}" activated!')
-    return redirect('vacancy_detail', pk=vacancy.pk)
-
-
-@login_required
-@permission_required('core.change_vacancy', raise_exception=True)
-def vacancy_deactivate(request, pk):
-    """Deactivate a vacancy"""
-    vacancy = get_object_or_404(Vacancy, pk=pk)
-    vacancy.is_active = False
-    vacancy.save()
-    messages.success(request, f'Vacancy "{vacancy.title}" deactivated!')
-    return redirect('vacancy_detail', pk=vacancy.pk)
-
-
-@login_required
-@permission_required('core.change_vacancy', raise_exception=True)
-def vacancy_feature(request, pk):
-    """Feature a vacancy"""
-    vacancy = get_object_or_404(Vacancy, pk=pk)
-    vacancy.is_featured = True
-    vacancy.save()
-    messages.success(request, f'Vacancy "{vacancy.title}" featured!')
-    return redirect('vacancy_detail', pk=vacancy.pk)
-
-
-@login_required
-@permission_required('core.change_vacancy', raise_exception=True)
-def vacancy_unfeature(request, pk):
-    """Remove feature from a vacancy"""
-    vacancy = get_object_or_404(Vacancy, pk=pk)
-    vacancy.is_featured = False
-    vacancy.save()
-    messages.success(request, f'Vacancy "{vacancy.title}" unfeatured!')
-    return redirect('vacancy_detail', pk=vacancy.pk)
-
-
-@login_required
-@permission_required('core.delete_vacancy', raise_exception=True)
-def vacancy_delete(request, pk):
-    """Function-based vacancy delete view"""
-    vacancy = get_object_or_404(Vacancy, pk=pk)
-    
-    if request.method == 'POST':
-        vacancy_title = vacancy.title
-        vacancy.delete()
-        messages.success(request, f'Vacancy "{vacancy_title}" deleted successfully!')
-        return redirect('vacancy_list')
-    
-    # GET request - show confirmation
-    context = {
-        'object': vacancy,
-        'object_type': 'vacancy',
-        'object_name': vacancy.title,
-        'back_url': reverse_lazy('vacancy_detail', kwargs={'pk': vacancy.pk}),
-    }
-    return render(request, 'management/confirm_delete.html', context)
 
 
 @login_required
 def vacancy_list(request):
-    """Function-based vacancy list view"""
-    queryset = Vacancy.objects.all()
+    """List all vacancies with filters"""
+    queryset = Vacancy.objects.select_related('author').order_by('-created_at')
     
-    # Get all filter parameters
-    status = request.GET.get('status', '')
-    organization = request.GET.get('organization', '')
-    job_type = request.GET.get('job_type', '')
-    deadline_from = request.GET.get('deadline_from', '')
-    deadline_to = request.GET.get('deadline_to', '')
-    featured = request.GET.get('featured', '')
-    per_page = request.GET.get('per_page', 20)
+    # Get filter parameters
+    filters = {
+        'status': request.GET.get('status', ''),
+        'author': request.GET.get('author', ''),
+        'job_type': request.GET.get('job_type', ''),
+        'date_from': request.GET.get('date_from', ''),
+        'date_to': request.GET.get('date_to', ''),
+        'mine': request.GET.get('mine', ''),
+        'search': request.GET.get('search', ''),
+        'active': request.GET.get('active', ''),
+        'featured': request.GET.get('featured', ''),
+    }
     
     # Apply filters
-    if status:
-        if status == 'active':
-            queryset = queryset.filter(is_active=True)
-        elif status == 'inactive':
-            queryset = queryset.filter(is_active=False)
-        elif status == 'expired':
-            queryset = queryset.filter(expiration_date__lt=timezone.now().date())
+    if filters['status'] == 'active':
+        queryset = queryset.filter(is_active=True)
+    elif filters['status'] == 'inactive':
+        queryset = queryset.filter(is_active=False)
     
-    if organization:
-        queryset = queryset.filter(organization__icontains=organization)
+    if filters['active'] == 'true':
+        queryset = queryset.filter(is_active=True)
     
-    if job_type:
-        queryset = queryset.filter(job_type=job_type)
-    
-    if deadline_from:
-        queryset = queryset.filter(application_deadline__gte=deadline_from)
-    
-    if deadline_to:
-        queryset = queryset.filter(application_deadline__lte=deadline_to)
-    
-    if featured == 'true':
+    if filters['featured'] == 'true':
         queryset = queryset.filter(is_featured=True)
     
-    # Order results
-    queryset = queryset.order_by('-created_at')
+    if filters['author']:
+        queryset = queryset.filter(author__username__icontains=filters['author'])
     
-    # Calculate expired count
-    expired_count = Vacancy.objects.filter(
-        Q(expiration_date__lt=timezone.now().date()) | 
-        Q(application_deadline__lt=timezone.now().date())
-    ).count()
+    if filters['job_type']:
+        queryset = queryset.filter(job_type=filters['job_type'])
+    
+    # Search in title and organization
+    if filters['search']:
+        queryset = queryset.filter(
+            Q(title__icontains=filters['search']) |
+            Q(organization__icontains=filters['search']) |
+            Q(location__icontains=filters['search'])
+        )
+    
+    # Date range filters
+    if filters['date_from']:
+        try:
+            date_from = datetime.strptime(filters['date_from'], '%Y-%m-%d').date()
+            queryset = queryset.filter(created_at__date__gte=date_from)
+        except (ValueError, TypeError):
+            pass
+    
+    if filters['date_to']:
+        try:
+            date_to = datetime.strptime(filters['date_to'], '%Y-%m-%d').date()
+            queryset = queryset.filter(created_at__date__lte=date_to)
+        except (ValueError, TypeError):
+            pass
+    
+    # My vacancies filter
+    if filters['mine'] == 'true':
+        queryset = queryset.filter(author=request.user)
     
     # Pagination
+    per_page = request.GET.get('per_page', 20)
     try:
         per_page = int(per_page)
         if per_page not in [10, 20, 50, 100]:
@@ -1336,34 +1226,224 @@ def vacancy_list(request):
         per_page = 20
     
     paginator = Paginator(queryset, per_page)
-    page = request.GET.get('page')
+    page_number = request.GET.get('page', 1)
     
     try:
-        page_obj = paginator.page(page)
+        page_obj = paginator.page(page_number)
     except PageNotAnInteger:
         page_obj = paginator.page(1)
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
     
+    # Get counts
+    total_count = Vacancy.objects.count()
+    active_count = Vacancy.objects.filter(is_active=True).count()
+    inactive_count = Vacancy.objects.filter(is_active=False).count()
+    
+    # Get unique job types for filter
+    job_types = Vacancy.JOB_TYPES
+    
     context = {
-        'vacancies': page_obj.object_list,
         'page_obj': page_obj,
-        'total_count': Vacancy.objects.count(),
-        'active_count': Vacancy.objects.filter(is_active=True).count(),
-        'expired_count': expired_count,
-        'featured_count': Vacancy.objects.filter(is_featured=True).count(),
-        'now': timezone.now(),  # Add current time
-        # Filter parameters for template
-        'current_status': status,
-        'current_organization': organization,
-        'current_job_type': job_type,
-        'current_deadline_from': deadline_from,
-        'current_deadline_to': deadline_to,
-        'current_featured': featured,
+        'vacancies': page_obj.object_list,
+        'total_count': total_count,
+        'active_count': active_count,
+        'inactive_count': inactive_count,
+        'job_types': job_types,
+        'current_filters': filters,
         'current_per_page': per_page,
+        'active_filter_count': sum(1 for v in filters.values() if v),
     }
     
-    return render(request, 'management/vacancy_list.html', context)
+    return render(request, 'management/vacancy/vacancy_list.html', context)
+
+
+
+
+@login_required
+@require_POST
+def vacancy_toggle_active(request, pk):
+    """Toggle vacancy active status"""
+    try:
+        vacancy = get_object_or_404(Vacancy, id=pk)
+        
+        # Check if user is author OR has 'Publisher' in roles
+        is_author = vacancy.author == request.user
+        is_publisher = hasattr(request.user, 'roles') and 'Publisher' in request.user.roles
+        
+        if not (is_author or is_publisher):
+            return JsonResponse({
+                'icon': 'error',
+                'title': 'Permission Denied',
+                'message': 'You do not have permission to modify this vacancy'
+            }, status=403)
+        
+        vacancy.is_active = not vacancy.is_active
+        vacancy.save()
+        
+        return JsonResponse({
+            'icon': 'success',
+            'title': 'Success!',
+            'message': f'Vacancy marked as {"active" if vacancy.is_active else "inactive"}',
+            'is_active': vacancy.is_active
+        })
+        
+    except Vacancy.DoesNotExist:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Error',
+            'message': 'Vacancy not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Server Error',
+            'message': 'An error occurred. Please try again.'
+        }, status=500)
+
+
+@login_required
+@require_POST
+def vacancy_toggle_featured(request, pk):
+    """Toggle vacancy featured status"""
+    try:
+        vacancy = get_object_or_404(Vacancy, id=pk)
+        
+        # Check if user is author OR has 'Publisher' in roles
+        is_author = vacancy.author == request.user
+        is_publisher = hasattr(request.user, 'roles') and 'Publisher' in request.user.roles
+        
+        if not (is_author or is_publisher):
+            return JsonResponse({
+                'icon': 'error',
+                'title': 'Permission Denied',
+                'message': 'You do not have permission to modify this vacancy'
+            }, status=403)
+        
+        vacancy.is_featured = not vacancy.is_featured
+        vacancy.save()
+        
+        return JsonResponse({
+            'icon': 'success',
+            'title': 'Success!',
+            'message': f'Vacancy {"featured" if vacancy.is_featured else "unfeatured"} successfully',
+            'is_featured': vacancy.is_featured
+        })
+        
+    except Vacancy.DoesNotExist:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Error',
+            'message': 'Vacancy not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Server Error',
+            'message': str(e)
+        }, status=500)
+
+
+@login_required
+@require_POST
+def vacancy_delete(request, pk):
+    """Delete a vacancy"""
+    try:
+        vacancy = get_object_or_404(Vacancy, id=pk)
+        
+        # Check if user is author OR has 'Publisher' in roles
+        is_author = vacancy.author == request.user
+        is_publisher = hasattr(request.user, 'roles') and 'Publisher' in request.user.roles
+        
+        if not (is_author or is_publisher):
+            return JsonResponse({
+                'icon': 'error',
+                'title': 'Permission Denied',
+                'message': 'You do not have permission to delete this vacancy'
+            }, status=403)
+        
+        # Delete attachments
+        for attachment in vacancy.attachments:
+            if attachment.file:
+                attachment.file.delete()
+            attachment.delete()
+        
+        vacancy.delete()
+        
+        # Get updated counts
+        total_count = Vacancy.objects.count()
+        active_count = Vacancy.objects.filter(is_active=True).count()
+        inactive_count = Vacancy.objects.filter(is_active=False).count()
+        featured_count = Vacancy.objects.filter(is_featured=True).count()
+        
+        return JsonResponse({
+            'icon': 'success',
+            'title': 'Success!',
+            'message': 'Vacancy deleted successfully',
+            'new_counts': {
+                'total': total_count,
+                'active': active_count,
+                'inactive': inactive_count,
+                'featured': featured_count,
+            }
+        })
+        
+    except Vacancy.DoesNotExist:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Error',
+            'message': 'Vacancy not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Server Error',
+            'message': 'An error occurred. Please try again.'
+        }, status=500)
+
+
+@login_required
+@require_POST
+def attachment_delete(request, pk):
+    """Delete a specific attachment"""
+    try:
+        attachment = get_object_or_404(GenericAttachment, id=pk)
+        vacancy = attachment.content_object
+        
+        # Check permission: author or publisher
+        is_author = vacancy.author == request.user
+        is_publisher = hasattr(request.user, 'roles') and 'Publisher' in request.user.roles
+        
+        if not (is_author or is_publisher):
+            return JsonResponse({
+                'icon': 'error',
+                'title': 'Permission Denied',
+                'message': 'You do not have permission to delete this attachment'
+            }, status=403)
+        
+        # Delete file and database record
+        if attachment.file:
+            attachment.file.delete()
+        attachment.delete()
+        
+        return JsonResponse({
+            'icon': 'success',
+            'title': 'Success!',
+            'message': 'Attachment deleted successfully'
+        })
+        
+    except GenericAttachment.DoesNotExist:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Error',
+            'message': 'Attachment not found'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'icon': 'error',
+            'title': 'Server Error',
+            'message': 'An error occurred. Please try again.'
+        }, status=500)
 
 
 # ============================================
@@ -1710,7 +1790,7 @@ def bulk_attachment_upload(request):
                 if object_type == 'story':
                     return redirect('story_detail', pk=object_id)
                 elif object_type == 'vacancy':
-                    return redirect('vacancy_detail', pk=object_id)
+                    return redirect('vacancy_page', pk=object_id)
                 elif object_type == 'notice':
                     return redirect('notice_detail', pk=object_id)
                 
@@ -1757,7 +1837,7 @@ def delete_attachment(request, attachment_id):
     if obj_type == 'story':
         return redirect('story_detail', pk=obj.pk)
     elif obj_type == 'vacancy':
-        return redirect('vacancy_detail', pk=obj.pk)
+        return redirect('vacancy_page', pk=obj.pk)
     elif obj_type == 'notice':
         return redirect('notice_detail', pk=obj.pk)
     

@@ -39,27 +39,367 @@
                         </div>
                         
                         <div class="sidebar-section">
-                            <h3>How to Apply</h3>
-                            <p>{{ vacancy.how_to_apply|safe }}</p>
-                            <a href="{{ vacancy.application_link }}" class="btn mt-2 w-100" id="applyBtn">Apply Via Link</a>
-                        </div>
-                        {% if similar_jobs %}
-                            <div class="sidebar-section">
-                                <h3>Similar Jobs</h3>
-                                <div id="similarJobs">
-                                    {% for job in similar_jobs %}
-                                        <div class="mb-2">
-                                            <a href="vacancy/{{ job.id }}" class="story-card-title" style="font-size: 1rem;">{{ job.title }}</a>
-                                            <div style="font-size: 0.8rem; color: var(--text-light);">{{ job.organization }} • {{ job.location }}</div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
+                        <h3>How to Apply</h3>
+                        <p>{{ vacancy.how_to_apply|safe }}</p>
+                        <a href="{{ vacancy.application_link }}" class="btn mt-2 w-100" id="applyBtn">Apply Via Link</a>
+                    </div>
+
+                    <!-- Attachments Section -->
+                    {% if attachments %}
+                    <div class="sidebar-section">
+                        <h3>Attachments</h3>
+                        <div class="attachments-list">
+                            {% for attachment in attachments %}
+                            <div class="attachment-item mb-2">
+                                <a href="{{ attachment.file.url }}" 
+                                   download="{{ attachment.file_name }}"
+                                   class="d-flex align-items-center text-decoration-none p-2 border rounded"
+                                   title="Download {{ attachment.file_name }}">
+                                    <i class="fas 
+                                        {% if attachment.is_image %}fa-file-image text-info
+                                        {% elif attachment.is_pdf %}fa-file-pdf text-danger
+                                        {% else %}fa-file text-secondary{% endif %} me-2 fa-lg"></i>
+                                    <div class="flex-grow-1">
+                                        <div class="small fw-semibold">{{ attachment.file_name|truncatechars:30 }}</div>
+                                        <small class="text-muted">{{ attachment.get_file_size_display }}</small>
+                                    </div>
+                                    <i class="fas fa-download text-secondary ms-2"></i>
+                                </a>
                             </div>
-                        {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Similar Jobs Section -->
+                    {% if similar_jobs %}
+                    <div class="sidebar-section">
+                        <h3>Similar Jobs</h3>
+                        <div id="similarJobs">
+                            {% for job in similar_jobs %}
+                                <div class="mb-2">
+                                    <a href="vacancy/{{ job.id }}" class="story-card-title" style="font-size: 1rem;">{{ job.title }}</a>
+                                    <div style="font-size: 0.8rem; color: var(--text-light);">{{ job.organization }} • {{ job.location }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                     </div>
                 </div>
+                
+                <!-- Admin Controls at the Bottom - Only for logged in Publisher or Author -->
+{% if can_manage %}
+<hr class="my-4">
+
+<div class="admin-controls">
+    <div class="admin-header">
+        <h5>Vacancy Management</h5>
+        <span class="admin-status">
+            {% if vacancy.is_active %}
+                <span class="status active">Active</span>
+            {% else %}
+                <span class="status inactive">Inactive</span>
+            {% endif %}
+        </span>
+    </div>
+
+    <div class="admin-actions">
+
+        <a href="{% url 'vacancy_edit' vacancy.id %}" class="admin-btn edit">
+            <i class="fas fa-pen"></i>
+            Edit
+        </a>
+
+        {% if vacancy.is_active %}
+        <button class="admin-btn toggle deactivate-btn" data-vacancy-id="{{ vacancy.id }}">
+            <i class="fas fa-eye-slash"></i>
+            Deactivate
+        </button>
+        {% else %}
+        <button class="admin-btn toggle activate-btn" data-vacancy-id="{{ vacancy.id }}">
+            <i class="fas fa-eye"></i>
+            Activate
+        </button>
+        {% endif %}
+
+        {% if vacancy.is_featured %}
+        <button class="admin-btn feature unfeature-btn" data-vacancy-id="{{ vacancy.id }}">
+            <i class="fas fa-star"></i>
+            Unfeature
+        </button>
+        {% else %}
+        <button class="admin-btn feature feature-btn" data-vacancy-id="{{ vacancy.id }}">
+            <i class="fas fa-star"></i>
+            Feature
+        </button>
+        {% endif %}
+
+        <a href="{% url 'vacancy_list' %}" class="admin-btn list">
+            <i class="fas fa-list"></i>
+            List
+        </a>
+
+        <button class="admin-btn delete delete-btn"
+            data-vacancy-id="{{ vacancy.id }}"
+            data-vacancy-title="{{ vacancy.title }}">
+            <i class="fas fa-trash"></i>
+            Delete
+        </button>
+
+    </div>
+</div>
+{% endif %}
             </div>
         </section>
     </main>
     {% include 'partials/footer.html' %}
+
+    <!-- jQuery and SweetAlert for admin actions -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+    $(document).ready(function() {
+        // Show confirmation alert
+        function showConfirmAlert(title, text, confirmText, icon = 'warning') {
+            return Swal.fire({
+                title: title,
+                text: text,
+                icon: icon,
+                showCancelButton: true,
+                confirmButtonColor: icon === 'error' ? '#ef4444' : (icon === 'warning' ? '#f59e0b' : '#10b981'),
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Cancel',
+                reverseButtons: true
+            });
+        }
+        
+        // Handle activate button
+        $('.activate-btn').on('click', function() {
+            var vacancyId = $(this).data('vacancy-id');
+            
+            showConfirmAlert(
+                'Activate Vacancy',
+                'Are you sure you want to activate this vacancy?',
+                'Activate',
+                'success'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{% url "vacancy_toggle_active" 0 %}'.replace('0', vacancyId),
+                        type: 'POST',
+                        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                        success: function() { location.reload(); },
+                        error: function() {
+                            Swal.fire('Error', 'Failed to activate vacancy', 'error');
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Handle deactivate button
+        $('.deactivate-btn').on('click', function() {
+            var vacancyId = $(this).data('vacancy-id');
+            
+            showConfirmAlert(
+                'Deactivate Vacancy',
+                'Are you sure you want to deactivate this vacancy?',
+                'Deactivate',
+                'warning'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{% url "vacancy_toggle_active" 0 %}'.replace('0', vacancyId),
+                        type: 'POST',
+                        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                        success: function() { location.reload(); },
+                        error: function() {
+                            Swal.fire('Error', 'Failed to deactivate vacancy', 'error');
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Handle feature button
+        $('.feature-btn').on('click', function() {
+            var vacancyId = $(this).data('vacancy-id');
+            
+            showConfirmAlert(
+                'Feature Vacancy',
+                'Are you sure you want to feature this vacancy?',
+                'Feature',
+                'success'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{% url "vacancy_toggle_featured" 0 %}'.replace('0', vacancyId),
+                        type: 'POST',
+                        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                        success: function() { location.reload(); },
+                        error: function() {
+                            Swal.fire('Error', 'Failed to feature vacancy', 'error');
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Handle unfeature button
+        $('.unfeature-btn').on('click', function() {
+            var vacancyId = $(this).data('vacancy-id');
+            
+            showConfirmAlert(
+                'Remove Feature',
+                'Are you sure you want to remove featured status?',
+                'Remove',
+                'warning'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{% url "vacancy_toggle_featured" 0 %}'.replace('0', vacancyId),
+                        type: 'POST',
+                        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                        success: function() { location.reload(); },
+                        error: function() {
+                            Swal.fire('Error', 'Failed to remove feature', 'error');
+                        }
+                    });
+                }
+            });
+        });
+        
+        // Handle delete button
+        $('.delete-btn').on('click', function() {
+            var vacancyId = $(this).data('vacancy-id');
+            var title = $(this).data('vacancy-title');
+            
+            showConfirmAlert(
+                'Delete Vacancy',
+                `Are you sure you want to delete "${title}"? This cannot be undone.`,
+                'Delete',
+                'error'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{% url "vacancy_delete" 0 %}'.replace('0', vacancyId),
+                        type: 'POST',
+                        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                        success: function() {
+                            window.location.href = '{% url "vacancy_list" %}';
+                        },
+                        error: function() {
+                            Swal.fire('Error', 'Failed to delete vacancy', 'error');
+                        }
+                    });
+                }
+            });
+        });
+    });
+    </script>
+    <style>
+        /* ADMIN MANAGEMENT PANEL */
+
+.admin-controls{
+    background:#fafafa;
+    border:1px solid #e5e7eb;
+    border-radius:10px;
+    padding:18px;
+}
+
+.admin-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+}
+
+.admin-header h5{
+    margin:0;
+    font-weight:600;
+}
+
+.status{
+    font-size:12px;
+    padding:4px 10px;
+    border-radius:20px;
+    font-weight:500;
+}
+
+.status.active{
+    background:#dcfce7;
+    color:#166534;
+}
+
+.status.inactive{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.admin-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.admin-btn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 14px;
+    border-radius:6px;
+    border:1px solid #e5e7eb;
+    background:white;
+    font-size:14px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+}
+
+.admin-btn:hover{
+    background:#f3f4f6;
+}
+
+/* edit button */
+.admin-btn.edit{
+    border-color:#3b82f6;
+    color:#3b82f6;
+}
+
+/* activate/deactivate */
+.admin-btn.toggle{
+    border-color:#6b7280;
+    color:#374151;
+}
+
+/* feature */
+.admin-btn.feature{
+    border-color:#f59e0b;
+    color:#b45309;
+}
+
+/* list button */
+.admin-btn.list{
+    border-color:#8b5cf6;
+    color:#8b5cf6;
+}
+
+.admin-btn.list:hover{
+    background:#8b5cf6;
+    color:white;
+}
+
+/* delete */
+.admin-btn.delete{
+    border-color:#ef4444;
+    color:#ef4444;
+}
+
+.admin-btn.delete:hover{
+    background:#ef4444;
+    color:white;
+}
+    </style>
 {% endblock %}

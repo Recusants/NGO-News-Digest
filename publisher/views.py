@@ -421,6 +421,9 @@ def vacancies(request):
 def vacancy_page(request, pk):
     vacancy = Vacancy.objects.get(id=pk)
     
+    # Get attachments for this vacancy
+    attachments = vacancy.attachments.all()  # This is the key line
+    
     # Extract key words from current title
     current_words = set(vacancy.title.lower().split())
     
@@ -443,9 +446,26 @@ def vacancy_page(request, pk):
         if len(similar_jobs) >= 3:
             break
     
+    # Permission checks
+    user = request.user
+    is_authenticated = user.is_authenticated
+    is_author = False
+    is_publisher = False
+    
+    if is_authenticated:
+        is_author = vacancy.author == user
+        is_publisher = hasattr(user, 'roles') and 'Publisher' in user.roles
+    
+    can_manage = is_authenticated and (is_author or is_publisher)
+    
     context = {
         'vacancy': vacancy,
+        'attachments': attachments,  # Add attachments to context
         'similar_jobs': similar_jobs,
+        'is_authenticated': is_authenticated,
+        'is_author': is_author,
+        'is_publisher': is_publisher,
+        'can_manage': can_manage,
     }
     
     return render(request, 'publisher/vacancy_page.html', context)

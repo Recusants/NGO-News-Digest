@@ -1,0 +1,857 @@
+{% extends 'management/management_base.html' %}
+{% load static %}
+
+{% block title %}Vacancies{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="container-fluid px-4 py-4" style="max-width: 1400px;">
+    <!-- Messages Display as SweetAlert Popups -->
+    {% if messages %}
+        {% for message in messages %}
+        <script>
+            Swal.fire({
+                icon: '{% if "error" in message.tags %}error{% elif "success" in message.tags %}success{% else %}info{% endif %}',
+                title: '{% if "error" in message.tags %}Error{% elif "success" in message.tags %}Success{% else %}Notice{% endif %}',
+                text: '{{ message|escapejs }}',
+                timer: 3000,
+                showConfirmButton: true
+            });
+        </script>
+        {% endfor %}
+    {% endif %}
+    
+    <!-- Header with Filter Button -->
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-4 mb-4">
+        <div>
+            <h1 class="h2 fw-semibold text-dark mb-2">
+                <i class="fas fa-briefcase me-2"></i>Vacancies
+            </h1>
+            <p class="text-secondary mb-0">
+                Manage job vacancies and opportunities
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <!-- Filter Button with Badge -->
+            <button type="button" class="btn btn-outline-primary position-relative" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <i class="fas fa-filter me-2"></i> Filters
+                {% if active_filter_count > 0 %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ active_filter_count }}
+                    <span class="visually-hidden">active filters</span>
+                </span>
+                {% endif %}
+            </button>
+            <a href="{% url 'vacancy_create' %}" class="btn btn-primary px-4 py-2">
+                <i class="fas fa-plus me-2"></i> Create New Vacancy
+            </a>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-white border-0 h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-white-50 mb-2 text-uppercase small">Total Vacancies</h6>
+                            <h3 class="card-title text-white mb-0 display-6">{{ total_count }}</h3>
+                        </div>
+                        <i class="fas fa-briefcase fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-white border-0 h-100" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-white-50 mb-2 text-uppercase small">Active</h6>
+                            <h3 class="card-title text-white mb-0 display-6">{{ active_count }}</h3>
+                        </div>
+                        <i class="fas fa-check-circle fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-white border-0 h-100" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-white-50 mb-2 text-uppercase small">Inactive</h6>
+                            <h3 class="card-title text-white mb-0 display-6">{{ inactive_count }}</h3>
+                        </div>
+                        <i class="fas fa-pause-circle fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-white border-0 h-100" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-white-50 mb-2 text-uppercase small">Featured</h6>
+                            <h3 class="card-title text-white mb-0 display-6">{{ featured_count }}</h3>
+                        </div>
+                        <i class="fas fa-star fa-3x opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Active Filters Display (Compact) - Only shown when filters are active -->
+    {% if active_filter_count > 0 %}
+    <div class="d-flex flex-wrap gap-2 mb-3 p-3 bg-light rounded">
+        <span class="text-secondary me-2"><i class="fas fa-filter me-1"></i>Active filters:</span>
+        
+        {% if current_filters.status %}
+        <div class="badge bg-light text-primary d-inline-flex align-items-center px-3 py-2">
+            <span>Status: {{ current_filters.status|title }}</span>
+            <button type="button" onclick="removeFilter('status')" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        {% if current_filters.job_type %}
+        <div class="badge bg-light text-info d-inline-flex align-items-center px-3 py-2">
+            <span>Job Type: 
+                {% for value, label in job_types %}
+                    {% if value == current_filters.job_type %}{{ label }}{% endif %}
+                {% endfor %}
+            </span>
+            <button type="button" onclick="removeFilter('job_type')" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        {% if current_filters.featured == 'true' %}
+        <div class="badge bg-light text-success d-inline-flex align-items-center px-3 py-2">
+            <span>Featured Only</span>
+            <button type="button" onclick="removeFilter('featured')" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        {% if current_filters.search %}
+        <div class="badge bg-light text-secondary d-inline-flex align-items-center px-3 py-2">
+            <span>Search: "{{ current_filters.search }}"</span>
+            <button type="button" onclick="removeFilter('search')" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        {% if current_filters.mine == 'true' %}
+        <div class="badge bg-light text-purple d-inline-flex align-items-center px-3 py-2">
+            <span>My Vacancies Only</span>
+            <button type="button" onclick="removeFilter('mine')" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        {% if current_filters.deadline_from or current_filters.deadline_to %}
+        <div class="badge bg-light text-warning d-inline-flex align-items-center px-3 py-2">
+            <span>Deadline: 
+                {% if current_filters.deadline_from %}{{ current_filters.deadline_from }}{% else %}Any{% endif %} 
+                to 
+                {% if current_filters.deadline_to %}{{ current_filters.deadline_to }}{% else %}Any{% endif %}
+            </span>
+            <button type="button" onclick="removeDateFilters()" class="btn-close ms-2" style="font-size: 0.65rem;" aria-label="Remove"></button>
+        </div>
+        {% endif %}
+        
+        <a href="{% url 'vacancy_list' %}" class="btn btn-sm btn-outline-danger ms-2">
+            <i class="fas fa-times me-1"></i> Clear all
+        </a>
+    </div>
+    {% endif %}
+    
+    <!-- Vacancies Table - DECLUTTERED -->
+    <div class="card border">
+        <div class="card-body p-4">
+            {% if vacancies %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="fw-semibold">#</th>
+                            <th class="fw-semibold">Position & Organization</th>
+                            <th class="fw-semibold">Type & Location</th>
+                            <th class="fw-semibold">Deadline</th>
+                            <th class="fw-semibold">Status</th>
+                            <th class="fw-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vacancies-table-body">
+                        {% for vacancy in vacancies %}
+                        <tr id="vacancy-row-{{ vacancy.pk }}" class="{% if vacancy.is_expired %}table-secondary{% endif %}">
+                            <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                            <td>
+                                <div>
+                                    <a href="{% url 'vacancy_page' vacancy.pk %}" class="text-dark text-decoration-none fw-medium">
+                                        {{ vacancy.title|truncatechars:50 }}
+                                    </a>
+                                    <div class="small text-secondary mt-1">
+                                        <i class="fas fa-building me-1" style="font-size: 0.7rem;"></i>
+                                        {{ vacancy.organization|truncatechars:30 }}
+                                        {% if vacancy.is_featured %}
+                                        <span class="badge bg-warning text-dark ms-2">FEATURED</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="badge 
+                                        {% if vacancy.job_type == 'FULL_TIME' %}bg-primary
+                                        {% elif vacancy.job_type == 'PART_TIME' %}bg-purple
+                                        {% else %}bg-secondary{% endif %} text-white">
+                                        {{ vacancy.get_job_type_display }}
+                                    </span>
+                                    <div class="small text-secondary mt-1">
+                                        <i class="fas fa-map-marker-alt me-1" style="font-size: 0.7rem;"></i>
+                                        {{ vacancy.location }}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>{{ vacancy.application_deadline|date:"M d, Y" }}</div>
+                                {% if vacancy.application_deadline %}
+                                    <small class="
+                                        {% if vacancy.is_expired %}text-danger
+                                        {% elif vacancy.days_until_deadline and vacancy.days_until_deadline < 3 %}text-warning
+                                        {% else %}text-success{% endif %} d-block">
+                                        {% if vacancy.is_expired %}
+                                            <i class="fas fa-hourglass-end me-1"></i>Expired
+                                        {% else %}
+                                            {% if vacancy.days_until_deadline is not None %}
+                                                <i class="fas fa-hourglass-half me-1"></i>{{ vacancy.days_until_deadline }} day(s) left
+                                            {% endif %}
+                                        {% endif %}
+                                    </small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span id="status-badge-{{ vacancy.pk }}" 
+                                      class="badge 
+                                        {% if vacancy.is_expired %}bg-warning text-dark
+                                        {% elif vacancy.is_active %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                    {% if vacancy.is_expired %}
+                                        Expired
+                                    {% else %}
+                                        {{ vacancy.is_active|yesno:"Active,Inactive" }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 action-buttons" data-vacancy-id="{{ vacancy.pk }}" data-vacancy-title="{{ vacancy.title|escapejs }}">
+                                    <!-- View Button -->
+                                    <a href="{% url 'vacancy_page' vacancy.pk %}" 
+                                       class="btn btn-sm btn-outline-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    <!-- Edit Button - Always visible but will handle permission in view -->
+                                    <a href="{% url 'vacancy_edit' vacancy.pk %}" 
+                                       class="btn btn-sm btn-outline-purple" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    <!-- Activate/Deactivate Button -->
+                                    {% if vacancy.is_active %}
+                                    <button class="btn btn-sm btn-outline-warning deactivate-btn" 
+                                            title="Deactivate"
+                                            data-action="deactivate">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-outline-success activate-btn" 
+                                            title="Activate"
+                                            data-action="activate">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <!-- Feature/Unfeature Button -->
+                                    {% if vacancy.is_featured %}
+                                    <button class="btn btn-sm btn-outline-warning unfeature-btn" 
+                                            title="Remove Feature"
+                                            data-action="unfeature">
+                                        <i class="fas fa-star"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-outline-purple feature-btn" 
+                                            title="Mark as Featured"
+                                            data-action="feature">
+                                        <i class="fas fa-star"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <!-- Delete Button -->
+                                    <button class="btn btn-sm btn-outline-danger delete-btn" 
+                                            title="Delete"
+                                            data-action="delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center flex-wrap gap-3 mt-4 pt-3 border-top">
+                <!-- Page Info -->
+                <div class="text-secondary small order-2 order-md-1">
+                    Showing <strong>{{ page_obj.start_index }}</strong> to 
+                    <strong>{{ page_obj.end_index }}</strong> of 
+                    <strong>{{ page_obj.paginator.count }}</strong> vacancies
+                </div>
+                
+                <!-- Page Numbers -->
+                <nav aria-label="Page navigation" class="order-1 order-md-2">
+                    <ul class="pagination mb-0">
+                        <!-- Previous Button -->
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}" aria-label="Previous">
+                                <i class="fas fa-angle-left me-1"></i> Prev
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="fas fa-angle-left me-1"></i> Prev</span>
+                        </li>
+                        {% endif %}
+                        
+                        <!-- Page numbers around current -->
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if num >= page_obj.number|add:'-1' and num <= page_obj.number|add:'1' %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <!-- Next Button -->
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}" aria-label="Next">
+                                Next <i class="fas fa-angle-right ms-1"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Next <i class="fas fa-angle-right ms-1"></i></span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                
+                <!-- Page Size Selector -->
+                <div class="d-flex align-items-center gap-2 order-3">
+                    <span class="small text-secondary">Show:</span>
+                    <select onchange="changePageSize(this)" class="form-select form-select-sm w-auto">
+                        <option value="10" {% if request.GET.per_page == "10" %}selected{% endif %}>10</option>
+                        <option value="20" {% if request.GET.per_page == "20" or not request.GET.per_page %}selected{% endif %}>20</option>
+                        <option value="50" {% if request.GET.per_page == "50" %}selected{% endif %}>50</option>
+                        <option value="100" {% if request.GET.per_page == "100" %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-briefcase fa-4x text-secondary mb-3" style="color: #cbd5e1;"></i>
+                <h4 class="h5 mb-2">No vacancies found</h4>
+                <p class="text-secondary mb-4">
+                    {% if active_filter_count > 0 %}
+                    Try changing your filters
+                    {% else %}
+                    Create your first vacancy to get started
+                    {% endif %}
+                </p>
+                {% if active_filter_count > 0 %}
+                <button onclick="resetFilters()" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i> Clear Filters
+                </button>
+                {% else %}
+                <a href="{% url 'vacancy_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i> Create Vacancy
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">
+                    <i class="fas fa-filter me-2"></i>Filter Vacancies
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="GET" action="" id="filterForm">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Search Bar -->
+                        <div class="col-12">
+                            <label class="form-label fw-medium text-dark">Search</label>
+                            <input type="text" class="form-control" name="search" value="{{ current_filters.search|default:'' }}" 
+                                   placeholder="Search in title, organization, location...">
+                        </div>
+                        
+                        <!-- Status Filter -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-dark">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="">All Status</option>
+                                <option value="active" {% if current_filters.status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if current_filters.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Job Type Filter -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-dark">Job Type</label>
+                            <select name="job_type" class="form-select">
+                                <option value="">All Types</option>
+                                {% for value, label in job_types %}
+                                <option value="{{ value }}" {% if current_filters.job_type == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Featured Filter -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-dark">Featured</label>
+                            <select name="featured" class="form-select">
+                                <option value="">All</option>
+                                <option value="true" {% if current_filters.featured == 'true' %}selected{% endif %}>Featured Only</option>
+                            </select>
+                        </div>
+                        
+                        <!-- My Vacancies Filter -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-dark">My Vacancies</label>
+                            <div class="form-check mt-2">
+                                <input type="checkbox" name="mine" class="form-check-input" id="modalMineCheckbox" value="true" 
+                                       {% if current_filters.mine == 'true' %}checked{% endif %}>
+                                <label class="form-check-label" for="modalMineCheckbox">
+                                    Show only my vacancies
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Deadline Range -->
+                        <div class="col-12">
+                            <label class="form-label fw-medium text-dark">Deadline Range</label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input type="date" name="deadline_from" id="deadlineFrom" value="{{ current_filters.deadline_from|default:'' }}" 
+                                           class="form-control" placeholder="From">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="date" name="deadline_to" id="deadlineTo" value="{{ current_filters.deadline_to|default:'' }}"
+                                           class="form-control" placeholder="To">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Date Presets -->
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="text-secondary small me-2">Quick deadlines:</span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setDeadlinePreset('week')">Next 7 days</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setDeadlinePreset('month')">Next 30 days</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setDeadlinePreset('expired')">Expired</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Per Page -->
+                        <div class="col-12">
+                            <label class="form-label fw-medium text-dark">Items per page</label>
+                            <select name="per_page" class="form-select">
+                                <option value="10" {% if current_per_page == 10 %}selected{% endif %}>10</option>
+                                <option value="20" {% if current_per_page == 20 %}selected{% endif %}>20</option>
+                                <option value="50" {% if current_per_page == 50 %}selected{% endif %}>50</option>
+                                <option value="100" {% if current_per_page == 100 %}selected{% endif %}>100</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="reset" class="btn btn-outline-danger" onclick="resetFiltersAndClose()">Clear All</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center" style="background: rgba(0,0,0,0.7); z-index: 9999;">
+    <div class="bg-white p-4 rounded-3 text-center shadow-lg">
+        <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+        <p class="text-secondary mb-0">Processing...</p>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Function to show loading overlay
+function showLoading() {
+    document.getElementById('loadingOverlay').classList.remove('d-none');
+    document.getElementById('loadingOverlay').classList.add('d-flex');
+}
+
+// Function to hide loading overlay
+function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('d-none');
+    document.getElementById('loadingOverlay').classList.remove('d-flex');
+}
+
+// Function to reset all filters
+function resetFilters() {
+    window.location.href = '{% url "vacancy_list" %}';
+}
+
+// Function to reset filters and close modal
+function resetFiltersAndClose() {
+    window.location.href = '{% url "vacancy_list" %}';
+}
+
+// Function to remove a specific filter
+function removeFilter(filterName) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(filterName);
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+
+// Function to remove date filters
+function removeDateFilters() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('deadline_from');
+    url.searchParams.delete('deadline_to');
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+
+// Function to change page size
+function changePageSize(select) {
+    const perPage = select.value;
+    const url = new URL(window.location.href);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', '1');
+    window.location.href = url.toString();
+}
+
+// Function to set deadline presets
+function setDeadlinePreset(preset) {
+    const today = new Date();
+    let fromDate = new Date();
+    let toDate = new Date();
+    
+    if (preset === 'week') {
+        toDate.setDate(today.getDate() + 7);
+        document.getElementById('deadlineFrom').value = today.toISOString().split('T')[0];
+        document.getElementById('deadlineTo').value = toDate.toISOString().split('T')[0];
+    } else if (preset === 'month') {
+        toDate.setMonth(today.getMonth() + 1);
+        document.getElementById('deadlineFrom').value = today.toISOString().split('T')[0];
+        document.getElementById('deadlineTo').value = toDate.toISOString().split('T')[0];
+    } else if (preset === 'expired') {
+        document.getElementById('deadlineTo').value = today.toISOString().split('T')[0];
+    }
+}
+
+// Function to show confirmation alert
+function showConfirmAlert(title, text, confirmText, icon = 'warning') {
+    return Swal.fire({
+        title: title,
+        text: text,
+        icon: icon,
+        showCancelButton: true,
+        confirmButtonColor: icon === 'error' ? '#ef4444' : (icon === 'warning' ? '#f59e0b' : '#10b981'),
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: confirmText,
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+    });
+}
+
+// Initialize event listeners
+$(document).ready(function() {
+    console.log('Document ready - initializing event listeners');
+    
+    // Function to handle AJAX request
+    function handleAction(button, action, vacancyId, title, confirmTitle, confirmText, confirmButton, icon) {
+        let url;
+        if (action === 'activate' || action === 'deactivate') {
+            url = "{% url 'vacancy_toggle_active' 0 %}".replace('0', vacancyId);
+        } else if (action === 'feature' || action === 'unfeature') {
+            url = "{% url 'vacancy_toggle_featured' 0 %}".replace('0', vacancyId);
+        } else if (action === 'delete') {
+            url = "{% url 'vacancy_delete' 0 %}".replace('0', vacancyId);
+        } else {
+            console.error('Unknown action:', action);
+            return;
+        }
+        
+        showConfirmAlert(confirmTitle, confirmText, confirmButton, icon).then((result) => {
+            if (result.isConfirmed) {
+                showLoading();
+                
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    success: function(response) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: response.message,
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            if (action === 'delete') {
+                                // Remove row with animation
+                                const row = document.getElementById(`vacancy-row-${vacancyId}`);
+                                if (row) {
+                                    row.style.transition = 'all 0.3s ease';
+                                    row.style.opacity = '0';
+                                    row.style.transform = 'translateY(-10px)';
+                                    setTimeout(() => {
+                                        row.remove();
+                                        
+                                        // Update stats if provided
+                                        if (response.new_counts) {
+                                            const statValues = document.querySelectorAll('.display-6');
+                                            if (statValues.length >= 4) {
+                                                statValues[0].textContent = response.new_counts.total;
+                                                statValues[1].textContent = response.new_counts.active;
+                                                statValues[2].textContent = response.new_counts.inactive;
+                                                statValues[3].textContent = response.new_counts.featured;
+                                            }
+                                        }
+                                        
+                                        // Reload if no vacancies left
+                                        if (document.querySelectorAll('#vacancies-table-body tr').length === 0) {
+                                            location.reload();
+                                        }
+                                    }, 300);
+                                }
+                            } else {
+                                location.reload();
+                            }
+                        });
+                    },
+                    error: function(xhr) {
+                        console.error('AJAX error:', xhr);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: xhr.responseJSON?.message || 'An error occurred.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    },
+                    complete: function() {
+                        hideLoading();
+                    }
+                });
+            }
+        });
+    }
+    
+    // Attach event listeners to action buttons
+    $('.action-buttons').each(function() {
+        const container = $(this);
+        const vacancyId = container.data('vacancy-id');
+        const title = container.data('vacancy-title');
+        
+        // Activate button
+        container.find('.activate-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleAction(this, 'activate', vacancyId, title, 
+                'Activate Vacancy', 
+                `Are you sure you want to activate "${title}"?`, 
+                'Activate Now', 
+                'success');
+        });
+        
+        // Deactivate button
+        container.find('.deactivate-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleAction(this, 'deactivate', vacancyId, title, 
+                'Deactivate Vacancy', 
+                `Are you sure you want to deactivate "${title}"?`, 
+                'Deactivate', 
+                'warning');
+        });
+        
+        // Feature button
+        container.find('.feature-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleAction(this, 'feature', vacancyId, title, 
+                'Feature Vacancy', 
+                `Are you sure you want to feature "${title}"?`, 
+                'Feature Now', 
+                'success');
+        });
+        
+        // Unfeature button
+        container.find('.unfeature-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleAction(this, 'unfeature', vacancyId, title, 
+                'Remove Feature', 
+                `Are you sure you want to remove "${title}" from featured?`, 
+                'Remove Feature', 
+                'warning');
+        });
+        
+        // Delete button
+        container.find('.delete-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleAction(this, 'delete', vacancyId, title, 
+                'Delete Vacancy', 
+                `Are you sure you want to delete "${title}"? This action cannot be undone.`, 
+                'Delete', 
+                'error');
+        });
+    });
+    
+    // Filter form submission
+    $('#filterForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = $(this).serializeArray();
+        const params = new URLSearchParams();
+        
+        // Add all form data
+        formData.forEach(item => {
+            if (item.value) {
+                params.set(item.name, item.value);
+            }
+        });
+        
+        // Add current per_page if not in form
+        const perPage = new URLSearchParams(window.location.search).get('per_page');
+        if (perPage && !params.has('per_page')) {
+            params.set('per_page', perPage);
+        }
+        
+        // Reset to page 1
+        params.set('page', '1');
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('filterModal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        window.location.href = '?' + params.toString();
+    });
+});
+</script>
+
+<!-- Add custom CSS -->
+<style>
+    .btn-outline-purple {
+        color: #8b5cf6;
+        border-color: #8b5cf6;
+    }
+    .btn-outline-purple:hover {
+        color: #fff;
+        background-color: #8b5cf6;
+        border-color: #8b5cf6;
+    }
+    .bg-purple {
+        background-color: #8b5cf6 !important;
+    }
+    .text-purple {
+        color: #8b5cf6 !important;
+    }
+    .opacity-25 {
+        opacity: 0.25;
+    }
+    
+    /* Filter badge styles */
+    .badge.d-inline-flex {
+        display: inline-flex !important;
+        align-items: center !important;
+        white-space: nowrap;
+        max-width: 100%;
+    }
+    
+    .badge.d-inline-flex .btn-close {
+        font-size: 0.5rem;
+        padding: 0.25rem;
+        margin: -0.25rem -0.25rem -0.25rem 0.5rem;
+    }
+    
+    .badge.d-inline-flex .btn-close:focus {
+        box-shadow: none;
+    }
+    
+    /* Pagination styles */
+    .pagination .page-link {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    @media (max-width: 768px) {
+        .pagination {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .pagination .page-item {
+            margin: 2px;
+        }
+    }
+    
+    /* Modal improvements */
+    .modal-content {
+        border: none;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid #f0f0f0;
+        background-color: #f8f9fa;
+    }
+    
+    .modal-footer {
+        border-top: 1px solid #f0f0f0;
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

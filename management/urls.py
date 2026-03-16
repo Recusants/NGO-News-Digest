@@ -13,16 +13,15 @@ urlpatterns = [
     path('stories/<int:pk>/delete/', views.story_delete, name='story_delete'),
     
     # VACANCY URLS
+    path('vacancy/create/', views.vacancy_create, name='vacancy_create'),
     path('vacancies/', views.vacancy_list, name='vacancy_list'),
-    path('vacancies/create/', views.vacancy_create, name='vacancy_create'),
-    path('vacancies/<int:pk>/', views.vacancy_detail, name='vacancy_detail'),
-    path('vacancies/<int:pk>/edit/', views.vacancy_edit, name='vacancy_edit'),
-    path('vacancies/<int:pk>/activate/', views.vacancy_activate, name='vacancy_activate'),
-    path('vacancies/<int:pk>/deactivate/', views.vacancy_deactivate, name='vacancy_deactivate'),
-    path('vacancies/<int:pk>/feature/', views.vacancy_feature, name='vacancy_feature'),
-    path('vacancies/<int:pk>/unfeature/', views.vacancy_unfeature, name='vacancy_unfeature'),
-    path('vacancies/<int:pk>/delete/', views.vacancy_delete, name='vacancy_delete'),
-    
+    path('vacancy/edit/<int:pk>/', views.vacancy_edit, name='vacancy_edit'),
+    path('vacancy/<int:pk>/toggle-active/', views.vacancy_toggle_active, name='vacancy_toggle_active'),
+    path('vacancy/<int:pk>/toggle-featured/', views.vacancy_toggle_featured, name='vacancy_toggle_featured'),
+    path('vacancy/<int:pk>/delete/', views.vacancy_delete, name='vacancy_delete'),
+    path('attachment/<int:pk>/delete/', views.attachment_delete, name='attachment_delete'),
+
+
     # NOTICE URLS
     path('notices/', views.notice_list, name='notice_list'),
     path('notices/create/', views.notice_create, name='notice_create'),
