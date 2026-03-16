@@ -25,7 +25,7 @@ if not ALLOWED_HOSTS or ALLOWED_HOSTS == ['']:
 
 import logging
 
-DEBUG = True
+DEBUG = False
 # Log all errors to a file
 logging.basicConfig(
     filename='/home/ngodiges/django_debug.log',
