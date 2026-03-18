@@ -1276,6 +1276,249 @@
 
     /* ========== END CLICKABLE VACANCY AND NOTICE CARDS ========== */
 
+    /* ========== MOBILE FILTER POPUP ========== */
+    .filter-popup-btn {
+        display: none;
+        width: 100%;
+        padding: 1rem;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        font-family: 'Segoe UI', sans-serif;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-bottom: 1.5rem;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        box-shadow: var(--card-shadow);
+        transition: var(--transition);
+    }
+
+    .filter-popup-btn:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-2px);
+    }
+
+    .filter-popup-btn i {
+        font-size: 1.1rem;
+    }
+
+    .filter-popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        backdrop-filter: blur(3px);
+    }
+
+    .filter-popup-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+
+    .filter-popup {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: var(--bg-light);
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        padding: 1.5rem;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+        z-index: 2001;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .filter-popup.active {
+        transform: translateY(0);
+    }
+
+    .filter-popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .filter-popup-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-dark);
+    }
+
+    .filter-popup-header h3 i {
+        color: var(--primary);
+    }
+
+    .filter-popup-close {
+        background: none;
+        border: none;
+        color: var(--text-light);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        line-height: 1;
+        transition: var(--transition);
+    }
+
+    .filter-popup-close:hover {
+        color: var(--primary);
+    }
+
+    .filter-popup .filter-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        align-items: center;
+    }
+
+    .filter-popup .filter-label {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        font-size: 1rem;
+        color: var(--text-dark);
+        font-weight: 600;
+    }
+
+    .filter-popup .filter-btn {
+        padding: 0.5rem 1rem;
+        background-color: var(--bg-gray);
+        color: var(--text-dark);
+        border: 1px solid var(--border-color);
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        width: auto;
+        flex: 0 0 auto;
+    }
+
+    .filter-popup .filter-btn:hover {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .filter-popup .filter-btn.active {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .filter-popup .search-box {
+        width: 100%;
+        margin: 1rem 0;
+    }
+
+    .filter-popup .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        background-color: var(--bg-light);
+        color: var(--text-dark);
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 1rem;
+    }
+
+    .filter-popup .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.2);
+    }
+
+    .filter-popup-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .filter-popup-actions .btn {
+        flex: 1;
+        padding: 0.75rem;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    /* Desktop filter - normal */
+    @media (min-width: 769px) {
+        .filter-popup-btn {
+            display: none !important;
+        }
+        .filter-popup-overlay,
+        .filter-popup {
+            display: none !important;
+        }
+    }
+
+    /* Mobile filter popup */
+    @media (max-width: 768px) {
+        .filter-popup-btn {
+            display: flex;
+        }
+        
+        .filter-section {
+            display: none !important; /* Force hide the original filter section on mobile */
+        }
+        
+        .filter-popup .filter-group {
+            gap: 0.5rem;
+        }
+        
+        .filter-popup .filter-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .filter-popup {
+            padding: 1rem;
+        }
+        
+        .filter-popup-header h3 {
+            font-size: 1.1rem;
+        }
+        
+        .filter-popup .filter-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+        
+        .filter-popup .filter-group {
+            gap: 0.4rem;
+        }
+        
+        .filter-popup-actions {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+    /* ========== END MOBILE FILTER POPUP ========== */
+
     /* =========================================== */
     /* MOBILE RESPONSIVE STYLES - COMPLETE REVAMP  */
     /* =========================================== */
@@ -1482,27 +1725,9 @@
             padding: 1.25rem;
         }
         
-        /* Filter section */
+        /* Filter section - will be hidden on mobile */
         .filter-section {
-            padding: 1.25rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .filter-group {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 0.75rem;
-        }
-        
-        .filter-btn {
-            width: 100%;
-            text-align: center;
-            padding: 0.75rem 1rem;
-        }
-        
-        .search-box {
-            min-width: 100%;
-            order: -1;
+            display: block; /* Desktop shows, mobile hides via media query */
         }
         
         /* Stats */
@@ -1832,6 +2057,18 @@
         <i class="fas fa-chevron-up"></i>
     </button>
     
+    <!-- Mobile Filter Popup -->
+    <div class="filter-popup-overlay" id="filterPopupOverlay"></div>
+    <div class="filter-popup" id="filterPopup">
+        <div class="filter-popup-header">
+            <h3><i class="fas fa-filter"></i> Filter & Search</h3>
+            <button class="filter-popup-close" id="filterPopupClose">&times;</button>
+        </div>
+        <div id="filterPopupContent">
+            <!-- Content will be moved here dynamically -->
+        </div>
+    </div>
+    
     <!-- Your existing scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -2035,6 +2272,182 @@
                 card.addEventListener('blur', function() {
                     this.style.outline = 'none';
                 });
+            });
+        });
+
+        // ========== MOBILE FILTER POPUP ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('filterPopupOverlay');
+            const popup = document.getElementById('filterPopup');
+            const closeBtn = document.getElementById('filterPopupClose');
+            const popupContent = document.getElementById('filterPopupContent');
+            
+            // Function to open popup
+            window.openFilterPopup = function(btn) {
+                // Find the filter section associated with this button
+                const filterSection = btn.closest('.page-section')?.querySelector('.filter-section');
+                
+                if (filterSection && popupContent) {
+                    // Clone the filter content into the popup
+                    popupContent.innerHTML = '';
+                    
+                    // Create filter group container
+                    const filterGroupContainer = document.createElement('div');
+                    filterGroupContainer.className = 'filter-group';
+                    
+                    // Add label
+                    const label = document.createElement('span');
+                    label.className = 'filter-label';
+                    label.textContent = 'Filter by:';
+                    filterGroupContainer.appendChild(label);
+                    
+                    // Clone filter buttons
+                    const originalButtons = filterSection.querySelectorAll('.filter-btn');
+                    originalButtons.forEach(originalBtn => {
+                        const btn = originalBtn.cloneNode(true);
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            // Remove active from all buttons in popup
+                            popupContent.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                            // Add active to clicked button
+                            this.classList.add('active');
+                        });
+                        filterGroupContainer.appendChild(btn);
+                    });
+                    
+                    popupContent.appendChild(filterGroupContainer);
+                    
+                    // Clone search box
+                    const searchBox = filterSection.querySelector('.search-box')?.cloneNode(true);
+                    if (searchBox) {
+                        // Re-attach search input listener
+                        const searchInput = searchBox.querySelector('.search-input');
+                        if (searchInput) {
+                            searchInput.addEventListener('input', function() {
+                                // Your search logic here
+                                console.log('Searching:', this.value);
+                            });
+                        }
+                        popupContent.appendChild(searchBox);
+                    }
+                    
+                    // Add action buttons
+                    const actions = document.createElement('div');
+                    actions.className = 'filter-popup-actions';
+                    actions.innerHTML = `
+                        <button class="btn btn-outline" onclick="applyFilter()">Apply Filters</button>
+                        <button class="btn" onclick="closeFilterPopup()">Close</button>
+                    `;
+                    popupContent.appendChild(actions);
+                }
+                
+                // Show popup
+                overlay.classList.add('active');
+                popup.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            };
+            
+            // Function to close popup
+            window.closeFilterPopup = function() {
+                overlay.classList.remove('active');
+                popup.classList.remove('active');
+                document.body.style.overflow = '';
+            };
+            
+            // Function to apply filter
+            window.applyFilter = function() {
+                // Get values from popup
+                const activeFilter = popupContent.querySelector('.filter-btn.active');
+                const searchValue = popupContent.querySelector('.search-input')?.value;
+                
+                // Find the original filter section and update it
+                const originalFilterSection = document.querySelector('.filter-section');
+                if (originalFilterSection) {
+                    // Update active filter in original
+                    if (activeFilter) {
+                        const filterValue = activeFilter.dataset.filter;
+                        originalFilterSection.querySelectorAll('.filter-btn').forEach(btn => {
+                            btn.classList.remove('active');
+                            if (btn.dataset.filter === filterValue) {
+                                btn.classList.add('active');
+                                // Trigger click event to load filtered content
+                                btn.click();
+                            }
+                        });
+                    }
+                    
+                    // Update search input in original
+                    if (searchValue !== undefined) {
+                        const originalSearch = originalFilterSection.querySelector('.search-input');
+                        if (originalSearch) {
+                            originalSearch.value = searchValue;
+                            // Trigger input event for search
+                            originalSearch.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }
+                }
+                
+                closeFilterPopup();
+            };
+            
+            // Close popup when clicking overlay
+            if (overlay) {
+                overlay.addEventListener('click', closeFilterPopup);
+            }
+            
+            // Close popup when clicking close button
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeFilterPopup);
+            }
+            
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && popup.classList.contains('active')) {
+                    closeFilterPopup();
+                }
+            });
+            
+            // Add filter popup buttons to all filter sections on mobile
+            function addFilterPopupButtons() {
+                if (window.innerWidth <= 768) {
+                    const filterSections = document.querySelectorAll('.filter-section');
+                    
+                    filterSections.forEach(section => {
+                        // Check if button already exists
+                        if (!section.parentElement.querySelector('.filter-popup-btn')) {
+                            const pageSection = section.closest('.page-section');
+                            if (pageSection) {
+                                const btn = document.createElement('button');
+                                btn.className = 'filter-popup-btn';
+                                btn.innerHTML = '<i class="fas fa-filter"></i> Filter & Search';
+                                btn.onclick = function() { openFilterPopup(this); };
+                                
+                                // Insert before the filter section
+                                section.parentElement.insertBefore(btn, section);
+                            }
+                        }
+                    });
+                } else {
+                    // Remove buttons on desktop
+                    document.querySelectorAll('.filter-popup-btn').forEach(btn => btn.remove());
+                }
+            }
+            
+            // Initial call
+            addFilterPopupButtons();
+            
+            // Handle window resize
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    addFilterPopupButtons();
+                    
+                    // Close popup if open and switching to desktop
+                    if (window.innerWidth > 768 && popup.classList.contains('active')) {
+                        closeFilterPopup();
+                    }
+                }, 250);
             });
         });
     </script>

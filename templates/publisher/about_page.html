@@ -1,56 +1,485 @@
 <!-- Team Preview -->
 {% if site_info.show_team_preview %}
 <div class="team-preview-section">
-    <h2 class="section-title">Meet Our Team</h2>
-    <p class="section-subtitle">Dedicated professionals committed to amplifying civil society impact</p>
-    
-    <div class="team-grid">
-        {% for member in team_members %}
-        <div class="team-card">
-            <div class="team-image">
-                <img src="https://images.unsplash.com/photo-{{ forloop.counter|add:1576765974 }}?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80" 
-                     alt="{{ member.user.get_full_name }}" loading="lazy">
-            </div>
-            <div class="team-content">
-                <h4 class="team-name">{{ member.user.get_full_name }}</h4>
-                <p class="team-role">{{ member.position }}</p>
-                <p class="team-bio">{{ member.bio|truncatewords:20 }}</p>
-                
-                {% if member.twitter_url or member.linkedin_url %}
-                <div class="team-social">
-                    {% if member.twitter_url %}
-                    <a href="{{ member.twitter_url }}" target="_blank" class="team-social-link">
-                        <i class="fab fa-twitter"></i>
-                    </a>
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Meet Our Team</h2>
+            <p class="section-subtitle">Dedicated professionals committed to amplifying civil society impact</p>
+        </div>
+        
+        <div class="team-grid">
+            {% for member in team_members|slice:":4" %}
+            <div class="team-card">
+                <div class="team-image-wrapper">
+                    {% if member.profile_image %}
+                        <img src="{{ member.profile_image.url }}" alt="{{ member.user.get_full_name }}" class="team-image">
+                    {% else %}
+                        <div class="team-image-placeholder">
+                            <span>{{ member.user.first_name|first }}{{ member.user.last_name|first }}</span>
+                        </div>
                     {% endif %}
                     
-                    {% if member.linkedin_url %}
-                    <a href="{{ member.linkedin_url }}" target="_blank" class="team-social-link">
-                        <i class="fab fa-linkedin-in"></i>
-                    </a>
+                    {% if member.position %}
+                    <div class="team-role-badge">{{ member.position }}</div>
                     {% endif %}
                 </div>
-                {% endif %}
+                
+                <div class="team-content">
+                    <h3 class="team-name">{{ member.user.get_full_name }}</h3>
+                    
+                    <p class="team-bio">{{ member.bio|truncatewords:15|default:"Passionate about making a difference in Zimbabwe's civil society sector." }}</p>
+                    
+                    <div class="team-social">
+                        {% if member.twitter_url %}
+                        <a href="{{ member.twitter_url }}" target="_blank" rel="noopener noreferrer" class="social-link twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if member.linkedin_url %}
+                        <a href="{{ member.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="social-link linkedin">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        {% endif %}
+                        
+                        {% if member.email %}
+                        <a href="mailto:{{ member.email }}" class="social-link email">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
+            {% empty %}
+            <div class="team-placeholder">
+                <div class="placeholder-content">
+                    <i class="fas fa-users placeholder-icon"></i>
+                    <h4>Meet Our Team</h4>
+                    <p>Get to know the dedicated professionals behind NGO News Digest</p>
+                    <a href="{% url 'team_page' %}" class="btn btn-primary">
+                        View Full Team <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
         </div>
-        {% empty %}
-        <div class="no-team-message">
-            <i class="fas fa-users fa-3x"></i>
-            <h4>Our Team</h4>
-            <p>Meet our dedicated team members</p>
-            <a href="{% url 'editors_page' %}" class="btn btn-outline">
-                <i class="fas fa-arrow-right"></i> Meet the Team
+        
+        {% if team_members|length > 4 %}
+        <div class="view-all-container">
+            <a href="{% url 'team_page' %}" class="view-all-btn">
+                <span>Meet the Entire Team</span>
+                <i class="fas fa-arrow-right"></i>
             </a>
         </div>
-        {% endfor %}
+        {% endif %}
     </div>
-    
-    {% if team_members|length > 0 %}
-    <div class="action-buttons">
-        <a href="{% url 'editors_page' %}" class="read-more-btn">
-            <i class="fas fa-users"></i> View Full Team
-        </a>
-    </div>
-    {% endif %}
 </div>
+
+<style>
+/* Team Preview Section */
+.team-preview-section {
+    padding: 4rem 0;
+    background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-gray) 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.team-preview-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light), var(--primary));
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.section-title {
+    font-size: 2.2rem;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+    position: relative;
+    display: inline-block;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background-color: var(--primary);
+    border-radius: 3px;
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    max-width: 600px;
+    margin: 1.5rem auto 0;
+}
+
+/* Team Grid */
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+/* Team Card */
+.team-card {
+    background-color: var(--bg-light);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
+    position: relative;
+    border: 1px solid rgba(198, 40, 40, 0.1);
+}
+
+.team-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--card-shadow-hover);
+    border-color: rgba(198, 40, 40, 0.3);
+}
+
+/* Image Wrapper */
+.team-image-wrapper {
+    position: relative;
+    padding-top: 100%;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+    overflow: hidden;
+}
+
+.team-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.team-card:hover .team-image {
+    transform: scale(1.1);
+}
+
+.team-image-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    font-size: 3rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Role Badge */
+.team-role-badge {
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--primary);
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.team-card:hover .team-role-badge {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Team Content */
+.team-content {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.team-name {
+    font-size: 1.25rem;
+    color: var(--text-dark);
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.team-bio {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+}
+
+/* Social Links */
+.team-social {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.social-link {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.social-link.twitter {
+    background-color: #1DA1F2;
+}
+
+.social-link.linkedin {
+    background-color: #0077B5;
+}
+
+.social-link.email {
+    background-color: var(--primary);
+}
+
+.social-link:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.social-link.twitter:hover {
+    background-color: #0d8bd9;
+}
+
+.social-link.linkedin:hover {
+    background-color: #006396;
+}
+
+.social-link.email:hover {
+    background-color: var(--primary-dark);
+}
+
+/* View All Button */
+.view-all-container {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.view-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background-color: transparent;
+    border: 2px solid var(--primary);
+    border-radius: 50px;
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.view-all-btn:hover {
+    background-color: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(198, 40, 40, 0.3);
+}
+
+.view-all-btn i {
+    transition: transform 0.3s ease;
+}
+
+.view-all-btn:hover i {
+    transform: translateX(5px);
+}
+
+/* Placeholder when no team members */
+.team-placeholder {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--bg-light), var(--bg-gray));
+    border-radius: 20px;
+    padding: 4rem 2rem;
+    text-align: center;
+    border: 2px dashed var(--border-color);
+}
+
+.placeholder-content {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.placeholder-icon {
+    font-size: 4rem;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.placeholder-content h4 {
+    font-size: 1.5rem;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+}
+
+.placeholder-content p {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .team-preview-section {
+        padding: 3rem 0;
+    }
+    
+    .section-title {
+        font-size: 2rem;
+    }
+    
+    .section-subtitle {
+        font-size: 1rem;
+    }
+    
+    .team-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .team-preview-section {
+        padding: 2.5rem 0;
+    }
+    
+    .section-header {
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1.8rem;
+    }
+    
+    .section-title::after {
+        width: 60px;
+    }
+    
+    .team-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .team-name {
+        font-size: 1.2rem;
+    }
+    
+    .team-bio {
+        font-size: 0.9rem;
+    }
+    
+    .view-all-btn {
+        padding: 0.875rem 1.75rem;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .team-preview-section {
+        padding: 2rem 0;
+    }
+    
+    .section-title {
+        font-size: 1.6rem;
+    }
+    
+    .section-subtitle {
+        font-size: 0.95rem;
+    }
+    
+    .team-content {
+        padding: 1.25rem;
+    }
+    
+    .social-link {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+    
+    .placeholder-icon {
+        font-size: 3rem;
+    }
+    
+    .placeholder-content h4 {
+        font-size: 1.3rem;
+    }
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .team-card {
+    background-color: var(--bg-dark);
+}
+
+[data-theme="dark"] .team-role-badge {
+    background: rgba(30, 30, 30, 0.95);
+    color: var(--primary-light);
+}
+
+[data-theme="dark"] .team-placeholder {
+    background: linear-gradient(135deg, var(--bg-dark), #2a2a2a);
+    border-color: #444;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.team-card {
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0;
+}
+
+.team-card:nth-child(1) { animation-delay: 0.1s; }
+.team-card:nth-child(2) { animation-delay: 0.2s; }
+.team-card:nth-child(3) { animation-delay: 0.3s; }
+.team-card:nth-child(4) { animation-delay: 0.4s; }
+</style>
 {% endif %}

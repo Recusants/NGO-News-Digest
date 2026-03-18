@@ -5,10 +5,10 @@
                 <h3>NGO News Digest</h3>
                 <p>Zimbabwe's premier platform for civil society news, opportunities, and connections.</p>
                 <div class="social-icons">
-                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    <a href="https://facebook.com/ngodigest" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com/ngodigest" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="https://linkedin.com/company/ngo-digest" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://youtube.com/@ngodigest" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
                 </div>
             </div>
             
@@ -36,16 +36,17 @@
                 <h3>Subscribe</h3>
                 <p>Get weekly updates on NGO news and opportunities in Zimbabwe.</p>
                 <div class="subscribe-form" style="margin-top: 1rem;">
+                    {% csrf_token %}
                     <div class="form-row">
-                        <input type="text" placeholder="Your Name">
-                        <input type="email" placeholder="Your Email">
+                        <input type="text" id="footerName" placeholder="Your Name" required>
+                        <input type="email" id="footerEmail" placeholder="Your Email" required>
                     </div>
                     <div class="form-group" style="text-align: left; margin-top: 1rem;">
                         <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                            <input type="checkbox" id="agreeTerms" name="agree_terms" required style="width: auto; margin-top: 0.25rem;">
-                            <label for="agreeTerms" style="font-size: 0.9rem; line-height: 1.4;">
+                            <input type="checkbox" id="footerAgreeTerms" name="agree_terms" required style="width: auto; margin-top: 0.25rem;">
+                            <label for="footerAgreeTerms" style="font-size: 0.9rem; line-height: 1.4; color: var(--text-light);">
                                 I agree to the 
-                                <a href="{% url 'privacy_terms_page' %}" target="_blank" style="color: var(--primary); font-weight: 600;">
+                                <a href="{% url 'privacy_terms_page' %}" target="_blank" style="color: var(--primary-light); font-weight: 600;">
                                     Privacy Policy & Terms of Service
                                 </a>
                                 *
@@ -53,13 +54,336 @@
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn">Subscribe Now</button>
+                    <button type="submit" class="btn" id="footerSubscribeBtn">Subscribe Now</button>
                 </div>
             </div>
         </div>
         
         <div class="copyright">
-            <p>&copy; 2023 NGO News Digest. All rights reserved. Serving Zimbabwe's Civil Society.</p>
+            <p>&copy; {% now "Y" %} NGO News Digest. All rights reserved. Serving Zimbabwe's Civil Society.</p>
         </div>
     </div>
 </footer>
+
+<script>
+$(document).ready(function() {
+    // Email validation function
+    function validEmail(email) {
+        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+    
+    // Footer subscription
+    $('#footerSubscribeBtn').on('click', function(e) {
+        e.preventDefault();
+        
+        var name = $('#footerName').val();
+        var email = $('#footerEmail').val();
+        var agreed = $('#footerAgreeTerms').is(':checked');
+        var errors = "";
+
+        // Validation
+        if(name.trim() === ""){
+            errors = "Please enter your name";
+        } else if(!validEmail(email)){
+            errors = "Please enter a valid email address";
+        } else if(!agreed){
+            errors = "Please agree to the terms and conditions first.";
+        }
+
+        if(errors){
+            Swal.fire({
+                title: 'Error!',
+                text: errors,
+                icon: 'error',
+                confirmButtonColor: 'var(--primary)'
+            });
+        } else {
+            $.ajax({
+                url: '{% url "subscribe" %}',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    'name': name,
+                    'email': email,
+                    'agreed': agreed,
+                },
+                headers: {
+                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                beforeSend: function() {
+                    Swal.fire({
+                        title: 'Processing...',
+                        text: 'Please wait while we process your subscription',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                },
+                success: function(responseData) {
+                    Swal.close();
+                    
+                    if (responseData.status === 'success') {
+                        // Clear form
+                        $('#footerName').val('');
+                        $('#footerEmail').val('');
+                        $('#footerAgreeTerms').prop('checked', false);
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: responseData.message || 'Thank you for subscribing! Please check your email to confirm your subscription.',
+                            confirmButtonColor: 'var(--primary)'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: responseData.message || 'Subscription failed. Please try again.',
+                            confirmButtonColor: 'var(--primary)'
+                        });
+                    }
+                },
+                error: function(jqXHR) {
+                    Swal.close();
+                    let errorMsg = 'Server error. Please try again or contact us.';
+                    
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMsg = jqXHR.responseJSON.message;
+                    }
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMsg,
+                        confirmButtonColor: 'var(--primary)'
+                    });
+                }
+            });
+        }
+    });
+    
+    // Handle Enter key in form inputs
+    $('#footerName, #footerEmail').on('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            $('#footerSubscribeBtn').click();
+        }
+    });
+});
+</script>
+
+<style>
+/* Footer specific styles */
+footer {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    padding: 3rem 0 1.5rem;
+    margin-top: 3rem;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-column h3 {
+    color: white;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #444;
+    padding-bottom: 0.5rem;
+}
+
+.footer-column p {
+    color: #aaa;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links li {
+    margin-bottom: 0.75rem;
+}
+
+.footer-links a {
+    color: #aaa;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.footer-links a:hover {
+    color: var(--primary-light);
+    padding-left: 5px;
+}
+
+.social-icons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.social-icons a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: #333;
+    border-radius: 50%;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.social-icons a:hover {
+    background-color: var(--primary);
+    transform: translateY(-3px);
+}
+
+/* Footer subscription form */
+footer .subscribe-form {
+    max-width: 100%;
+}
+
+footer .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+footer .form-row input {
+    padding: 0.6rem 1rem;
+    border: 1px solid #444;
+    border-radius: var(--border-radius);
+    background-color: #2d2d2d;
+    color: white;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+footer .form-row input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.2);
+}
+
+footer .form-row input::placeholder {
+    color: #888;
+}
+
+footer .form-group {
+    margin: 1rem 0;
+}
+
+footer .form-group label {
+    color: #aaa;
+}
+
+footer .btn {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+footer .btn:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(198, 40, 40, 0.3);
+}
+
+.copyright {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid #444;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 992px) {
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    footer {
+        padding: 2rem 0 1rem;
+    }
+    
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .footer-column {
+        text-align: center;
+    }
+    
+    .footer-column h3 {
+        text-align: center;
+    }
+    
+    .social-icons {
+        justify-content: center;
+    }
+    
+    footer .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .copyright {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    footer {
+        padding: 1.5rem 0 1rem;
+    }
+    
+    .footer-column h3 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .footer-column p {
+        font-size: 0.9rem;
+    }
+    
+    .footer-links a {
+        font-size: 0.9rem;
+    }
+    
+    .social-icons a {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+    
+    footer .btn {
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+}
+</style>

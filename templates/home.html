@@ -8,168 +8,185 @@
     {% include 'partials/header.html' %}
     <main id="pageContent">
         <section id="home" class="page-section active">
+            <!-- Hero Section -->
             <div class="hero">
                 <div class="container">
-                    <h1>Amplifying Zimbabwe's Civil Society Impact</h1>
-                    <p>Stay informed with the latest NGO stories, job vacancies, funding opportunities, and policy updates from across Zimbabwe's civil society sector.</p>
-                    
-                    <!-- UPDATED SUBSCRIPTION FORM WITH NAME FIELD -->
-                    <div class="subscribe-form">
-                        <div class="form-row">
-                            <input type="text" id="subscribeName" placeholder="Your Name">
-                            <input type="email" id="subscribeEmail" placeholder="Your Email">
-                        </div>
-                        <div class="form-group" style="text-align: left; margin-top: 1rem;">
-                            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-                                <input type="checkbox" id="agreeTerms" name="agree_terms" required style="width: auto; margin-top: 0.25rem;">
-                                <label for="agreeTerms" style="font-size: 0.9rem; line-height: 1.4;">
-                                    I agree to the 
-                                    <a href="{% url 'privacy_terms_page' %}" target="_blank" style="color: var(--primary-light); font-weight: 600;">
-                                        Privacy Policy & Terms of Service
-                                    </a>
-                                    *
-                                </label>
+                    <div class="hero-content">
+                        <h1 class="hero-title">Amplifying Zimbabwe's Civil Society Impact</h1>
+                        <p class="hero-subtitle">Stay informed with the latest NGO stories, job vacancies, funding opportunities, and policy updates from across Zimbabwe's civil society sector.</p>
+                        
+                        <!-- Subscription Form -->
+                        <div class="subscribe-card">
+                            <h3>Subscribe to Our Newsletter</h3>
+                            <div class="subscribe-form">
+                                <div class="form-row">
+                                    <input type="text" id="subscribeName" placeholder="Your Name" class="form-input">
+                                    <input type="email" id="subscribeEmail" placeholder="Your Email" class="form-input">
+                                </div>
+                                
+                                <div class="terms-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="agreeTerms" name="agree_terms" required>
+                                        <span class="checkbox-text">
+                                            I agree to the 
+                                            <a href="{% url 'privacy_terms_page' %}" target="_blank" class="terms-link">
+                                                Privacy Policy & Terms
+                                            </a>
+                                            *
+                                        </span>
+                                    </label>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary" id="home-subscribe-button">
+                                    Subscribe Now
+                                </button>
                             </div>
                         </div>
-                        
-                        <button type="submit" class="btn" id="home-subscribe-button">Subscribe Now</button>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Featured Stories -->
             {% if featured_stories %}
-                <div class="container section py-2">
+            <div class="container section">
+                <div class="section-header">
                     <h2>Latest Stories</h2>
-                    <div class="content-grid" id="featuredStories">
-                        {% for story in featured_stories %}
-                            <a href="{% url 'story_page' story.pk %}" class="card-link">
-                                <div class="card story-card">
-                                    <img src="{{ story.get_thumbnail_url }}" alt="{{ story.headline }}" class="story-card-img">
-                                    <div class="story-card-content">
-                                        <div class="badge badge-red">{{ story.category.name }}</div>
-                                        <h3 class="story-card-title">{{ story.headline }}</h3>
-                                        <p class="story-card-excerpt">{{ story.snippet }}</p>
-                                        <div class="story-card-meta">
-                                            <div class="story-card-author">
-                                                <i class="fas fa-user-circle"></i>
-                                                <span>{{ story.author }}</span>
-                                            </div>
-                                            <div>{{ story.created_at|date:"M d, Y" }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        {% endfor %}
-                    </div>
-                    <div class="text-center mt-2">
-                        <a href="{% url 'stories_page' %}" class="btn btn-small" data-page="stories">View All Stories</a>
-                    </div>
+                    <p>Discover impactful stories from Zimbabwe's civil society</p>
                 </div>
+                
+                <div class="content-grid">
+                    {% for story in featured_stories %}
+                    <a href="{% url 'story_page' story.pk %}" class="card-link">
+                        <div class="card story-card">
+                            <img src="{{ story.get_thumbnail_url }}" alt="{{ story.headline }}" class="story-card-img">
+                            <div class="story-card-content">
+                                <span class="badge badge-red">{{ story.category.name }}</span>
+                                <h3>{{ story.headline }}</h3>
+                                <p>{{ story.snippet }}</p>
+                                <div class="story-card-meta">
+                                    <span><i class="fas fa-user"></i> {{ story.author }}</span>
+                                    <span><i class="far fa-calendar"></i> {{ story.created_at|date:"M d, Y" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                
+                <div class="section-footer">
+                    <a href="{% url 'stories_page' %}" class="btn btn-outline">View All Stories</a>
+                </div>
+            </div>
             {% endif %}
-            
 
+            <!-- Featured Vacancies -->
             {% if featured_vacancies %}
-                <div class="container section py-2" style="background-color: var(--bg-light);">
+            <div class="container section alt-bg">
+                <div class="section-header">
                     <h2>Urgent Vacancies</h2>
-                    <div class="content-grid" id="featuredVacancies">
-                        {% for vacancy in featured_vacancies %}
-                            <div class="card vacancy-card" data-vacancy-id="{{ vacancy.id }}">
-                                <div class="vacancy-card-header">
-                                    <div>
-                                        <h3 class="vacancy-title">
-                                            <a href="/vacancy_page/{{ vacancy.id }}/">{{ vacancy.title|default:"Untitled Position" }}</a>
-                                        </h3>
-                                        <div class="vacancy-org">{{ vacancy.organization|default:"Organization not specified" }}</div>
-                                    </div>
-                                    {% if vacancy.urgent %}
-                                        <span class="badge badge-red">Urgent</span>
-                                    {% endif %}
-                                    {% if vacancy.featured %}
-                                        <span class="badge badge-blue">Featured</span>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="vacancy-details">
-                                    <div class="vacancy-detail">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <span>{{ vacancy.location|default:"Location not specified" }}</span>
-                                    </div>
-                                    <div class="vacancy-detail">
-                                        <i class="fas fa-briefcase"></i>
-                                        <span>{{ vacancy.job_type|default:"Type not specified" }}</span>
-                                    </div>
-                                </div>
-                                
-                                <p>{{ vacancy.description|striptags|truncatechars:150|default:"No description available" }}</p>
-                                
-                                <div class="vacancy-deadline">
-                                    <i class="far fa-calendar-alt"></i>
-                                    Deadline: 
-                                    {% if vacancy.expiration_date %}
-                                        {{ vacancy.expiration_date|date:"M d, Y" }}
-                                    {% else %}
-                                        <span style="color: #999;">Not specified</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <div class="text-center mt-2">
-                        <a href="{% url 'vacancies_page' %}" class="btn btn-small btn-outline" data-page="vacancies">More Vacancies</a>
-                    </div>
+                    <p>Time-sensitive opportunities in the NGO sector</p>
                 </div>
-            {% endif %}
-
-            {% if featured_notices %}
-                <div class="container section py-2">
-                    <h2>Important Notices</h2>
-                    <div class="content-grid" id="featuredNotices">
-                        {% for notice in featured_notices %}
-                            <div class="card notice-card" data-notice-id="{{ notice.id }}">
-                                <div class="notice-card-header">
-                                    <div class="notice-category badge">
-                                        {{ notice.category }}
-                                    </div>
-                                    <div class="notice-date">{{ notice.created_at|date:"M d, Y" }}</div>
-                                </div>
-                                
-                                <h3 class="notice-title">
-                                    <a href="/notice_page/{{ notice.id }}/" onclick="event.stopPropagation();">{{ notice.headline }}</a>
+                
+                <div class="content-grid">
+                    {% for vacancy in featured_vacancies %}
+                    <div class="card vacancy-card" data-vacancy-id="{{ vacancy.id }}">
+                        <div class="vacancy-header">
+                            <div>
+                                <h3>
+                                    <a href="/vacancy_page/{{ vacancy.id }}/">{{ vacancy.title|default:"Untitled Position" }}</a>
                                 </h3>
-                                
-                                <p class="notice-description">{{ notice.description|truncatechars:150|safe }}</p>
-                                
-                                <div class="notice-attachment">
-                                    <i class="fas fa-paperclip"></i>
-                                    <span>More details available</span>
-                                </div>
+                                <p class="vacancy-org">{{ vacancy.organization|default:"Organization not specified" }}</p>
                             </div>
-                        {% endfor %}
+                            {% if vacancy.urgent %}
+                                <span class="badge badge-red">Urgent</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="vacancy-details">
+                            <span><i class="fas fa-map-marker-alt"></i> {{ vacancy.location|default:"Location not specified" }}</span>
+                            <span><i class="fas fa-briefcase"></i> {{ vacancy.job_type|default:"Type not specified" }}</span>
+                        </div>
+                        
+                        <p>{{ vacancy.description|striptags|truncatechars:150|default:"No description available" }}</p>
+                        
+                        <div class="vacancy-footer">
+                            <span><i class="far fa-calendar-alt"></i> Deadline: 
+                                {% if vacancy.expiration_date %}
+                                    {{ vacancy.expiration_date|date:"M d, Y" }}
+                                {% else %}
+                                    Not specified
+                                {% endif %}
+                            </span>
+                        </div>
                     </div>
-                    <div class="text-center mt-2">
-                        <a href="{% url 'notices_page' %}" class="btn btn-small" data-page="notices">More Notices</a>
-                    </div>
+                    {% endfor %}
                 </div>
+                
+                <div class="section-footer">
+                    <a href="{% url 'vacancies_page' %}" class="btn btn-outline">More Vacancies</a>
+                </div>
+            </div>
             {% endif %}
 
-            <div class="container section py-2">
-                <h2>Our Impact in Numbers</h2>
-                <div class="stats-counter">
-                    <div class="stat-item">
-                        <div class="stat-number" data-count="245">{{ stories_published }}</div>
-                        <div class="stat-label">Stories Published</div>
+            <!-- Featured Notices -->
+            {% if featured_notices %}
+            <div class="container section">
+                <div class="section-header">
+                    <h2>Important Notices</h2>
+                    <p>Funding opportunities, events, and policy updates</p>
+                </div>
+                
+                <div class="content-grid">
+                    {% for notice in featured_notices %}
+                    <div class="card notice-card" data-notice-id="{{ notice.id }}">
+                        <div class="notice-header">
+                            <span class="badge">{{ notice.category }}</span>
+                            <span class="notice-date">{{ notice.created_at|date:"M d, Y" }}</span>
+                        </div>
+                        
+                        <h3>
+                            <a href="/notice_page/{{ notice.id }}/" onclick="event.stopPropagation();">{{ notice.headline }}</a>
+                        </h3>
+                        
+                        <p>{{ notice.description|truncatechars:150|safe }}</p>
+                        
+                        <div class="notice-footer">
+                            <span><i class="fas fa-paperclip"></i> More details available</span>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number" data-count="187">{{ jobs_listed }}</div>
-                        <div class="stat-label">Jobs Listed</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="section-footer">
+                    <a href="{% url 'notices_page' %}" class="btn btn-outline">More Notices</a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Impact Stats - Fixed Contrast -->
+            <div class="stats-section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2>Our Impact in Numbers</h2>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number" data-count="532">{{ NGOs_engaged }}</div>
-                        <div class="stat-label">NGOs Engaged</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" data-count="12400">{{ subscribers }}</div>
-                        <div class="stat-label">Subscribers</div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-number">{{ stories_published }}</div>
+                            <div class="stat-label">Stories Published</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ jobs_listed }}</div>
+                            <div class="stat-label">Jobs Listed</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ NGOs_engaged }}</div>
+                            <div class="stat-label">NGOs Engaged</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ subscribers }}</div>
+                            <div class="stat-label">Subscribers</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -180,75 +197,521 @@
     <script>
         $(document).ready(function() {
             function validEmail(email) {
-                // Simple email validation regex
                 var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 return emailRegex.test(email);
             }
             
             $('#home-subscribe-button').on('click', function() {
-                var name = $('#subscribeName').val()
-                var email = $('#subscribeEmail').val()
-                var agreed = $('#agreeTerms').is(':checked')
+                var name = $('#subscribeName').val().trim();
+                var email = $('#subscribeEmail').val().trim();
+                var agreed = $('#agreeTerms').is(':checked');
 
-                var errors = ""
-
-                if(name == ""){
-                    errors = "Please enter your name"
-                } else if(!validEmail(email)){
-                    errors = "Please enter a valid email"
-                } else if(!agreed){  // Simplified check since agreed is boolean
-                    errors = "Please agree to the terms and conditions first."
+                if(name === ""){
+                    Swal.fire({ title: 'Error!', text: 'Please enter your name', icon: 'error' });
+                    return;
+                }
+                if(!validEmail(email)){
+                    Swal.fire({ title: 'Error!', text: 'Please enter a valid email', icon: 'error' });
+                    return;
+                }
+                if(!agreed){
+                    Swal.fire({ title: 'Error!', text: 'Please agree to the terms and conditions', icon: 'error' });
+                    return;
                 }
 
-                if(errors){
-                    Swal.fire({
-                        title: 'Error!',
-                        text: errors,
-                        icon: 'error'
-                    });
-                } else {
-                    $.ajax({
-                        url: '{% url "subscribe" %}',
-                        method: 'POST',
-                        dataType: 'json',
-                        data: {
-                            'name': name,
-                            'email': email,
-                            'agreed': agreed,
-                        },
-                        headers: {
-                            'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
-                        },
-                        beforeSend: function() {
-                            // Show loading SweetAlert
-                            Swal.fire({
-                                title: 'Processing...',
-                                text: 'Please wait while we process your subscription',
-                                allowOutsideClick: false,
-                                allowEscapeKey: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-                        },
-                        success: function(responseData) {
-                            // Close loading and redirect immediately
-                            Swal.close();
-                            window.location.href = "{% url 'subscription_result_page' %}";
-                        },
-                        error: function(jqXHR) {
-                            // Close loading and show error
-                            Swal.close();
-                            Swal.fire({
-                                title: 'Error',
-                                text: 'Server error. Please try again or alert the owner via contact page.',
-                                icon: 'error'
-                            });
-                        }
-                    });
+                $.ajax({
+                    url: '{% url "subscribe" %}',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: { 'name': name, 'email': email, 'agreed': agreed },
+                    headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
+                    beforeSend: function() {
+                        Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    },
+                    success: function() {
+                        Swal.close();
+                        window.location.href = "{% url 'subscription_result_page' %}";
+                    },
+                    error: function() {
+                        Swal.fire({ title: 'Error', text: 'Server error. Please try again.', icon: 'error' });
+                    }
+                });
+            });
+
+            // Make cards clickable
+            $('.vacancy-card, .notice-card').on('click', function(e) {
+                if (!$(e.target).closest('a').length) {
+                    var id = $(this).data('vacancy-id') || $(this).data('notice-id');
+                    var type = $(this).hasClass('vacancy-card') ? 'vacancy_page' : 'notice_page';
+                    if (id) window.location.href = `/${type}/${id}/`;
                 }
-            })
-        })
+            });
+        });
     </script>
+
+    <style>
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Subscribe Card */
+        .subscribe-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .subscribe-card h3 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: white;
+        }
+
+        .terms-group {
+            text-align: left;
+            margin: 1rem 0;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .checkbox-label input {
+            width: auto;
+        }
+
+        .terms-link {
+            color: white;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        /* Section Styles */
+        .section {
+            padding: 4rem 0;
+        }
+
+        .alt-bg {
+            background-color: var(--bg-gray);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: var(--text-light);
+        }
+
+        .section-footer {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-block;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-light);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        /* Story Card */
+        .story-card-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .story-card-content {
+            padding: 1.5rem;
+        }
+
+        .story-card-content h3 {
+            font-size: 1.2rem;
+            margin: 0.5rem 0;
+            line-height: 1.4;
+        }
+
+        .story-card-content p {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .story-card-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .story-card-meta i {
+            margin-right: 0.25rem;
+        }
+
+        /* Vacancy Card */
+        .vacancy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .vacancy-header h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .vacancy-header h3 a {
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .vacancy-header h3 a:hover {
+            color: var(--primary);
+        }
+
+        .vacancy-org {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .vacancy-details {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            flex-wrap: wrap;
+        }
+
+        .vacancy-details i {
+            width: 16px;
+            color: var(--primary);
+        }
+
+        .vacancy-footer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        /* Notice Card */
+        .notice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .notice-date {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .notice-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .notice-card h3 a {
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .notice-card h3 a:hover {
+            color: var(--primary);
+        }
+
+        .notice-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .notice-footer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        /* Stats Section - Fixed Contrast */
+        .stats-section {
+            background-color: var(--primary-dark);
+            color: white;
+            padding: 4rem 0;
+        }
+
+        .stats-section .section-header h2 {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 3rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .stats-section .section-header h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: white;
+            border-radius: 3px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem 1rem;
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(198, 40, 40, 0.1);
+            color: var(--primary);
+        }
+
+        .badge-red {
+            background: rgba(198, 40, 40, 0.1);
+            color: var(--primary);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        /* Card Link */
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 992px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .section {
+                padding: 3rem 0;
+            }
+            
+            .section-header h2 {
+                font-size: 1.8rem;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-section {
+                padding: 3rem 0;
+            }
+            
+            .stats-section .section-header h2 {
+                font-size: 1.8rem;
+            }
+            
+            .stat-number {
+                font-size: 2.5rem;
+            }
+            
+            .stat-label {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 1.8rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .stat-item {
+                padding: 1.5rem;
+            }
+            
+            .stat-number {
+                font-size: 2.2rem;
+            }
+            
+            .vacancy-details {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+    
     {% include 'partials/footer.html' %}
 {% endblock %}

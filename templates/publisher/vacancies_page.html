@@ -1,7 +1,7 @@
 {% extends 'partials/base.html' %}
 {% load static %}
 
-{% block title %}NGO News Digest - Vacancies {% endblock %}
+{% block title %}NGO News Digest - Vacancies{% endblock %}
 
 {% block content %}
     {% include 'partials/header.html' %}
@@ -11,104 +11,265 @@
                 <h1>NGO Job Vacancies</h1>
                 <p class="mb-2">Find your next opportunity in Zimbabwe's civil society sector.</p>
                 
+                <!-- Search Only - No category buttons -->
                 <div class="filter-section">
-                    <div class="filter-group">
-                        <span class="filter-label">Filter by:</span>
-                        <button class="filter-btn active" data-filter="all">All</button>
-                        {% for category in categories %}
-                            <button class="filter-btn" data-filter="{{ category.name  }}">{{ category.name }}</button>
-                        {% endfor %}
-                        
-                        <div class="search-box">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text" class="search-input" id="vacancySearch" placeholder="Search vacancies...">
-                        </div>
+                    <div class="search-box" style="width: 100%;">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" id="vacancySearch" placeholder="Search vacancies by title, organization, or description...">
                     </div>
                 </div>
                 
+                <!-- Vacancies Grid -->
                 <div class="content-grid" id="vacanciesList">
                     <!-- Vacancies loaded via JS -->
-                </div>
-
-                <center id="more-vacancies-btn-container">
-                    <div class="text-center mt-2">
-                        <button id="more-vacancies-btn" class="btn btn-small" data-page="vacancies">More Vacancies</button>
+                    <div class="loading-state">
+                        <div class="loading-spinner"></div>
+                        <p>Loading vacancies...</p>
                     </div>
-                </center>
+                </div>
                 
-                <div class="pagination" id="vacanciesPagination">
-                    <!-- Pagination loaded via JS -->
+                <!-- Load More Container -->
+                <div id="loadMoreContainer" class="text-center mt-3" style="display: none;">
+                    <button id="loadMoreBtn" class="btn btn-primary" style="width: auto; padding: 0.75rem 2rem;">
+                        <i class="fas fa-plus-circle"></i> Load More Vacancies
+                    </button>
+                </div>
+                
+                <!-- End of Results Message -->
+                <div id="endOfResults" class="text-center mt-3" style="display: none;">
+                    <p style="color: var(--text-light); padding: 1rem;">
+                        <i class="fas fa-check-circle" style="color: var(--primary);"></i> 
+                        You've reached the end of vacancies
+                    </p>
+                </div>
+                
+                <!-- No Results Message -->
+                <div id="noResultsMessage" class="empty-state" style="display: none;">
+                    <i class="fas fa-briefcase empty-state-icon"></i>
+                    <h3>No vacancies found</h3>
+                    <p>Try adjusting your search term</p>
+                </div>
+                
+                <!-- Error Message -->
+                <div id="errorMessage" class="empty-state" style="display: none;">
+                    <i class="fas fa-exclamation-circle empty-state-icon" style="color: var(--primary);"></i>
+                    <h3>Something went wrong</h3>
+                    <p>We couldn't load the vacancies. Please try again.</p>
+                    <button id="retryBtn" class="btn btn-small" style="width: auto;">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
                 </div>
             </div>
         </section>
     </main>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script>
-        
         $(document).ready(function() {
-            var page = 1
-            var page_size = 3
-            var category = "All"
-
-            clearVacanciesGrid()
-            loadVacancies(page, page_size, category)
-
-
+            // State variables
+            var currentPage = 1;
+            var pageSize = 6;
+            var currentSearch = "";
+            var isLoading = false;
+            var hasMore = true;
+            var totalLoaded = 0;
+            
+            // UI Elements
+            const vacanciesGrid = $('#vacanciesList');
+            const loadMoreContainer = $('#loadMoreContainer');
+            const endOfResults = $('#endOfResults');
+            const noResultsMessage = $('#noResultsMessage');
+            const errorMessage = $('#errorMessage');
+            const loadingState = $('.loading-state');
+            
+            // Initial load
+            loadVacancies(true);
+            
             /*-----------------------------------------------------------------------------------------------------------
-            EVENTS >>>>>
+            EVENTS
             -------------------------------------------------------------------------------------------------------------*/
-
-            $('#more-vacancies-btn').on('click', function() {
-                page++
-                loadVacancies(page, page_size, category)
+            
+            // Load more button
+            $('#loadMoreBtn').on('click', function() {
+                if (!isLoading && hasMore) {
+                    currentPage++;
+                    loadVacancies(false);
+                }
             });
-
+            
+            // Retry button
+            $('#retryBtn').on('click', function() {
+                resetSearch();
+            });
+            
+            // Search input with debounce
+            let searchTimeout;
+            $('#vacancySearch').on('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    if (!isLoading) {
+                        currentSearch = $(this).val();
+                        resetAndLoad();
+                    }
+                }, 500);
+            });
+            
+            // Handle Enter key in search
+            $('#vacancySearch').on('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    clearTimeout(searchTimeout);
+                    currentSearch = $(this).val();
+                    resetAndLoad();
+                }
+            });
+            
+            // Make vacancy cards clickable
+            $(document).on('click', '.vacancy-card', function(e) {
+                // Don't trigger if clicking on a link inside the card
+                if (!$(e.target).closest('a').length) {
+                    const vacancyId = $(this).data('vacancy-id');
+                    if (vacancyId) {
+                        window.location.href = `/vacancy_page/${vacancyId}/`;
+                    }
+                }
+            });
+            
             /*-----------------------------------------------------------------------------------------------------------
-            EVENTS <<<<<
+            FUNCTIONS
             -------------------------------------------------------------------------------------------------------------*/
-        
-
-            function loadVacancies(page, page_size, category){
+            
+            function resetAndLoad() {
+                currentPage = 1;
+                totalLoaded = 0;
+                hasMore = true;
+                vacanciesGrid.empty();
+                hideAllMessages();
+                loadingState.show();
+                loadVacancies(true);
+            }
+            
+            function resetSearch() {
+                currentSearch = "";
+                currentPage = 1;
+                totalLoaded = 0;
+                hasMore = true;
+                
+                // Reset UI
+                $('#vacancySearch').val('');
+                
+                vacanciesGrid.empty();
+                hideAllMessages();
+                loadingState.show();
+                loadVacancies(true);
+            }
+            
+            function hideAllMessages() {
+                loadingState.hide();
+                loadMoreContainer.hide();
+                endOfResults.hide();
+                noResultsMessage.hide();
+                errorMessage.hide();
+            }
+            
+            function showLoading() {
+                isLoading = true;
+                if (currentPage === 1) {
+                    loadingState.show();
+                } else {
+                    // Show loading indicator on load more button
+                    $('#loadMoreBtn').html('<i class="fas fa-spinner fa-spin"></i> Loading...').prop('disabled', true);
+                }
+            }
+            
+            function hideLoading() {
+                isLoading = false;
+                loadingState.hide();
+                $('#loadMoreBtn').html('<i class="fas fa-plus-circle"></i> Load More Vacancies').prop('disabled', false);
+            }
+            
+            function formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-ZW', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            }
+            
+            function loadVacancies(isNewSearch) {
+                if (isLoading) return;
+                
+                showLoading();
+                
+                // Build URL with filters
+                let url = "{% url 'vacancies' %}?page=" + currentPage + "&page_size=" + pageSize;
+                
+                if (currentSearch) {
+                    url += "&search=" + encodeURIComponent(currentSearch);
+                }
+                
                 $.ajax({
-                    url: "{% url 'vacancies' %}",
-                    data: {
-                        page: page,
-                        page_size: page_size,
-                        category: category,
-                     },
+                    url: url,
+                    method: 'GET',
                     success: function(responseData) {
-                        const vacanciesGrid = $('#vacanciesList');
-                        var vacancies = responseData.vacancies
+                        const vacancies = responseData.vacancies || [];
+                        const totalCount = responseData.total || 0;
                         
-
-                        if (vacancies.length < page_size){
-                            $('#more-vacancies-btn-container').hide()
-                        }
+                        hideLoading();
                         
-                        if (vacancies.length == 0 && page < 1) {
-                            vacanciesGrid.html(`
-                                <div class="empty-state">
-                                    <i class="fas fa-briefcase empty-state-icon"></i>
-                                    <h3>No vacancies found</h3>
-                                    <p>Try adjusting your filters or search term</p>
-                                </div>`)
+                        if (vacancies.length === 0) {
+                            if (currentPage === 1) {
+                                // No results at all
+                                vacanciesGrid.empty();
+                                hideAllMessages();
+                                noResultsMessage.show();
+                            } else {
+                                // No more results to load
+                                hasMore = false;
+                                loadMoreContainer.hide();
+                                endOfResults.show();
+                            }
                             return;
                         }
                         
+                        // Append vacancies to grid
+                        if (isNewSearch) {
+                            vacanciesGrid.empty();
+                        }
+                        
                         vacancies.forEach(vacancy => {
+                            // Clean description (strip HTML tags)
+                            const cleanDescription = vacancy.description ? 
+                                vacancy.description.replace(/<[^>]*>/g, '').substring(0, 150) + 
+                                (vacancy.description.length > 150 ? '...' : '') : 
+                                'No description available';
+                            
+                            // Format deadline
+                            const deadline = vacancy.expiration_date ? 
+                                formatDate(vacancy.expiration_date) : 
+                                '<span style="color: #999;">Not specified</span>';
+                            
+                            // Create urgency/featured badges
+                            const badges = [];
+                            if (vacancy.urgent) badges.push('<span class="badge badge-red">Urgent</span>');
+                            if (vacancy.featured) badges.push('<span class="badge badge-blue">Featured</span>');
+                            
                             vacanciesGrid.append(`
-                                <div class="card vacancy-card" data-vacancy-id="${vacancy.id}">
+                                <div class="card vacancy-card clickable-card" data-vacancy-id="${vacancy.id}" role="button" tabindex="0">
                                     <div class="vacancy-card-header">
                                         <div>
                                             <h3 class="vacancy-title">
-                                                <a href="/vacancy_page/${vacancy.id}">
+                                                <a href="/vacancy_page/${vacancy.id}/" onclick="event.stopPropagation();">
                                                     ${vacancy.title || 'Untitled Position'}
                                                 </a>
                                             </h3>
                                             <div class="vacancy-org">${vacancy.organization || 'Organization not specified'}</div>
                                         </div>
-                                        ${vacancy.urgent ? '<span class="badge badge-red">Urgent</span>' : ''}
-                                        ${vacancy.featured ? '<span class="badge badge-blue">Featured</span>' : ''}
+                                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                            ${badges.join('')}
+                                        </div>
                                     </div>
                                     
                                     <div class="vacancy-details">
@@ -122,39 +283,277 @@
                                         </div>
                                     </div>
                                     
-                                    <p>${vacancy.description ? vacancy.description.replace(/<[^>]*>/g, '').substring(0, 150) + (vacancy.description.length > 150 ? '...' : '') : 'No description available'}</p>
+                                    <p>${cleanDescription}</p>
                                     
                                     <div class="vacancy-deadline">
                                         <i class="far fa-calendar-alt"></i>
-                                        Deadline: 
-                                        ${vacancy.expiration_date ? formatDate(vacancy.expiration_date) : '<span style="color: #999;">Not specified</span>'}
+                                        Deadline: ${deadline}
                                     </div>
-                                </div>`
-                            )
-                        })
-                        
-                    },
-                    error: function(){
-                        Swal.fire({
-                            title: "Error",
-                            text: "An error ocured!",
-                            icon: "error"
+                                    <div class="read-more-indicator">
+                                        <i class="fas fa-arrow-right"></i> View Details
+                                    </div>
+                                </div>
+                            `);
                         });
+                        
+                        totalLoaded += vacancies.length;
+                        
+                        // Check if there are more vacancies to load
+                        const totalPages = responseData.pages || Math.ceil(totalCount / pageSize);
+                        hasMore = currentPage < totalPages;
+                        
+                        // Update UI based on load more availability
+                        if (hasMore) {
+                            loadMoreContainer.show();
+                            endOfResults.hide();
+                        } else {
+                            loadMoreContainer.hide();
+                            if (totalLoaded > 0) {
+                                endOfResults.show();
+                            }
+                        }
+                        
+                        // Hide no results message if we have vacancies
+                        noResultsMessage.hide();
+                        
+                        // Add keyboard navigation for cards
+                        $('.vacancy-card.clickable-card').each(function() {
+                            $(this).off('keydown').on('keydown', function(e) {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    const id = $(this).data('vacancy-id');
+                                    if (id) window.location.href = `/vacancy_page/${id}/`;
+                                }
+                            });
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error loading vacancies:', error);
+                        hideLoading();
+                        
+                        if (currentPage === 1) {
+                            vacanciesGrid.empty();
+                            hideAllMessages();
+                            errorMessage.show();
+                        } else {
+                            // Show error on load more
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Failed to load more vacancies. Please try again.',
+                                confirmButtonColor: 'var(--primary)'
+                            });
+                            // Re-enable load more button
+                            currentPage--; // Revert page increment
+                        }
                     }
-                })
-
+                });
             }
-
-
-            function clearVacanciesGrid(){
-                const vacanciesGrid = $('#vacanciesList');
-                vacanciesGrid.empty();
-            }
-        })
-
-
-
-
+        });
     </script>
+    
+    <style>
+        /* Loading state styles */
+        .loading-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-light);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Empty state */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            background: var(--bg-light);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+        
+        .empty-state p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Load more button */
+        #loadMoreBtn {
+            transition: all 0.3s ease;
+            border-radius: 50px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        #loadMoreBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+        }
+        
+        #loadMoreBtn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* End of results */
+        #endOfResults p {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: var(--bg-light);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            box-shadow: var(--card-shadow);
+            margin: 0 auto;
+            max-width: fit-content;
+        }
+        
+        #endOfResults i {
+            font-size: 1.2rem;
+        }
+        
+        /* Vacancy Card Enhancements */
+        .vacancy-card {
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .vacancy-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow-hover);
+        }
+        
+        .vacancy-card:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+        
+        .vacancy-card .read-more-indicator {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            color: var(--primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        [data-theme="dark"] .vacancy-card .read-more-indicator {
+            background: rgba(30, 30, 30, 0.9);
+        }
+        
+        .vacancy-card:hover .read-more-indicator {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        /* Search box full width */
+        .filter-section .search-box {
+            width: 100%;
+            min-width: 100%;
+        }
+        
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .loading-state {
+                padding: 2rem;
+            }
+            
+            .empty-state {
+                padding: 2rem;
+            }
+            
+            .empty-state-icon {
+                font-size: 2.5rem;
+            }
+            
+            #loadMoreBtn {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            #endOfResults p {
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+            }
+            
+            .vacancy-card .read-more-indicator {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .loading-state {
+                padding: 1.5rem;
+            }
+            
+            .loading-spinner {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .empty-state {
+                padding: 1.5rem;
+            }
+            
+            .empty-state-icon {
+                font-size: 2rem;
+            }
+            
+            .vacancy-card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        
+        /* Touch device optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            .vacancy-card:hover {
+                transform: none;
+            }
+            
+            .vacancy-card:active {
+                transform: scale(0.98);
+            }
+        }
+    </style>
+    
     {% include 'partials/footer.html' %}
 {% endblock %}

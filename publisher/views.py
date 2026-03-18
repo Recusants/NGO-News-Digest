@@ -226,8 +226,24 @@ def stories(request):
     page_size = int(request.GET.get('page_size', 6))
     sort_by = request.GET.get('sort_by', 'created_at')
     sort_order = request.GET.get('sort_order', 'asc')
+    search_query = request.GET.get('search', '')
+    category_filter = request.GET.get('category', '')
     
     stories_qs = Story.objects.all()
+    
+    # Apply search filter
+    if search_query:
+        stories_qs = stories_qs.filter(
+            Q(headline__icontains=search_query) |
+            Q(content__icontains=search_query) |
+            Q(snippet__icontains=search_query) |
+            Q(author__first_name__icontains=search_query) |
+            Q(author__last_name__icontains=search_query)
+        )
+    
+    # Apply category filter
+    if category_filter and category_filter.lower() != 'all':
+        stories_qs = stories_qs.filter(category__name=category_filter)
     
     # Apply sorting
     if sort_order.lower() == 'desc':
@@ -257,7 +273,12 @@ def stories(request):
         for story in paginated_stories
     ]
     
-    return JsonResponse({"stories": stories_list})
+    return JsonResponse({
+        "stories": stories_list,
+        "total": total_stories,
+        "page": page,
+        "pages": (total_stories + page_size - 1) // page_size
+    })
 
 
 def get_latest_stories(request):
