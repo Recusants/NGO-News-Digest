@@ -8,114 +8,404 @@
     <main id="pageContent">
         <section id="contact" class="page-section">
             <div class="container section py-2">
-                <center>
+                <div class="page-header">
                     <h1>Contact Us</h1>
-                    <p class="mb-2">Get in touch with us for inquiries, submissions, or partnership opportunities.</p>
-                </center>
+                    <p class="page-description">Get in touch with us for inquiries, submissions, or partnership opportunities.</p>
+                </div>
                 
-                <div class="two-column">
-                    <div class="contact-form">
-                        <h2>Send a Message</h2>
-                        <form id="contactForm">
-                            <div class="form-group">
-                                <label class="form-label" for="contactName">Full Name</label>
-                                <input type="text" class="form-control" id="contactName" required>
+                <div class="contact-grid">
+                    <!-- Contact Information Card -->
+                    <div class="contact-info-card">
+                        <h2>Contact Information</h2>
+                        
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-phone"></i>
                             </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="contactEmail">Email Address</label>
-                                <input type="email" class="form-control" id="contactEmailInput" required>
+                            <div class="info-content">
+                                <h3>Phone</h3>
+                                <p>{{ site_info.contact_phone|default:"+263 XXX XXX XXX" }}</p>
                             </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="contactOrg">Organization (Optional)</label>
-                                <input type="text" class="form-control" id="contactOrg">
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-envelope"></i>
                             </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="contactSubject">Subject</label>
-                                <input type="text" class="form-control" id="contactSubject" required>
+                            <div class="info-content">
+                                <h3>Email</h3>
+                                <p>{{ site_info.contact_email|default:"info@ngodigest.co.zw" }}</p>
                             </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label" for="contactMessage">Message</label>
-                                <textarea class="form-control" id="contactMessage" required></textarea>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-map-marker-alt"></i>
                             </div>
-                            
-                            <button type="submit" class="btn">Send Message</button>
-                        </form>
+                            <div class="info-content">
+                                <h3>Address</h3>
+                                <p>{{ site_info.address|default:"Harare, Zimbabwe"|linebreaks }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Social Media Section -->
+                        <div class="social-section">
+                            <h3>Follow Us</h3>
+                            <div class="social-links">
+                                {% if site_info.facebook_url %}
+                                <a href="{{ site_info.facebook_url }}" target="_blank" rel="noopener noreferrer" class="social-link facebook" aria-label="Facebook">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                {% endif %}
+                                
+                                {% if site_info.twitter_url %}
+                                <a href="{{ site_info.twitter_url }}" target="_blank" rel="noopener noreferrer" class="social-link twitter" aria-label="Twitter">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                {% endif %}
+                                
+                                {% if site_info.linkedin_url %}
+                                <a href="{{ site_info.linkedin_url }}" target="_blank" rel="noopener noreferrer" class="social-link linkedin" aria-label="LinkedIn">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                                {% endif %}
+                                
+                                {% if site_info.youtube_url %}
+                                <a href="{{ site_info.youtube_url }}" target="_blank" rel="noopener noreferrer" class="social-link youtube" aria-label="YouTube">
+                                    <i class="fab fa-youtube"></i>
+                                </a>
+                                {% endif %}
+                                
+                                {% if site_info.instagram_url %}
+                                <a href="{{ site_info.instagram_url }}" target="_blank" rel="noopener noreferrer" class="social-link instagram" aria-label="Instagram">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     
-                    <div>
-                        <div class="card mb-2">
-                            <h3>Contact Information</h3>
-                            <div class="mb-2">
-                                <i class="fas fa-phone mr-2" style="color: var(--primary);"></i>
-                                <span>{{ site_info.contact_phone }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <i class="fas fa-envelope mr-2" style="color: var(--primary);"></i>
-                                <span>{{ site_info.contact_email }}</span>
-                            </div>
-                            <div class="mb-2">
-                                <i class="fas fa-map-marker-alt mr-2" style="color: var(--primary);"></i>
-                                <span>{{ site_info.address|linebreaks }}</span>
-                            </div>
-                            <!-- 
-                            <div class="mb-2">
-                                <i class="fas fa-clock mr-2" style="color: var(--primary);"></i>
-                                <span>Mon-Fri: 8:00 AM - 5:00 PM</span>
-                            </div> -->
-                        </div>
+                    <!-- Quick Info Card -->
+                    <div class="quick-info-card">
+                        <h2>Quick Information</h2>
                         
-                        <div class="card">
-                            <h3>Follow Us</h3>
-                            <div class="social-icons">
-                                <a href="{{ site_info.facebook_url }}" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                                <a href="{{ site_info.twitter_url }}" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                                <a href="{{ site_info.linkedin_url }}" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                                <a href="{{ site_info.youtube_url }}" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-                                <a href="{{ site_info.instagram_url }}" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <div class="quick-item">
+                            <i class="fas fa-newspaper"></i>
+                            <div>
+                                <h3>Story Submissions</h3>
+                                <p>Send your stories to <a href="mailto:stories@ngodigest.co.zw">stories@ngodigest.co.zw</a></p>
                             </div>
                         </div>
                         
-                        <!-- <div class="card mt-2">
-                            <h3>Frequently Asked Questions</h3>
-                            <div class="faq-item">
-                                <div class="faq-question">
-                                    <span>How can I submit a story or announcement?</span>
-                                    <i class="fas fa-chevron-down"></i>
-                                </div>
-                                <div class="faq-answer">
-                                    <p>Please email your submission to submissions@ngonewsdigest.co.zw with relevant details and attachments. Our editorial team reviews all submissions within 3-5 working days.</p>
-                                </div>
+                        <div class="quick-item">
+                            <i class="fas fa-briefcase"></i>
+                            <div>
+                                <h3>Job Postings</h3>
+                                <p>Email vacancies to <a href="mailto:jobs@ngodigest.co.zw">jobs@ngodigest.co.zw</a></p>
                             </div>
-                            
-                            <div class="faq-item">
-                                <div class="faq-question">
-                                    <span>Is there a cost to post job vacancies?</span>
-                                    <i class="fas fa-chevron-down"></i>
-                                </div>
-                                <div class="faq-answer">
-                                    <p>We offer free job postings for registered Zimbabwean NGOs. International organizations and for-profit companies may be charged a nominal fee.</p>
-                                </div>
+                        </div>
+                        
+                        <div class="quick-item">
+                            <i class="fas fa-bullhorn"></i>
+                            <div>
+                                <h3>Announcements</h3>
+                                <p>Send notices to <a href="mailto:notices@ngodigest.co.zw">notices@ngodigest.co.zw</a></p>
                             </div>
-                            
-                            <div class="faq-item">
-                                <div class="faq-question">
-                                    <span>How often is the digest updated?</span>
-                                    <i class="fas fa-chevron-down"></i>
-                                </div>
-                                <div class="faq-answer">
-                                    <p>We update our platform daily with new content. Subscribers receive a weekly digest every Monday morning.</p>
-                                </div>
+                        </div>
+                        
+                        <div class="quick-item">
+                            <i class="fas fa-handshake"></i>
+                            <div>
+                                <h3>Partnerships</h3>
+                                <p>Partner with us: <a href="mailto:partners@ngodigest.co.zw">partners@ngodigest.co.zw</a></p>
                             </div>
-                        </div> -->
+                        </div>
+                        
+                        <div class="response-time">
+                            <i class="fas fa-clock"></i>
+                            <p>We typically respond within 24-48 hours</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
-</style>
+
+    <style>
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header .page-description {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Contact Grid */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Cards */
+        .contact-info-card,
+        .quick-info-card {
+            background-color: var(--bg-light);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .contact-info-card h2,
+        .quick-info-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--primary);
+            color: var(--text-dark);
+        }
+
+        /* Info Items */
+        .info-item {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+
+        .info-icon {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(198, 40, 40, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .info-content h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-dark);
+        }
+
+        .info-content p {
+            color: var(--text-light);
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Social Section */
+        .social-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .social-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .social-link.facebook { background-color: #1877f2; }
+        .social-link.twitter { background-color: #1da1f2; }
+        .social-link.linkedin { background-color: #0077b5; }
+        .social-link.youtube { background-color: #ff0000; }
+        .social-link.instagram { background: linear-gradient(45deg, #f09433, #d62976, #962fbf, #4f5bd5); }
+
+        /* Quick Items */
+        .quick-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .quick-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .quick-item i {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(198, 40, 40, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .quick-item h3 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-dark);
+        }
+
+        .quick-item p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .quick-item a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .quick-item a:hover {
+            text-decoration: underline;
+        }
+
+        /* Response Time */
+        .response-time {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: rgba(198, 40, 40, 0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .response-time i {
+            color: var(--primary);
+            font-size: 1.25rem;
+        }
+
+        .response-time p {
+            color: var(--text-dark);
+            font-weight: 500;
+            margin: 0;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 992px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                padding: 0 1rem;
+            }
+            
+            .page-header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                margin-bottom: 2rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .page-header .page-description {
+                font-size: 1rem;
+                padding: 0 1rem;
+            }
+            
+            .contact-info-card,
+            .quick-info-card {
+                padding: 1.5rem;
+            }
+            
+            .info-item {
+                gap: 1rem;
+            }
+            
+            .info-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 1rem;
+            }
+            
+            .quick-item {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .quick-item i {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+            
+            .social-links {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .contact-info-card h2,
+            .quick-info-card h2 {
+                font-size: 1.3rem;
+            }
+            
+            .info-item {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .info-content {
+                text-align: center;
+            }
+            
+            .response-time {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+
     {% include 'partials/footer.html' %}
 {% endblock %}
