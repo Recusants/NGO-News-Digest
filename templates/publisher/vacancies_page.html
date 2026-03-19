@@ -11,7 +11,7 @@
                 <h1>NGO Job Vacancies</h1>
                 <p class="mb-2">Find your next opportunity in Zimbabwe's civil society sector.</p>
                 
-                <!-- Search Only - No category buttons -->
+                <!-- Search Only -->
                 <div class="filter-section">
                     <div class="search-box" style="width: 100%;">
                         <i class="fas fa-search search-icon"></i>
@@ -188,6 +188,7 @@
                 $('#loadMoreBtn').html('<i class="fas fa-plus-circle"></i> Load More Vacancies').prop('disabled', false);
             }
             
+            // FIXED: Added formatDate function
             function formatDate(dateString) {
                 if (!dateString) return '';
                 const date = new Date(dateString);
@@ -246,7 +247,7 @@
                                 (vacancy.description.length > 150 ? '...' : '') : 
                                 'No description available';
                             
-                            // Format deadline
+                            // Format deadline - NOW USING THE formatDate FUNCTION
                             const deadline = vacancy.expiration_date ? 
                                 formatDate(vacancy.expiration_date) : 
                                 '<span style="color: #999;">Not specified</span>';
@@ -285,12 +286,12 @@
                                     
                                     <p>${cleanDescription}</p>
                                     
-                                    <div class="vacancy-deadline">
-                                        <i class="far fa-calendar-alt"></i>
-                                        Deadline: ${deadline}
-                                    </div>
-                                    <div class="read-more-indicator">
-                                        <i class="fas fa-arrow-right"></i> View Details
+                                    <div class="vacancy-footer">
+                                        <div class="vacancy-deadline">
+                                            <i class="far fa-calendar-alt"></i>
+                                            Deadline: ${deadline}
+                                        </div>
+                                        <span class="view-details">View Details <i class="fas fa-arrow-right"></i></span>
                                     </div>
                                 </div>
                             `);
@@ -439,12 +440,13 @@
             font-size: 1.2rem;
         }
         
-        /* Vacancy Card Enhancements */
+        /* Vacancy Card */
         .vacancy-card {
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
             overflow: hidden;
+            padding: 1.5rem;
         }
         
         .vacancy-card:hover {
@@ -457,39 +459,102 @@
             outline-offset: 2px;
         }
         
-        .vacancy-card .read-more-indicator {
-            position: absolute;
-            bottom: 1rem;
-            right: 1rem;
+        .vacancy-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .vacancy-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .vacancy-title a {
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+        
+        .vacancy-title a:hover {
             color: var(--primary);
-            font-size: 0.8rem;
+        }
+        
+        .vacancy-org {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .vacancy-details {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            flex-wrap: wrap;
+        }
+        
+        .vacancy-detail i {
+            width: 16px;
+            color: var(--primary);
+        }
+        
+        .vacancy-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .vacancy-deadline {
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+        
+        .view-details {
+            color: var(--primary);
             font-weight: 600;
-            opacity: 0;
-            transform: translateX(-10px);
-            transition: all 0.3s ease;
-            z-index: 2;
-            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            transition: gap 0.3s ease;
+        }
+        
+        .view-details:hover {
+            gap: 0.75rem;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
             padding: 0.25rem 0.75rem;
             border-radius: 50px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-size: 0.8rem;
+            font-weight: 600;
         }
         
-        [data-theme="dark"] .vacancy-card .read-more-indicator {
-            background: rgba(30, 30, 30, 0.9);
+        .badge-red {
+            background-color: rgba(198, 40, 40, 0.1);
+            color: var(--primary);
         }
         
-        .vacancy-card:hover .read-more-indicator {
-            opacity: 1;
-            transform: translateX(0);
+        .badge-blue {
+            background-color: rgba(33, 150, 243, 0.1);
+            color: #2196f3;
         }
         
-        /* Search box full width */
+        /* Search box */
         .filter-section .search-box {
             width: 100%;
             min-width: 100%;
         }
         
-        /* Mobile adjustments */
+        /* Mobile */
         @media (max-width: 768px) {
             .loading-state {
                 padding: 2rem;
@@ -514,43 +579,15 @@
                 margin: 0 auto;
             }
             
-            .vacancy-card .read-more-indicator {
-                display: none;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .loading-state {
-                padding: 1.5rem;
-            }
-            
-            .loading-spinner {
-                width: 35px;
-                height: 35px;
-            }
-            
-            .empty-state {
-                padding: 1.5rem;
-            }
-            
-            .empty-state-icon {
-                font-size: 2rem;
-            }
-            
             .vacancy-card-header {
                 flex-direction: column;
                 align-items: flex-start;
             }
-        }
-        
-        /* Touch device optimizations */
-        @media (hover: none) and (pointer: coarse) {
-            .vacancy-card:hover {
-                transform: none;
-            }
             
-            .vacancy-card:active {
-                transform: scale(0.98);
+            .vacancy-footer {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
             }
         }
     </style>
